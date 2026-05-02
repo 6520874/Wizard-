@@ -15,26 +15,49 @@ namespace PixelRaid
         [SerializeField] private float visualScale = 0.65f;
         [SerializeField] private float attackRange = 1.45f;
         [SerializeField] private float hurtLockDuration = 0.35f;
+        [SerializeField] private int maxHealth = 100;
+        [SerializeField] private int maxMana = 100;
+        [SerializeField] private int slashManaCost = 12;
+        [SerializeField] private float manaRegenPerSecond = 9f;
+        [SerializeField] private int bossHitDamage = 16;
 
         private Rigidbody2D body;
         private SpriteRenderer spriteRenderer;
         private PixelRaidGeraltAnimator geraltAnimator;
         private bool controlsEnabled = true;
         private float hurtLockTimer;
+        private int currentHealth;
+        private float currentMana;
+
+        public int CurrentHealth => currentHealth;
+        public int MaxHealth => maxHealth;
+        public int CurrentMana => Mathf.RoundToInt(currentMana);
+        public int MaxMana => maxMana;
+        public bool IsAlive => currentHealth > 0;
 
         private void Awake()
         {
             body = GetComponent<Rigidbody2D>();
             spriteRenderer = GetComponent<SpriteRenderer>();
             geraltAnimator = GetComponent<PixelRaidGeraltAnimator>();
+            currentHealth = maxHealth;
+            currentMana = maxMana;
             transform.localScale = Vector3.one * visualScale;
             body.gravityScale = 0f;
             body.constraints = RigidbodyConstraints2D.FreezePositionY | RigidbodyConstraints2D.FreezeRotation;
             SnapToRoad();
         }
 
+        private void Start()
+        {
+            PixelRaidPlayerHud.CreateIfMissing(this);
+            PixelRaidWorldDirector.CreateIfMissing(this);
+        }
+
         private void Update()
         {
+            RegenerateMana();
+
             if (!controlsEnabled)
             {
                 body.velocity = Vector2.zero;
@@ -62,8 +85,7 @@ namespace PixelRaid
 
             if (Input.GetButtonDown("Fire1") || Input.GetKeyDown(KeyCode.J))
             {
-                geraltAnimator.PlaySlash();
-                TryHitBoss();
+                TrySlash();
             }
             else
             {
@@ -83,17 +105,77 @@ namespace PixelRaid
 
         public void TakeBossHit(float attackerX)
         {
+            TakeDamage(bossHitDamage, attackerX);
+        }
+
+        public void TakeEnemyHit(int damage, float attackerX)
+        {
+            TakeDamage(damage, attackerX);
+        }
+
+        public void RestoreHealth(int amount)
+        {
+            currentHealth = Mathf.Clamp(currentHealth + amount, 0, maxHealth);
+        }
+
+        public void RestoreMana(int amount)
+        {
+            currentMana = Mathf.Clamp(currentMana + amount, 0f, maxMana);
+        }
+
+        public void ConfigureRoad(float roadYValue, float minX, float maxX)
+        {
+            roadY = roadYValue;
+            minRoadX = minX;
+            maxRoadX = maxX;
+            SnapToRoad();
+        }
+
+        public void WarpTo(Vector2 position)
+        {
+            transform.position = new Vector3(position.x, position.y, transform.position.z);
+            SnapToRoad();
+        }
+
+        private void TrySlash()
+        {
+            if (currentMana < slashManaCost)
+            {
+                geraltAnimator.PlayLocomotion(false);
+                return;
+            }
+
+            currentMana = Mathf.Max(0f, currentMana - slashManaCost);
+            geraltAnimator.PlaySlash();
+            TryHitBoss();
+            TryHitCommonEnemies();
+        }
+
+        private void TakeDamage(int damage, float attackerX)
+        {
             if (hurtLockTimer > 0f)
             {
                 return;
             }
 
+            currentHealth = Mathf.Clamp(currentHealth - Mathf.Max(0, damage), 0, maxHealth);
             hurtLockTimer = hurtLockDuration;
             float knockDirection = transform.position.x >= attackerX ? 1f : -1f;
             transform.position += new Vector3(knockDirection * 0.18f, 0f, 0f);
             body.velocity = Vector2.zero;
             geraltAnimator.PlayHurt();
+            controlsEnabled = currentHealth > 0;
             SnapToRoad();
+        }
+
+        private void RegenerateMana()
+        {
+            if (currentMana >= maxMana)
+            {
+                return;
+            }
+
+            currentMana = Mathf.Min(maxMana, currentMana + manaRegenPerSecond * Time.deltaTime);
         }
 
         private void SnapToRoad()
@@ -116,6 +198,25 @@ namespace PixelRaid
             if (horizontalDistance <= attackRange)
             {
                 boss.TakeHit(transform.position.x);
+            }
+        }
+
+        private void TryHitCommonEnemies()
+        {
+            PixelRaidEnemyPatrol[] enemies = FindObjectsOfType<PixelRaidEnemyPatrol>();
+            for (int i = 0; i < enemies.Length; i++)
+            {
+                PixelRaidEnemyPatrol enemy = enemies[i];
+                if (enemy == null || !enemy.CanBeHit)
+                {
+                    continue;
+                }
+
+                float horizontalDistance = Mathf.Abs(enemy.transform.position.x - transform.position.x);
+                if (horizontalDistance <= attackRange)
+                {
+                    enemy.TakeHit(transform.position.x);
+                }
             }
         }
     }
