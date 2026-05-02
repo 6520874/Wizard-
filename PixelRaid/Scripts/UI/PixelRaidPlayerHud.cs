@@ -15,6 +15,10 @@ namespace PixelRaid
         private Text healthText;
         private Text manaText;
         private Text roomText;
+        private Text hintText;
+        private GameObject bossStatusRoot;
+        private Image bossHealthFill;
+        private Text bossHealthText;
 
         public static PixelRaidPlayerHud CreateIfMissing(PixelRaidPlayerController target)
         {
@@ -74,7 +78,7 @@ namespace PixelRaid
             RectTransform canvasRect = gameObject.GetComponent<RectTransform>();
             canvasRect.sizeDelta = Vector2.zero;
 
-            GameObject root = CreateUiObject("TopLeft Status", transform, new Vector2(364f, 112f), new Vector2(22f, -20f), new Vector2(0f, 1f));
+            GameObject root = CreateUiObject("TopLeft Status", transform, new Vector2(364f, 134f), new Vector2(22f, -20f), new Vector2(0f, 1f));
             Image panel = root.AddComponent<Image>();
             panel.sprite = PixelRaidSpriteLibrary.GetSolidSprite(new Color32(8, 11, 15, 215));
             panel.type = Image.Type.Sliced;
@@ -92,6 +96,11 @@ namespace PixelRaid
 
             roomText = CreateText("Room Label", root.transform, "霜林边境", 14, TextAnchor.MiddleLeft, new Vector2(110f, -88f), new Vector2(230f, 22f));
             roomText.color = new Color32(202, 216, 225, 255);
+
+            hintText = CreateText("Control Hint", root.transform, "J攻击  Shift冲刺  E消耗蓝量治疗", 12, TextAnchor.MiddleLeft, new Vector2(16f, -113f), new Vector2(320f, 18f));
+            hintText.color = new Color32(172, 190, 204, 230);
+
+            BuildBossBar();
         }
 
         private Image CreateBar(Transform parent, string label, Vector2 position, Color32 fillColor, out Text valueText)
@@ -122,6 +131,47 @@ namespace PixelRaid
             SetFill(manaFill, mana01, 184f);
             healthText.text = $"{player.CurrentHealth}/{player.MaxHealth}";
             manaText.text = $"{player.CurrentMana}/{player.MaxMana}";
+            UpdateBossBar();
+        }
+
+        private void BuildBossBar()
+        {
+            bossStatusRoot = CreateUiObject("Boss Status", transform, new Vector2(430f, 52f), new Vector2(0f, -22f), new Vector2(0.5f, 1f));
+            Image panel = bossStatusRoot.AddComponent<Image>();
+            panel.sprite = PixelRaidSpriteLibrary.GetSolidSprite(new Color32(5, 9, 14, 205));
+            panel.color = new Color32(5, 9, 14, 205);
+
+            Text title = CreateText("Boss Name", bossStatusRoot.transform, "狂猎统领", 15, TextAnchor.MiddleLeft, new Vector2(14f, -6f), new Vector2(160f, 20f));
+            title.color = new Color32(207, 231, 245, 255);
+
+            Image back = CreateImage("Boss Health Back", bossStatusRoot.transform, new Vector2(392f, 16f), new Vector2(18f, -28f), new Color32(2, 4, 8, 240));
+            back.sprite = PixelRaidSpriteLibrary.GetSolidSprite(new Color32(2, 4, 8, 240));
+
+            bossHealthFill = CreateImage("Boss Health Fill", back.transform, new Vector2(386f, 10f), new Vector2(3f, -3f), new Color32(83, 184, 232, 255));
+            RectTransform fillRect = bossHealthFill.rectTransform;
+            fillRect.anchorMin = new Vector2(0f, 1f);
+            fillRect.anchorMax = new Vector2(0f, 1f);
+            fillRect.pivot = new Vector2(0f, 1f);
+            bossHealthFill.sprite = PixelRaidSpriteLibrary.GetSolidSprite(new Color32(83, 184, 232, 255));
+
+            bossHealthText = CreateText("Boss Health Value", bossStatusRoot.transform, "8/8", 13, TextAnchor.MiddleRight, new Vector2(316f, -5f), new Vector2(92f, 20f));
+            bossHealthText.color = new Color32(236, 246, 251, 255);
+            bossStatusRoot.SetActive(false);
+        }
+
+        private void UpdateBossBar()
+        {
+            PixelRaidWildHuntBossController boss = FindObjectOfType<PixelRaidWildHuntBossController>();
+            bool shouldShow = boss != null && boss.HasSpawned && boss.CurrentHealth > 0;
+            bossStatusRoot.SetActive(shouldShow);
+            if (!shouldShow)
+            {
+                return;
+            }
+
+            float health01 = boss.MaxHealth <= 0 ? 0f : Mathf.Clamp01((float)boss.CurrentHealth / boss.MaxHealth);
+            SetFill(bossHealthFill, health01, 386f);
+            bossHealthText.text = $"{boss.CurrentHealth}/{boss.MaxHealth}";
         }
 
         private static void SetFill(Image image, float normalizedValue, float maxWidth)

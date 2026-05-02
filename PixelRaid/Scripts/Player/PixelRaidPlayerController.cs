@@ -20,6 +20,12 @@ namespace PixelRaid
         [SerializeField] private int slashManaCost = 12;
         [SerializeField] private float manaRegenPerSecond = 9f;
         [SerializeField] private int bossHitDamage = 16;
+        [SerializeField] private float dashSpeed = 12f;
+        [SerializeField] private float dashDuration = 0.16f;
+        [SerializeField] private float dashCooldown = 0.55f;
+        [SerializeField] private int dashManaCost = 18;
+        [SerializeField] private int healManaCost = 35;
+        [SerializeField] private int healAmount = 22;
 
         private Rigidbody2D body;
         private SpriteRenderer spriteRenderer;
@@ -28,6 +34,10 @@ namespace PixelRaid
         private float hurtLockTimer;
         private int currentHealth;
         private float currentMana;
+        private float dashTimer;
+        private float dashCooldownTimer;
+        private float invulnerableTimer;
+        private float lastFacingDirection = 1f;
 
         public int CurrentHealth => currentHealth;
         public int MaxHealth => maxHealth;
@@ -57,6 +67,8 @@ namespace PixelRaid
         private void Update()
         {
             RegenerateMana();
+            dashCooldownTimer -= Time.deltaTime;
+            invulnerableTimer -= Time.deltaTime;
 
             if (!controlsEnabled)
             {
@@ -74,16 +86,34 @@ namespace PixelRaid
                 return;
             }
 
+            if (dashTimer > 0f)
+            {
+                dashTimer -= Time.deltaTime;
+                body.velocity = new Vector2(lastFacingDirection * dashSpeed, 0f);
+                geraltAnimator.PlayLocomotion(true);
+                SnapToRoad();
+                return;
+            }
+
             float moveInput = Input.GetAxisRaw("Horizontal");
             body.velocity = new Vector2(moveInput * moveSpeed, 0f);
             SnapToRoad();
 
             if (moveInput != 0f)
             {
+                lastFacingDirection = Mathf.Sign(moveInput);
                 spriteRenderer.flipX = moveInput < 0f;
             }
 
-            if (Input.GetButtonDown("Fire1") || Input.GetKeyDown(KeyCode.J))
+            if (Input.GetKeyDown(KeyCode.LeftShift) || Input.GetKeyDown(KeyCode.RightShift))
+            {
+                TryDash(moveInput);
+            }
+            else if (Input.GetKeyDown(KeyCode.E))
+            {
+                TryHeal();
+            }
+            else if (Input.GetButtonDown("Fire1") || Input.GetKeyDown(KeyCode.J))
             {
                 TrySlash();
             }
@@ -115,12 +145,24 @@ namespace PixelRaid
 
         public void RestoreHealth(int amount)
         {
+            int previousHealth = currentHealth;
             currentHealth = Mathf.Clamp(currentHealth + amount, 0, maxHealth);
+            int restoredAmount = currentHealth - previousHealth;
+            if (restoredAmount > 0)
+            {
+                PixelRaidCombatText.Spawn($"+{restoredAmount}", transform.position, new Color32(97, 231, 151, 255));
+            }
         }
 
         public void RestoreMana(int amount)
         {
+            float previousMana = currentMana;
             currentMana = Mathf.Clamp(currentMana + amount, 0f, maxMana);
+            int restoredAmount = Mathf.RoundToInt(currentMana - previousMana);
+            if (restoredAmount > 0)
+            {
+                PixelRaidCombatText.Spawn($"+{restoredAmount} MP", transform.position, new Color32(89, 181, 255, 255));
+            }
         }
 
         public void ConfigureRoad(float roadYValue, float minX, float maxX)
@@ -151,14 +193,47 @@ namespace PixelRaid
             TryHitCommonEnemies();
         }
 
+        private void TryDash(float moveInput)
+        {
+            if (dashCooldownTimer > 0f || currentMana < dashManaCost)
+            {
+                return;
+            }
+
+            if (Mathf.Abs(moveInput) > 0.01f)
+            {
+                lastFacingDirection = Mathf.Sign(moveInput);
+            }
+
+            currentMana = Mathf.Max(0f, currentMana - dashManaCost);
+            dashTimer = dashDuration;
+            dashCooldownTimer = dashCooldown;
+            invulnerableTimer = dashDuration + 0.08f;
+            hurtLockTimer = 0f;
+        }
+
+        private void TryHeal()
+        {
+            if (currentHealth >= maxHealth || currentMana < healManaCost)
+            {
+                return;
+            }
+
+            currentMana = Mathf.Max(0f, currentMana - healManaCost);
+            RestoreHealth(healAmount);
+            body.velocity = Vector2.zero;
+            geraltAnimator.ForceIdle();
+        }
+
         private void TakeDamage(int damage, float attackerX)
         {
-            if (hurtLockTimer > 0f)
+            if (hurtLockTimer > 0f || invulnerableTimer > 0f || !IsAlive)
             {
                 return;
             }
 
             currentHealth = Mathf.Clamp(currentHealth - Mathf.Max(0, damage), 0, maxHealth);
+            PixelRaidCombatText.Spawn($"-{damage}", transform.position, new Color32(255, 72, 82, 255));
             hurtLockTimer = hurtLockDuration;
             float knockDirection = transform.position.x >= attackerX ? 1f : -1f;
             transform.position += new Vector3(knockDirection * 0.18f, 0f, 0f);

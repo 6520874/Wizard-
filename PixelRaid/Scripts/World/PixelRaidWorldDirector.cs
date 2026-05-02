@@ -16,9 +16,9 @@ namespace PixelRaid
 
         private readonly RoomDefinition[] rooms =
         {
-            new RoomDefinition("霜林边境", new Color32(180, 210, 230, 255), new EnemySpawn(PixelRaidEnemyKind.Ghoul, -3.9f), new EnemySpawn(PixelRaidEnemyKind.Wisp, 3.6f)),
-            new RoomDefinition("沉没遗迹", new Color32(112, 170, 190, 255), new EnemySpawn(PixelRaidEnemyKind.Wisp, -5.1f), new EnemySpawn(PixelRaidEnemyKind.Ghoul, 0.9f), new EnemySpawn(PixelRaidEnemyKind.Wisp, 5.4f)),
-            new RoomDefinition("寒铁圣所", new Color32(130, 145, 180, 255), new EnemySpawn(PixelRaidEnemyKind.FrostKnight, -3.2f), new EnemySpawn(PixelRaidEnemyKind.Ghoul, 2.8f), new EnemySpawn(PixelRaidEnemyKind.FrostKnight, 5.7f))
+            new RoomDefinition("霜林边境", new Color32(180, 210, 230, 255), new EnemySpawn(PixelRaidEnemyKind.Nekker, -3.9f), new EnemySpawn(PixelRaidEnemyKind.Wraith, 3.6f)),
+            new RoomDefinition("沉没沼泽", new Color32(91, 145, 139, 255), new EnemySpawn(PixelRaidEnemyKind.Drowner, -5.1f), new EnemySpawn(PixelRaidEnemyKind.Nekker, 0.9f), new EnemySpawn(PixelRaidEnemyKind.Drowner, 5.4f)),
+            new RoomDefinition("墓园旧道", new Color32(128, 145, 166, 255), new EnemySpawn(PixelRaidEnemyKind.Wraith, -3.2f), new EnemySpawn(PixelRaidEnemyKind.Nekker, 2.8f), new EnemySpawn(PixelRaidEnemyKind.Wraith, 5.7f))
         };
 
         public static PixelRaidWorldDirector CreateIfMissing(PixelRaidPlayerController target)
@@ -132,7 +132,7 @@ namespace PixelRaid
 
                 enemyObject.AddComponent<BoxCollider2D>();
                 PixelRaidEnemyPatrol enemy = enemyObject.AddComponent<PixelRaidEnemyPatrol>();
-                float patrolWidth = spawn.Kind == PixelRaidEnemyKind.FrostKnight ? 1.4f : 2.1f;
+                float patrolWidth = spawn.Kind == PixelRaidEnemyKind.Drowner ? 1.4f : 2.1f;
                 enemy.Configure(spawn.Kind, new Vector2(patrolWidth, 0f));
                 spawnedEnemies.Add(enemyObject);
             }

@@ -5,9 +5,9 @@ namespace PixelRaid
 {
     public enum PixelRaidEnemyKind
     {
-        Wisp,
-        Ghoul,
-        FrostKnight
+        Nekker,
+        Drowner,
+        Wraith
     }
 
     [RequireComponent(typeof(BoxCollider2D))]
@@ -16,7 +16,7 @@ namespace PixelRaid
     {
         private static readonly Dictionary<PixelRaidEnemyKind, Sprite> EnemySprites = new Dictionary<PixelRaidEnemyKind, Sprite>();
 
-        [SerializeField] private PixelRaidEnemyKind enemyKind = PixelRaidEnemyKind.Ghoul;
+        [SerializeField] private PixelRaidEnemyKind enemyKind = PixelRaidEnemyKind.Nekker;
         [SerializeField] private Vector2 patrolOffset = new Vector2(1.5f, 0f);
         [SerializeField] private float speed = 2f;
         [SerializeField] private float chaseRange = 2.4f;
@@ -97,12 +97,27 @@ namespace PixelRaid
             }
 
             health--;
+            PixelRaidCombatText.Spawn("-1", transform.position, new Color32(255, 225, 126, 255));
             hurtFlashTimer = 0.12f;
             float knockDirection = transform.position.x >= attackerX ? 1f : -1f;
             transform.position += new Vector3(knockDirection * 0.22f, 0f, 0f);
 
             if (health <= 0)
             {
+                if (player == null)
+                {
+                    player = FindObjectOfType<PixelRaidPlayerController>();
+                }
+
+                if (player != null)
+                {
+                    player.RestoreMana(enemyKind == PixelRaidEnemyKind.Wraith ? 16 : 10);
+                    if (enemyKind == PixelRaidEnemyKind.Drowner)
+                    {
+                        player.RestoreHealth(6);
+                    }
+                }
+
                 Destroy(gameObject);
             }
         }
@@ -140,26 +155,26 @@ namespace PixelRaid
         {
             switch (enemyKind)
             {
-                case PixelRaidEnemyKind.Wisp:
+                case PixelRaidEnemyKind.Wraith:
                     maxHealth = 1;
                     contactDamage = 6;
-                    speed = 2.6f;
-                    chaseRange = 2.9f;
-                    transform.localScale = new Vector3(0.38f, 0.38f, 1f);
+                    speed = 2.75f;
+                    chaseRange = 3.15f;
+                    transform.localScale = new Vector3(0.52f, 0.68f, 1f);
                     break;
-                case PixelRaidEnemyKind.FrostKnight:
-                    maxHealth = 4;
-                    contactDamage = 12;
-                    speed = 1.55f;
-                    chaseRange = 2.15f;
-                    transform.localScale = new Vector3(0.78f, 0.9f, 1f);
+                case PixelRaidEnemyKind.Drowner:
+                    maxHealth = 3;
+                    contactDamage = 11;
+                    speed = 1.72f;
+                    chaseRange = 2.25f;
+                    transform.localScale = new Vector3(0.68f, 0.78f, 1f);
                     break;
                 default:
                     maxHealth = 2;
                     contactDamage = 8;
-                    speed = 2f;
-                    chaseRange = 2.35f;
-                    transform.localScale = new Vector3(0.58f, 0.72f, 1f);
+                    speed = 2.25f;
+                    chaseRange = 2.45f;
+                    transform.localScale = new Vector3(0.55f, 0.62f, 1f);
                     break;
             }
 
@@ -186,7 +201,7 @@ namespace PixelRaid
             Color32 transparent = new Color32(0, 0, 0, 0);
             Color32 outline = new Color32(7, 9, 13, 255);
             Color32 glow = new Color32(91, 198, 255, 255);
-            Color32 body = kind == PixelRaidEnemyKind.FrostKnight ? new Color32(67, 77, 92, 255) : new Color32(41, 49, 44, 255);
+            Color32 body = kind == PixelRaidEnemyKind.Drowner ? new Color32(36, 88, 92, 255) : new Color32(47, 61, 42, 255);
 
             for (int y = 0; y < texture.height; y++)
             {
@@ -198,31 +213,38 @@ namespace PixelRaid
 
             switch (kind)
             {
-                case PixelRaidEnemyKind.Wisp:
-                    Fill(texture, 9, 7, 15, 15, glow);
-                    Fill(texture, 11, 10, 13, 12, outline);
-                    Fill(texture, 5, 5, 7, 8, glow);
-                    Fill(texture, 17, 6, 19, 9, glow);
-                    Fill(texture, 8, 4, 15, 5, new Color32(172, 224, 255, 210));
+                case PixelRaidEnemyKind.Wraith:
+                    Fill(texture, 8, 8, 16, 17, new Color32(196, 224, 238, 210));
+                    Fill(texture, 9, 7, 15, 9, outline);
+                    Fill(texture, 10, 10, 11, 11, glow);
+                    Fill(texture, 14, 10, 15, 11, glow);
+                    Fill(texture, 6, 15, 8, 20, new Color32(196, 224, 238, 145));
+                    Fill(texture, 12, 16, 14, 22, new Color32(196, 224, 238, 120));
+                    Fill(texture, 17, 14, 19, 20, new Color32(196, 224, 238, 145));
                     break;
-                case PixelRaidEnemyKind.FrostKnight:
-                    Fill(texture, 7, 4, 16, 17, outline);
-                    Fill(texture, 8, 5, 15, 16, body);
-                    Fill(texture, 9, 13, 13, 20, outline);
-                    Fill(texture, 12, 13, 17, 20, outline);
-                    Fill(texture, 10, 15, 12, 20, body);
-                    Fill(texture, 13, 15, 15, 20, body);
-                    Fill(texture, 9, 14, 18, 15, glow);
-                    Fill(texture, 5, 17, 18, 18, outline);
+                case PixelRaidEnemyKind.Drowner:
+                    Fill(texture, 6, 8, 17, 17, outline);
+                    Fill(texture, 7, 9, 16, 16, body);
+                    Fill(texture, 8, 5, 14, 9, outline);
+                    Fill(texture, 9, 6, 13, 9, new Color32(58, 122, 124, 255));
+                    Fill(texture, 7, 17, 10, 21, outline);
+                    Fill(texture, 14, 17, 17, 21, outline);
+                    Fill(texture, 4, 11, 7, 14, outline);
+                    Fill(texture, 17, 11, 20, 14, outline);
+                    Fill(texture, 10, 8, 11, 9, glow);
+                    Fill(texture, 14, 8, 15, 9, glow);
                     break;
                 default:
-                    Fill(texture, 6, 8, 17, 16, outline);
-                    Fill(texture, 7, 9, 16, 15, body);
-                    Fill(texture, 5, 6, 8, 10, outline);
-                    Fill(texture, 15, 6, 18, 10, outline);
-                    Fill(texture, 8, 14, 10, 20, outline);
-                    Fill(texture, 14, 14, 16, 20, outline);
-                    Fill(texture, 10, 12, 13, 13, glow);
+                    Fill(texture, 7, 10, 16, 17, outline);
+                    Fill(texture, 8, 11, 15, 16, body);
+                    Fill(texture, 6, 7, 11, 11, outline);
+                    Fill(texture, 12, 7, 18, 11, outline);
+                    Fill(texture, 8, 18, 10, 21, outline);
+                    Fill(texture, 14, 18, 16, 21, outline);
+                    Fill(texture, 4, 13, 7, 15, outline);
+                    Fill(texture, 17, 13, 20, 15, outline);
+                    Fill(texture, 10, 9, 11, 10, new Color32(235, 213, 91, 255));
+                    Fill(texture, 14, 9, 15, 10, new Color32(235, 213, 91, 255));
                     break;
             }
 
@@ -251,12 +273,12 @@ namespace PixelRaid
         {
             switch (enemyKind)
             {
-                case PixelRaidEnemyKind.Wisp:
-                    return new Color32(91, 198, 255, 230);
-                case PixelRaidEnemyKind.FrostKnight:
-                    return new Color32(66, 93, 126, 255);
+                case PixelRaidEnemyKind.Wraith:
+                    return new Color32(178, 218, 232, 220);
+                case PixelRaidEnemyKind.Drowner:
+                    return new Color32(50, 125, 132, 255);
                 default:
-                    return new Color32(119, 174, 91, 255);
+                    return new Color32(113, 147, 72, 255);
             }
         }
     }

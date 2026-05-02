@@ -14,23 +14,28 @@ namespace PixelRaid
         [SerializeField] private float attackRange = 1.7f;
         [SerializeField] private float attackCooldown = 1.45f;
         [SerializeField] private float hitStunDuration = 0.32f;
-        [SerializeField] private int health = 8;
+        [SerializeField] private int maxHealth = 8;
         [SerializeField] private float visualScale = 0.82f;
 
         private PixelRaidWildHuntBossAnimator bossAnimator;
         private SpriteRenderer spriteRenderer;
         private PixelRaidPlayerController player;
+        private int health;
         private float attackCooldownTimer;
         private float hitStunTimer;
         private bool attackDamageApplied;
         private bool spawned;
 
         public bool CanBeHit => spawned && hitStunTimer <= 0f && health > 0;
+        public bool HasSpawned => spawned;
+        public int CurrentHealth => health;
+        public int MaxHealth => maxHealth;
 
         private void Awake()
         {
             bossAnimator = GetComponent<PixelRaidWildHuntBossAnimator>();
             spriteRenderer = GetComponent<SpriteRenderer>();
+            health = maxHealth;
 
             Rigidbody2D body = GetComponent<Rigidbody2D>();
             body.bodyType = RigidbodyType2D.Kinematic;
@@ -119,6 +124,7 @@ namespace PixelRaid
             }
 
             health--;
+            PixelRaidCombatText.Spawn("-1", transform.position, new Color32(149, 221, 255, 255));
             hitStunTimer = hitStunDuration;
             float knockDirection = transform.position.x >= attackerX ? 1f : -1f;
             transform.position += new Vector3(knockDirection * 0.18f, 0f, 0f);
