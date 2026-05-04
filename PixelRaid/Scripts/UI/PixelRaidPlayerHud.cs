@@ -8,6 +8,7 @@ namespace PixelRaid
     {
         private const string HudName = "PixelRaid HUD";
         private const string PortraitPath = "PixelRaid/Art/UI/GeraltPortrait.png";
+        private const float PlayerBarWidth = 250f;
 
         private PixelRaidPlayerController player;
         private Image healthFill;
@@ -15,7 +16,6 @@ namespace PixelRaid
         private Text healthText;
         private Text manaText;
         private Text roomText;
-        private Text hintText;
         private GameObject bossStatusRoot;
         private Image bossHealthFill;
         private Text bossHealthText;
@@ -69,56 +69,74 @@ namespace PixelRaid
 
         private void BuildHud()
         {
-            Canvas canvas = gameObject.AddComponent<Canvas>();
+            for (int i = transform.childCount - 1; i >= 0; i--)
+            {
+                Destroy(transform.GetChild(i).gameObject);
+            }
+
+            Canvas canvas = gameObject.GetComponent<Canvas>();
+            if (canvas == null)
+            {
+                canvas = gameObject.AddComponent<Canvas>();
+            }
+
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
             canvas.sortingOrder = 100;
-            gameObject.AddComponent<CanvasScaler>();
-            gameObject.AddComponent<GraphicRaycaster>();
+            if (gameObject.GetComponent<CanvasScaler>() == null)
+            {
+                gameObject.AddComponent<CanvasScaler>();
+            }
+
+            if (gameObject.GetComponent<GraphicRaycaster>() == null)
+            {
+                gameObject.AddComponent<GraphicRaycaster>();
+            }
 
             RectTransform canvasRect = gameObject.GetComponent<RectTransform>();
             canvasRect.sizeDelta = Vector2.zero;
 
-            GameObject root = CreateUiObject("TopLeft Status", transform, new Vector2(364f, 134f), new Vector2(22f, -20f), new Vector2(0f, 1f));
+            GameObject root = CreateUiObject("TopLeft Status", transform, new Vector2(350f, 78f), new Vector2(6f, -6f), new Vector2(0f, 1f));
             Image panel = root.AddComponent<Image>();
             panel.sprite = PixelRaidSpriteLibrary.GetSolidSprite(new Color32(8, 11, 15, 215));
-            panel.type = Image.Type.Sliced;
             panel.color = new Color32(8, 11, 15, 215);
 
-            Image portraitFrame = CreateImage("Portrait Frame", root.transform, new Vector2(88f, 88f), new Vector2(12f, -12f), new Color32(21, 31, 39, 245));
+            Image portraitFrame = CreateImage("Portrait Frame", root.transform, new Vector2(58f, 58f), new Vector2(10f, -10f), new Color32(21, 31, 39, 245));
             portraitFrame.sprite = PixelRaidSpriteLibrary.GetSolidSprite(new Color32(21, 31, 39, 245));
 
-            Image portrait = CreateImage("Geralt Portrait", root.transform, new Vector2(78f, 78f), new Vector2(17f, -17f), Color.white);
+            Image portrait = CreateImage("Geralt Portrait", root.transform, new Vector2(50f, 50f), new Vector2(14f, -14f), Color.white);
             portrait.sprite = LoadSprite(PortraitPath, 96f);
             portrait.preserveAspect = true;
 
-            healthFill = CreateBar(root.transform, "Health", new Vector2(110f, -24f), new Color32(199, 41, 49, 255), out healthText);
-            manaFill = CreateBar(root.transform, "Mana", new Vector2(110f, -56f), new Color32(53, 139, 229, 255), out manaText);
+            healthFill = CreateBar(root.transform, "Health", "HP", new Vector2(78f, -16f), new Color32(220, 37, 48, 255), out healthText);
+            manaFill = CreateBar(root.transform, "Mana", "MP", new Vector2(78f, -45f), new Color32(35, 132, 238, 255), out manaText);
 
-            roomText = CreateText("Room Label", root.transform, "霜林边境", 14, TextAnchor.MiddleLeft, new Vector2(110f, -88f), new Vector2(230f, 22f));
+            roomText = CreateText("Room Label", root.transform, "霜林边境", 11, TextAnchor.MiddleLeft, new Vector2(78f, -63f), new Vector2(240f, 14f));
             roomText.color = new Color32(202, 216, 225, 255);
-
-            hintText = CreateText("Control Hint", root.transform, "J攻击  Shift冲刺  E消耗蓝量治疗", 12, TextAnchor.MiddleLeft, new Vector2(16f, -113f), new Vector2(320f, 18f));
-            hintText.color = new Color32(172, 190, 204, 230);
 
             BuildBossBar();
         }
 
-        private Image CreateBar(Transform parent, string label, Vector2 position, Color32 fillColor, out Text valueText)
+        private Image CreateBar(Transform parent, string name, string label, Vector2 position, Color32 fillColor, out Text valueText)
         {
-            CreateText(label + " Label", parent, label == "Health" ? "HP" : "MP", 14, TextAnchor.MiddleLeft, position, new Vector2(30f, 22f));
+            Text labelText = CreateText(name + " Label", parent, label, 13, TextAnchor.MiddleLeft, position, new Vector2(28f, 22f));
+            labelText.color = new Color32(218, 227, 229, 255);
 
-            Image back = CreateImage(label + " Back", parent, new Vector2(190f, 18f), position + new Vector2(32f, -1f), new Color32(2, 4, 7, 230));
+            Image back = CreateImage(name + " Back", parent, new Vector2(PlayerBarWidth, 20f), position + new Vector2(30f, 0f), new Color32(2, 4, 7, 245));
             back.sprite = PixelRaidSpriteLibrary.GetSolidSprite(new Color32(2, 4, 7, 230));
 
-            Image fill = CreateImage(label + " Fill", back.transform, new Vector2(184f, 12f), new Vector2(3f, -3f), fillColor);
+            Image fill = CreateImage(name + " Fill", back.transform, new Vector2(PlayerBarWidth - 6f, 14f), new Vector2(3f, -3f), fillColor);
             RectTransform fillRect = fill.rectTransform;
             fillRect.anchorMin = new Vector2(0f, 1f);
             fillRect.anchorMax = new Vector2(0f, 1f);
             fillRect.pivot = new Vector2(0f, 1f);
             fill.sprite = PixelRaidSpriteLibrary.GetSolidSprite(fillColor);
+            fill.type = Image.Type.Filled;
+            fill.fillMethod = Image.FillMethod.Horizontal;
+            fill.fillOrigin = (int)Image.OriginHorizontal.Left;
+            fill.fillAmount = 1f;
 
-            valueText = CreateText(label + " Value", parent, "100/100", 13, TextAnchor.MiddleRight, position + new Vector2(132f, -1f), new Vector2(86f, 22f));
-            valueText.color = new Color32(241, 244, 237, 255);
+            valueText = CreateText(name + " Value", back.transform, "100/100", 13, TextAnchor.MiddleCenter, Vector2.zero, new Vector2(PlayerBarWidth, 20f));
+            valueText.color = new Color32(250, 249, 232, 255);
             return fill;
         }
 
@@ -127,8 +145,8 @@ namespace PixelRaid
             float health01 = player.MaxHealth <= 0 ? 0f : Mathf.Clamp01((float)player.CurrentHealth / player.MaxHealth);
             float mana01 = player.MaxMana <= 0 ? 0f : Mathf.Clamp01((float)player.CurrentMana / player.MaxMana);
 
-            SetFill(healthFill, health01, 184f);
-            SetFill(manaFill, mana01, 184f);
+            SetFill(healthFill, health01, PlayerBarWidth - 6f);
+            SetFill(manaFill, mana01, PlayerBarWidth - 6f);
             healthText.text = $"{player.CurrentHealth}/{player.MaxHealth}";
             manaText.text = $"{player.CurrentMana}/{player.MaxMana}";
             UpdateBossBar();
@@ -176,6 +194,12 @@ namespace PixelRaid
 
         private static void SetFill(Image image, float normalizedValue, float maxWidth)
         {
+            if (image.type == Image.Type.Filled)
+            {
+                image.fillAmount = normalizedValue;
+                return;
+            }
+
             RectTransform rect = image.rectTransform;
             rect.sizeDelta = new Vector2(maxWidth * normalizedValue, rect.sizeDelta.y);
         }
