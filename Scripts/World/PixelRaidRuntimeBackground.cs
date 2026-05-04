@@ -6,7 +6,7 @@ namespace PixelRaid
     [RequireComponent(typeof(SpriteRenderer))]
     public class PixelRaidRuntimeBackground : MonoBehaviour
     {
-        [SerializeField] private string imagePath = "PixelRaid/Art/Backgrounds/Mountain_Background_04.png";
+        [SerializeField] private string imagePath = "Art/Backgrounds/Mountain_Background_04.png";
         [SerializeField] private float pixelsPerUnit = 64f;
         [SerializeField] private int sortingOrder = -50;
         [SerializeField] private bool fitToCamera = true;

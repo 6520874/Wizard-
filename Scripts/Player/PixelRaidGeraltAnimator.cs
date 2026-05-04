@@ -8,7 +8,7 @@ namespace PixelRaid
     [RequireComponent(typeof(SpriteRenderer))]
     public class PixelRaidGeraltAnimator : MonoBehaviour
     {
-        [SerializeField] private string frameRoot = "PixelRaid/Art/Geralt/Frames";
+        [SerializeField] private string frameRoot = "Art/Geralt/Frames";
         [SerializeField] private float idleFramesPerSecond = 6f;
         [SerializeField] private float runFramesPerSecond = 12f;
         [SerializeField] private float slashFramesPerSecond = 14f;

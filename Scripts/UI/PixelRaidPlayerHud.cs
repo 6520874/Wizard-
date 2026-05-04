@@ -7,8 +7,8 @@ namespace PixelRaid
     public class PixelRaidPlayerHud : MonoBehaviour
     {
         private const string HudName = "PixelRaid HUD";
-        private const string PortraitPath = "PixelRaid/Art/UI/GeraltPortrait.png";
-        private const string HudFramePath = "PixelRaid/Art/UI/DarkHudReferenceFull.png";
+        private const string PortraitPath = "Art/UI/GeraltPortrait.png";
+        private const string HudFramePath = "Art/UI/DarkHudReferenceFull.png";
         private const float PlayerBarWidth = 382f;
         private const float ManaBarWidth = 352f;
 

@@ -17,7 +17,7 @@ namespace PixelRaid
     [RequireComponent(typeof(SpriteRenderer))]
     public class PixelRaidWildHuntBossAnimator : MonoBehaviour
     {
-        [SerializeField] private string frameRoot = "PixelRaid/Art/WildHuntBoss/Frames";
+        [SerializeField] private string frameRoot = "Art/WildHuntBoss/Frames";
         [SerializeField] private float spawnFramesPerSecond = 10f;
         [SerializeField] private float idleFramesPerSecond = 6f;
         [SerializeField] private float runFramesPerSecond = 12f;

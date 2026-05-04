@@ -312,7 +312,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d0884739069d48fe8727326b492d1deb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  imagePath: PixelRaid/Art/Backgrounds/Mountain_Background_04.png
+  imagePath: Art/Backgrounds/Mountain_Background_04.png
   pixelsPerUnit: 64
   sortingOrder: -50
   fitToCamera: 1
@@ -488,7 +488,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 03a06a954a7514a9caba592a9982432f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  frameRoot: PixelRaid/Art/Geralt/Frames
+  frameRoot: Art/Geralt/Frames
   idleFramesPerSecond: 6
   runFramesPerSecond: 12
   slashFramesPerSecond: 14
@@ -513,6 +513,17 @@ MonoBehaviour:
   visualScale: 0.65
   attackRange: 1.45
   hurtLockDuration: 0.35
+  maxHealth: 100
+  maxMana: 100
+  slashManaCost: 12
+  manaRegenPerSecond: 9
+  bossHitDamage: 16
+  dashSpeed: 12
+  dashDuration: 0.16
+  dashCooldown: 0.55
+  dashManaCost: 18
+  healManaCost: 35
+  healAmount: 22
 --- !u!1 &400000
 GameObject:
   m_ObjectHideFlags: 0
