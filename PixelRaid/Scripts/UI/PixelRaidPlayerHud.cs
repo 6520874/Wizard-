@@ -20,6 +20,7 @@ namespace PixelRaid
         private Text healthText;
         private Text manaText;
         private Text roomText;
+        private PixelRaidPlayerController subscribedPlayer;
         private GameObject bossStatusRoot;
         private Image bossHealthFill;
         private Text bossHealthText;
@@ -42,7 +43,17 @@ namespace PixelRaid
 
         public void SetPlayer(PixelRaidPlayerController target)
         {
+            if (subscribedPlayer != null)
+            {
+                subscribedPlayer.StatsChanged -= UpdateBars;
+            }
+
             player = target;
+            subscribedPlayer = target;
+            if (subscribedPlayer != null)
+            {
+                subscribedPlayer.StatsChanged += UpdateBars;
+            }
         }
 
         public void SetRoomName(string roomName)
@@ -116,16 +127,22 @@ namespace PixelRaid
             portrait.sprite = LoadSprite(PortraitPath, 96f);
             portrait.preserveAspect = true;
 
+            Image healthTrack = CreateImage("Health Dynamic Track", root.transform, new Vector2(PlayerBarWidth, 34f), new Vector2(158f, -72f), new Color32(48, 6, 10, 245));
+            healthTrack.sprite = PixelRaidSpriteLibrary.GetSolidSprite(new Color32(48, 6, 10, 245));
+
+            Image manaTrack = CreateImage("Mana Dynamic Track", root.transform, new Vector2(ManaBarWidth, 29f), new Vector2(158f, -141f), new Color32(3, 19, 57, 245));
+            manaTrack.sprite = PixelRaidSpriteLibrary.GetSolidSprite(new Color32(3, 19, 57, 245));
+
             healthFill = CreateReferenceFill("Health Runtime Fill", root.transform, new Vector2(PlayerBarWidth, 34f), new Vector2(158f, -72f), new Color32(239, 20, 33, 222));
             manaFill = CreateReferenceFill("Mana Runtime Fill", root.transform, new Vector2(ManaBarWidth, 29f), new Vector2(158f, -141f), new Color32(28, 132, 255, 222));
-            healthMissing = CreateRightAnchoredImage("Health Missing Mask", root.transform, new Vector2(PlayerBarWidth, 38f), new Vector2(540f, -70f), new Color32(10, 14, 18, 218));
-            manaMissing = CreateRightAnchoredImage("Mana Missing Mask", root.transform, new Vector2(ManaBarWidth, 32f), new Vector2(510f, -139f), new Color32(8, 13, 20, 218));
+            healthMissing = CreateRightAnchoredImage("Health Missing Mask", root.transform, new Vector2(PlayerBarWidth, 38f), new Vector2(540f, -70f), new Color32(18, 18, 18, 235));
+            manaMissing = CreateRightAnchoredImage("Mana Missing Mask", root.transform, new Vector2(ManaBarWidth, 32f), new Vector2(510f, -139f), new Color32(12, 17, 24, 235));
 
-            Image healthTextCover = CreateImage("Health Original Text Cover", root.transform, new Vector2(212f, 31f), new Vector2(176f, -77f), new Color32(72, 4, 7, 170));
-            healthTextCover.sprite = PixelRaidSpriteLibrary.GetSolidSprite(new Color32(72, 4, 7, 170));
+            Image healthTextCover = CreateImage("Health Original Text Cover", root.transform, new Vector2(230f, 31f), new Vector2(176f, -77f), new Color32(67, 4, 8, 225));
+            healthTextCover.sprite = PixelRaidSpriteLibrary.GetSolidSprite(new Color32(67, 4, 8, 225));
 
-            Image manaTextCover = CreateImage("Mana Original Text Cover", root.transform, new Vector2(190f, 28f), new Vector2(176f, -147f), new Color32(3, 25, 75, 170));
-            manaTextCover.sprite = PixelRaidSpriteLibrary.GetSolidSprite(new Color32(3, 25, 75, 170));
+            Image manaTextCover = CreateImage("Mana Original Text Cover", root.transform, new Vector2(218f, 28f), new Vector2(176f, -147f), new Color32(3, 25, 75, 225));
+            manaTextCover.sprite = PixelRaidSpriteLibrary.GetSolidSprite(new Color32(3, 25, 75, 225));
 
             healthText = CreateText("Health Value", root.transform, "HP 100 / 100", 23, TextAnchor.MiddleLeft, new Vector2(187f, -76f), new Vector2(240f, 30f));
             healthText.color = new Color32(255, 250, 232, 255);
@@ -140,6 +157,7 @@ namespace PixelRaid
             AddOutline(roomText, new Color32(0, 0, 0, 220), new Vector2(1f, -1f));
 
             BuildBossBar();
+            UpdateBars();
         }
 
         private void BuildPortraitBadge(Transform parent)
@@ -250,6 +268,11 @@ namespace PixelRaid
 
         private void UpdateBars()
         {
+            if (player == null || healthText == null || manaText == null)
+            {
+                return;
+            }
+
             float health01 = player.MaxHealth <= 0 ? 0f : Mathf.Clamp01((float)player.CurrentHealth / player.MaxHealth);
             float mana01 = player.MaxMana <= 0 ? 0f : Mathf.Clamp01((float)player.CurrentMana / player.MaxMana);
 
@@ -260,6 +283,14 @@ namespace PixelRaid
             healthText.text = $"HP {player.CurrentHealth} / {player.MaxHealth}";
             manaText.text = $"MP {player.CurrentMana} / {player.MaxMana}";
             UpdateBossBar();
+        }
+
+        private void OnDestroy()
+        {
+            if (subscribedPlayer != null)
+            {
+                subscribedPlayer.StatsChanged -= UpdateBars;
+            }
         }
 
         private void BuildBossBar()

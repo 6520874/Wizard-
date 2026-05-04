@@ -44,6 +44,7 @@ namespace PixelRaid
         public int CurrentMana => Mathf.RoundToInt(currentMana);
         public int MaxMana => maxMana;
         public bool IsAlive => currentHealth > 0;
+        public System.Action StatsChanged;
 
         private void Awake()
         {
@@ -128,6 +129,15 @@ namespace PixelRaid
             SnapToRoad();
         }
 
+        private void OnTriggerStay2D(Collider2D other)
+        {
+            PixelRaidEnemyPatrol enemy = other.GetComponent<PixelRaidEnemyPatrol>();
+            if (enemy != null && enemy.CanBeHit)
+            {
+                TakeEnemyHit(enemy.ContactDamage, enemy.transform.position.x);
+            }
+        }
+
         public void SetControlEnabled(bool isEnabled)
         {
             controlsEnabled = isEnabled;
@@ -151,6 +161,7 @@ namespace PixelRaid
             if (restoredAmount > 0)
             {
                 PixelRaidCombatText.Spawn($"+{restoredAmount}", transform.position, new Color32(97, 231, 151, 255));
+                StatsChanged?.Invoke();
             }
         }
 
@@ -162,6 +173,7 @@ namespace PixelRaid
             if (restoredAmount > 0)
             {
                 PixelRaidCombatText.Spawn($"+{restoredAmount} MP", transform.position, new Color32(89, 181, 255, 255));
+                StatsChanged?.Invoke();
             }
         }
 
@@ -188,6 +200,7 @@ namespace PixelRaid
             }
 
             currentMana = Mathf.Max(0f, currentMana - slashManaCost);
+            StatsChanged?.Invoke();
             geraltAnimator.PlaySlash();
             TryHitBoss();
             TryHitCommonEnemies();
@@ -206,6 +219,7 @@ namespace PixelRaid
             }
 
             currentMana = Mathf.Max(0f, currentMana - dashManaCost);
+            StatsChanged?.Invoke();
             dashTimer = dashDuration;
             dashCooldownTimer = dashCooldown;
             invulnerableTimer = dashDuration + 0.08f;
@@ -220,6 +234,7 @@ namespace PixelRaid
             }
 
             currentMana = Mathf.Max(0f, currentMana - healManaCost);
+            StatsChanged?.Invoke();
             RestoreHealth(healAmount);
             body.velocity = Vector2.zero;
             geraltAnimator.ForceIdle();
@@ -232,8 +247,13 @@ namespace PixelRaid
                 return;
             }
 
+            int previousHealth = currentHealth;
             currentHealth = Mathf.Clamp(currentHealth - Mathf.Max(0, damage), 0, maxHealth);
             PixelRaidCombatText.Spawn($"-{damage}", transform.position, new Color32(255, 72, 82, 255));
+            if (currentHealth != previousHealth)
+            {
+                StatsChanged?.Invoke();
+            }
             hurtLockTimer = hurtLockDuration;
             float knockDirection = transform.position.x >= attackerX ? 1f : -1f;
             transform.position += new Vector3(knockDirection * 0.18f, 0f, 0f);

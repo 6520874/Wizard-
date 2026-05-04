@@ -20,7 +20,7 @@ namespace PixelRaid
         [SerializeField] private Vector2 patrolOffset = new Vector2(1.5f, 0f);
         [SerializeField] private float speed = 2f;
         [SerializeField] private float chaseRange = 2.4f;
-        [SerializeField] private float contactRange = 0.78f;
+        [SerializeField] private float contactRange = 1.08f;
         [SerializeField] private float hitCooldown = 0.75f;
         [SerializeField] private int maxHealth = 2;
         [SerializeField] private int contactDamage = 8;
@@ -35,6 +35,7 @@ namespace PixelRaid
         private float hurtFlashTimer;
 
         public bool CanBeHit => health > 0;
+        public int ContactDamage => contactDamage;
 
         private void Awake()
         {

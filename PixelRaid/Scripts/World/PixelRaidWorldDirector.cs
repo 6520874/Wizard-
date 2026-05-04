@@ -16,9 +16,9 @@ namespace PixelRaid
 
         private readonly RoomDefinition[] rooms =
         {
-            new RoomDefinition("霜林边境", new Color32(180, 210, 230, 255), new EnemySpawn(PixelRaidEnemyKind.Nekker, -3.9f), new EnemySpawn(PixelRaidEnemyKind.Wraith, 3.6f)),
-            new RoomDefinition("沉没沼泽", new Color32(91, 145, 139, 255), new EnemySpawn(PixelRaidEnemyKind.Drowner, -5.1f), new EnemySpawn(PixelRaidEnemyKind.Nekker, 0.9f), new EnemySpawn(PixelRaidEnemyKind.Drowner, 5.4f)),
-            new RoomDefinition("墓园旧道", new Color32(128, 145, 166, 255), new EnemySpawn(PixelRaidEnemyKind.Wraith, -3.2f), new EnemySpawn(PixelRaidEnemyKind.Nekker, 2.8f), new EnemySpawn(PixelRaidEnemyKind.Wraith, 5.7f))
+            new RoomDefinition("霜林边境", new Color32(180, 210, 230, 255)),
+            new RoomDefinition("沉没沼泽", new Color32(91, 145, 139, 255)),
+            new RoomDefinition("墓园旧道", new Color32(128, 145, 166, 255))
         };
 
         public static PixelRaidWorldDirector CreateIfMissing(PixelRaidPlayerController target)
