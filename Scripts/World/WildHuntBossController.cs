@@ -12,8 +12,8 @@ namespace WitcherGame
         [SerializeField] private float stopDistance = 1.35f;
         [SerializeField] private float attackRange = 1.7f;
         [SerializeField] private float laneAttackTolerance = 0.78f;
-        [SerializeField] private float minStageY = -2.42f;
-        [SerializeField] private float maxStageY = -0.72f;
+        [SerializeField] private float minStageY = -2.55f;
+        [SerializeField] private float maxStageY = 0.18f;
         [SerializeField] private float attackCooldown = 1.45f;
         [SerializeField] private float hitStunDuration = 0.32f;
         [SerializeField] private int maxHealth = 8;
