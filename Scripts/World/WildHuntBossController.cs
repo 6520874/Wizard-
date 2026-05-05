@@ -1,12 +1,12 @@
 using UnityEngine;
 
-namespace PixelRaid
+namespace WitcherGame
 {
     [RequireComponent(typeof(Rigidbody2D))]
     [RequireComponent(typeof(BoxCollider2D))]
     [RequireComponent(typeof(SpriteRenderer))]
-    [RequireComponent(typeof(PixelRaidWildHuntBossAnimator))]
-    public class PixelRaidWildHuntBossController : MonoBehaviour
+    [RequireComponent(typeof(WildHuntBossAnimator))]
+    public class WildHuntBossController : MonoBehaviour
     {
         [SerializeField] private float roadY = -1.88f;
         [SerializeField] private float moveSpeed = 1.55f;
@@ -17,9 +17,9 @@ namespace PixelRaid
         [SerializeField] private int maxHealth = 8;
         [SerializeField] private float visualScale = 0.82f;
 
-        private PixelRaidWildHuntBossAnimator bossAnimator;
+        private WildHuntBossAnimator bossAnimator;
         private SpriteRenderer spriteRenderer;
-        private PixelRaidPlayerController player;
+        private GeraltController player;
         private int health;
         private float attackCooldownTimer;
         private float hitStunTimer;
@@ -33,7 +33,7 @@ namespace PixelRaid
 
         private void Awake()
         {
-            bossAnimator = GetComponent<PixelRaidWildHuntBossAnimator>();
+            bossAnimator = GetComponent<WildHuntBossAnimator>();
             spriteRenderer = GetComponent<SpriteRenderer>();
             health = maxHealth;
 
@@ -52,7 +52,7 @@ namespace PixelRaid
 
         private void Start()
         {
-            player = FindObjectOfType<PixelRaidPlayerController>();
+            player = FindObjectOfType<GeraltController>();
             bossAnimator.PlaySpawn();
         }
 
@@ -80,7 +80,7 @@ namespace PixelRaid
 
             if (player == null)
             {
-                player = FindObjectOfType<PixelRaidPlayerController>();
+                player = FindObjectOfType<GeraltController>();
                 bossAnimator.PlayLocomotion(false);
                 return;
             }
@@ -90,7 +90,7 @@ namespace PixelRaid
             float distance = Mathf.Abs(dx);
             spriteRenderer.flipX = dx < 0f;
 
-            if (bossAnimator.CurrentAnimation == PixelRaidWildHuntBossAnimation.Attack && bossAnimator.IsOneShotPlaying)
+            if (bossAnimator.CurrentAnimation == WildHuntAnimation.Attack && bossAnimator.IsOneShotPlaying)
             {
                 TryApplyAttackDamage(distance);
                 return;
@@ -124,7 +124,7 @@ namespace PixelRaid
             }
 
             health--;
-            PixelRaidCombatText.Spawn("-1", transform.position, new Color32(149, 221, 255, 255));
+            WitcherCombatText.Spawn("-1", transform.position, new Color32(149, 221, 255, 255));
             hitStunTimer = hitStunDuration;
             float knockDirection = transform.position.x >= attackerX ? 1f : -1f;
             transform.position += new Vector3(knockDirection * 0.18f, 0f, 0f);

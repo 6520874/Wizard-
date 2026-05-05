@@ -1,17 +1,17 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace PixelRaid
+namespace WitcherGame
 {
-    public class PixelRaidWorldDirector : MonoBehaviour
+    public class WitcherWorldDirector : MonoBehaviour
     {
         private const float RoadY = -1.65f;
         private const float MinRoadX = -7.6f;
         private const float MaxRoadX = 7.6f;
 
         private readonly List<GameObject> spawnedEnemies = new List<GameObject>();
-        private PixelRaidPlayerController player;
-        private PixelRaidPlayerHud hud;
+        private GeraltController player;
+        private WitcherHud hud;
         private int roomIndex;
 
         private readonly RoomDefinition[] rooms =
@@ -21,30 +21,30 @@ namespace PixelRaid
             new RoomDefinition("墓园旧道", new Color32(128, 145, 166, 255))
         };
 
-        public static PixelRaidWorldDirector CreateIfMissing(PixelRaidPlayerController target)
+        public static WitcherWorldDirector CreateIfMissing(GeraltController target)
         {
-            PixelRaidWorldDirector existing = FindObjectOfType<PixelRaidWorldDirector>();
+            WitcherWorldDirector existing = FindObjectOfType<WitcherWorldDirector>();
             if (existing != null)
             {
                 existing.SetPlayer(target);
                 return existing;
             }
 
-            GameObject directorObject = new GameObject("PixelRaid World Director");
-            PixelRaidWorldDirector director = directorObject.AddComponent<PixelRaidWorldDirector>();
+            GameObject directorObject = new GameObject("Witcher World Director");
+            WitcherWorldDirector director = directorObject.AddComponent<WitcherWorldDirector>();
             director.SetPlayer(target);
             return director;
         }
 
-        public void SetPlayer(PixelRaidPlayerController target)
+        public void SetPlayer(GeraltController target)
         {
             player = target;
         }
 
         private void Start()
         {
-            player = player == null ? FindObjectOfType<PixelRaidPlayerController>() : player;
-            hud = FindObjectOfType<PixelRaidPlayerHud>();
+            player = player == null ? FindObjectOfType<GeraltController>() : player;
+            hud = FindObjectOfType<WitcherHud>();
             EnterRoom(0, false);
         }
 
@@ -52,7 +52,7 @@ namespace PixelRaid
         {
             if (player == null)
             {
-                player = FindObjectOfType<PixelRaidPlayerController>();
+                player = FindObjectOfType<GeraltController>();
                 return;
             }
 
@@ -87,7 +87,7 @@ namespace PixelRaid
             ApplyRoomLook(room);
             RespawnEnemies(room);
 
-            hud = hud == null ? FindObjectOfType<PixelRaidPlayerHud>() : hud;
+            hud = hud == null ? FindObjectOfType<WitcherHud>() : hud;
             if (hud != null)
             {
                 hud.SetRoomName(room.Name);
@@ -131,8 +131,8 @@ namespace PixelRaid
                 renderer.sortingOrder = 2;
 
                 enemyObject.AddComponent<BoxCollider2D>();
-                PixelRaidEnemyPatrol enemy = enemyObject.AddComponent<PixelRaidEnemyPatrol>();
-                float patrolWidth = spawn.Kind == PixelRaidEnemyKind.Drowner ? 1.4f : 2.1f;
+                MonsterPatrol enemy = enemyObject.AddComponent<MonsterPatrol>();
+                float patrolWidth = spawn.Kind == MonsterKind.Drowner ? 1.4f : 2.1f;
                 enemy.Configure(spawn.Kind, new Vector2(patrolWidth, 0f));
                 spawnedEnemies.Add(enemyObject);
             }
@@ -154,13 +154,13 @@ namespace PixelRaid
 
         private readonly struct EnemySpawn
         {
-            public EnemySpawn(PixelRaidEnemyKind kind, float x)
+            public EnemySpawn(MonsterKind kind, float x)
             {
                 Kind = kind;
                 X = x;
             }
 
-            public PixelRaidEnemyKind Kind { get; }
+            public MonsterKind Kind { get; }
             public float X { get; }
         }
     }

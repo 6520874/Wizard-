@@ -1,9 +1,9 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace PixelRaid
+namespace WitcherGame
 {
-    public enum PixelRaidGeraltAnimation
+    public enum GeraltAnimation
     {
         Idle,
         Run,
@@ -11,7 +11,7 @@ namespace PixelRaid
         Hurt
     }
 
-    public static class PixelRaidSpriteLibrary
+    public static class WitcherSpriteLibrary
     {
         private static readonly Dictionary<Color32, Sprite> CachedSprites = new Dictionary<Color32, Sprite>();
         private static readonly Dictionary<string, Sprite> CachedGeraltSprites = new Dictionary<string, Sprite>();
@@ -30,27 +30,27 @@ namespace PixelRaid
             texture.Apply();
 
             Sprite sprite = Sprite.Create(texture, new Rect(0f, 0f, 1f, 1f), new Vector2(0.5f, 0.5f), 1f);
-            sprite.name = $"PixelRaidSprite_{color.r}_{color.g}_{color.b}_{color.a}";
+            sprite.name = $"WitcherSprite_{color.r}_{color.g}_{color.b}_{color.a}";
             CachedSprites[color] = sprite;
             return sprite;
         }
 
-        public static int GetGeraltFrameCount(PixelRaidGeraltAnimation animation)
+        public static int GetGeraltFrameCount(GeraltAnimation animation)
         {
             switch (animation)
             {
-                case PixelRaidGeraltAnimation.Run:
+                case GeraltAnimation.Run:
                     return 9;
-                case PixelRaidGeraltAnimation.Slash:
+                case GeraltAnimation.Slash:
                     return 7;
-                case PixelRaidGeraltAnimation.Hurt:
+                case GeraltAnimation.Hurt:
                     return 7;
                 default:
                     return 9;
             }
         }
 
-        public static Sprite GetGeraltFrame(PixelRaidGeraltAnimation animation, int frame)
+        public static Sprite GetGeraltFrame(GeraltAnimation animation, int frame)
         {
             int frameCount = GetGeraltFrameCount(animation);
             int normalizedFrame = Mathf.Abs(frame) % frameCount;
@@ -74,11 +74,11 @@ namespace PixelRaid
             return sprite;
         }
 
-        private static void DrawGeralt(Texture2D texture, PixelRaidGeraltAnimation animation, int frame)
+        private static void DrawGeralt(Texture2D texture, GeraltAnimation animation, int frame)
         {
             int step = frame % 2 == 0 ? -1 : 1;
-            int bob = animation == PixelRaidGeraltAnimation.Run && (frame == 1 || frame == 4) ? 1 : 0;
-            int armSwing = animation == PixelRaidGeraltAnimation.Run ? step : 0;
+            int bob = animation == GeraltAnimation.Run && (frame == 1 || frame == 4) ? 1 : 0;
+            int armSwing = animation == GeraltAnimation.Run ? step : 0;
 
             Color32 outline = new Color32(24, 22, 20, 255);
             Color32 skin = new Color32(231, 190, 151, 255);
@@ -113,10 +113,10 @@ namespace PixelRaid
             Fill(texture, 15, 20 + bob, 18, 21 + bob, hair);
         }
 
-        private static void DrawLegs(Texture2D texture, PixelRaidGeraltAnimation animation, int frame, int bob, Color32 outline, Color32 leather, Color32 boot)
+        private static void DrawLegs(Texture2D texture, GeraltAnimation animation, int frame, int bob, Color32 outline, Color32 leather, Color32 boot)
         {
-            int forward = animation == PixelRaidGeraltAnimation.Run && frame % 2 == 0 ? 2 : 0;
-            int back = animation == PixelRaidGeraltAnimation.Run && frame % 2 != 0 ? 2 : 0;
+            int forward = animation == GeraltAnimation.Run && frame % 2 == 0 ? 2 : 0;
+            int back = animation == GeraltAnimation.Run && frame % 2 != 0 ? 2 : 0;
 
             Fill(texture, 11 - back, 5 + bob, 14 - back, 11 + bob, outline);
             Fill(texture, 12 - back, 6 + bob, 14 - back, 11 + bob, leather);
@@ -127,9 +127,9 @@ namespace PixelRaid
             Fill(texture, 16 + forward, 3 + bob, 22 + forward, 5 + bob, boot);
         }
 
-        private static void DrawArms(Texture2D texture, PixelRaidGeraltAnimation animation, int frame, int bob, int armSwing, Color32 outline, Color32 leather, Color32 skin, Color32 sword, Color32 slash)
+        private static void DrawArms(Texture2D texture, GeraltAnimation animation, int frame, int bob, int armSwing, Color32 outline, Color32 leather, Color32 skin, Color32 sword, Color32 slash)
         {
-            if (animation == PixelRaidGeraltAnimation.Slash)
+            if (animation == GeraltAnimation.Slash)
             {
                 int reach = frame < 2 ? frame * 2 : 4;
                 Fill(texture, 20, 15 + bob, 25 + reach, 18 + bob, outline);

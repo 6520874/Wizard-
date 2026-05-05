@@ -1,8 +1,8 @@
 using UnityEngine;
 
-namespace PixelRaid
+namespace WitcherGame
 {
-    public class PixelRaidCameraFollow : MonoBehaviour
+    public class WitcherCameraFollow : MonoBehaviour
     {
         [SerializeField] private Transform target;
         [SerializeField] private Vector3 offset = new Vector3(0f, 1.5f, -10f);

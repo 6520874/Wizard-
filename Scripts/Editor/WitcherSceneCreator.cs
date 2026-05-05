@@ -1,14 +1,14 @@
-using PixelRaid;
+using WitcherGame;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-public static class PixelRaidSceneCreator
+public static class WitcherSceneCreator
 {
-    private const string ScenePath = "Assets/Scenes/PixelRaidDemo.unity";
+    private const string ScenePath = "Assets/Scenes/WitcherHuntDemo.unity";
 
-    [MenuItem("Tools/Pixel Raid/Create Playable Scene")]
+    [MenuItem("Tools/Witcher Hunt/Create Playable Scene")]
     public static void CreatePlayableScene()
     {
         Scene scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
@@ -26,7 +26,7 @@ public static class PixelRaidSceneCreator
             Selection.activeObject = loadedPlayer;
         }
 
-        Debug.Log("Geralt showcase scene created at Assets/Scenes/PixelRaidDemo.unity");
+        Debug.Log("Geralt showcase scene created at Assets/Scenes/WitcherHuntDemo.unity");
     }
 
     private static void CreateCamera()
@@ -47,11 +47,11 @@ public static class PixelRaidSceneCreator
         GameObject backgroundObject = new GameObject("Background");
         SpriteRenderer spriteRenderer = backgroundObject.AddComponent<SpriteRenderer>();
         spriteRenderer.sortingOrder = -50;
-        backgroundObject.AddComponent<PixelRaidRuntimeBackground>();
+        backgroundObject.AddComponent<WitcherRuntimeBackground>();
         backgroundObject.transform.position = new Vector3(0f, 0f, 8f);
     }
 
-    private static PixelRaidPlayerController CreatePlayer()
+    private static GeraltController CreatePlayer()
     {
         GameObject playerObject = new GameObject("Player");
         playerObject.transform.position = new Vector3(0f, -1.65f, 0f);
@@ -60,7 +60,7 @@ public static class PixelRaidSceneCreator
         SpriteRenderer spriteRenderer = playerObject.AddComponent<SpriteRenderer>();
         spriteRenderer.sortingOrder = 2;
 
-        playerObject.AddComponent<PixelRaidGeraltAnimator>();
+        playerObject.AddComponent<GeraltAnimator>();
 
         Rigidbody2D body = playerObject.AddComponent<Rigidbody2D>();
         body.gravityScale = 0f;
@@ -70,13 +70,13 @@ public static class PixelRaidSceneCreator
         boxCollider.offset = new Vector2(0f, 0.65f);
         boxCollider.size = new Vector2(0.75f, 1.25f);
 
-        PixelRaidPlayerController player = playerObject.AddComponent<PixelRaidPlayerController>();
+        GeraltController player = playerObject.AddComponent<GeraltController>();
         return player;
     }
 
     private static void CreateBossSpawner()
     {
         GameObject spawnerObject = new GameObject("BossSpawner");
-        spawnerObject.AddComponent<PixelRaidBossSpawnDirector>();
+        spawnerObject.AddComponent<WildHuntBossSpawnDirector>();
     }
 }

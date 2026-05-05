@@ -1,10 +1,10 @@
 using System.IO;
 using UnityEngine;
 
-namespace PixelRaid
+namespace WitcherGame
 {
     [RequireComponent(typeof(SpriteRenderer))]
-    public class PixelRaidRuntimeBackground : MonoBehaviour
+    public class WitcherRuntimeBackground : MonoBehaviour
     {
         [SerializeField] private string imagePath = "Art/Backgrounds/Mountain_Background_04.png";
         [SerializeField] private float pixelsPerUnit = 64f;

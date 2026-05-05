@@ -2,13 +2,13 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
-namespace PixelRaid
+namespace WitcherGame
 {
-    public class PixelRaidGameManager : MonoBehaviour
+    public class WitcherGameManager : MonoBehaviour
     {
         [SerializeField] private Text statusText;
         [SerializeField] private Text scoreText;
-        [SerializeField] private PixelRaidPlayerController player;
+        [SerializeField] private GeraltController player;
 
         private int totalCoins;
         private int collectedCoins;
@@ -16,7 +16,7 @@ namespace PixelRaid
 
         private void Start()
         {
-            totalCoins = FindObjectsOfType<PixelRaidCoin>().Length;
+            totalCoins = FindObjectsOfType<WitcherCoin>().Length;
             UpdateScoreText();
             SetStatusText("Collect all coins");
         }
@@ -57,7 +57,7 @@ namespace PixelRaid
             }
         }
 
-        public void AssignPlayer(PixelRaidPlayerController playerController)
+        public void AssignPlayer(GeraltController playerController)
         {
             player = playerController;
         }

@@ -3,9 +3,9 @@ using System.IO;
 using System.Linq;
 using UnityEngine;
 
-namespace PixelRaid
+namespace WitcherGame
 {
-    public enum PixelRaidWildHuntBossAnimation
+    public enum WildHuntAnimation
     {
         Spawn,
         Idle,
@@ -15,7 +15,7 @@ namespace PixelRaid
     }
 
     [RequireComponent(typeof(SpriteRenderer))]
-    public class PixelRaidWildHuntBossAnimator : MonoBehaviour
+    public class WildHuntBossAnimator : MonoBehaviour
     {
         [SerializeField] private string frameRoot = "Art/WildHuntBoss/Frames";
         [SerializeField] private float spawnFramesPerSecond = 10f;
@@ -25,16 +25,16 @@ namespace PixelRaid
         [SerializeField] private float hurtFramesPerSecond = 12f;
         [SerializeField] private float pixelsPerUnit = 64f;
 
-        private readonly Dictionary<PixelRaidWildHuntBossAnimation, Sprite[]> framesByAnimation = new Dictionary<PixelRaidWildHuntBossAnimation, Sprite[]>();
+        private readonly Dictionary<WildHuntAnimation, Sprite[]> framesByAnimation = new Dictionary<WildHuntAnimation, Sprite[]>();
         private SpriteRenderer spriteRenderer;
-        private PixelRaidWildHuntBossAnimation currentAnimation = PixelRaidWildHuntBossAnimation.Idle;
-        private PixelRaidWildHuntBossAnimation loopAfterOneShot = PixelRaidWildHuntBossAnimation.Idle;
+        private WildHuntAnimation currentAnimation = WildHuntAnimation.Idle;
+        private WildHuntAnimation loopAfterOneShot = WildHuntAnimation.Idle;
         private int frameIndex;
         private float frameTimer;
         private bool oneShotPlaying;
 
         public bool IsOneShotPlaying => oneShotPlaying;
-        public PixelRaidWildHuntBossAnimation CurrentAnimation => currentAnimation;
+        public WildHuntAnimation CurrentAnimation => currentAnimation;
 
         public float NormalizedFrame
         {
@@ -49,7 +49,7 @@ namespace PixelRaid
         {
             spriteRenderer = GetComponent<SpriteRenderer>();
             LoadFrames();
-            PlayLoop(PixelRaidWildHuntBossAnimation.Idle, true);
+            PlayLoop(WildHuntAnimation.Idle, true);
         }
 
         private void Update()
@@ -76,25 +76,25 @@ namespace PixelRaid
                 return;
             }
 
-            PlayLoop(isMoving ? PixelRaidWildHuntBossAnimation.Run : PixelRaidWildHuntBossAnimation.Idle);
+            PlayLoop(isMoving ? WildHuntAnimation.Run : WildHuntAnimation.Idle);
         }
 
         public void PlaySpawn()
         {
-            PlayOneShot(PixelRaidWildHuntBossAnimation.Spawn, PixelRaidWildHuntBossAnimation.Idle);
+            PlayOneShot(WildHuntAnimation.Spawn, WildHuntAnimation.Idle);
         }
 
         public void PlayAttack()
         {
-            PlayOneShot(PixelRaidWildHuntBossAnimation.Attack, PixelRaidWildHuntBossAnimation.Idle);
+            PlayOneShot(WildHuntAnimation.Attack, WildHuntAnimation.Idle);
         }
 
         public void PlayHurt()
         {
-            PlayOneShot(PixelRaidWildHuntBossAnimation.Hurt, PixelRaidWildHuntBossAnimation.Idle);
+            PlayOneShot(WildHuntAnimation.Hurt, WildHuntAnimation.Idle);
         }
 
-        private void PlayLoop(PixelRaidWildHuntBossAnimation animation, bool restart = false)
+        private void PlayLoop(WildHuntAnimation animation, bool restart = false)
         {
             if (!restart && currentAnimation == animation)
             {
@@ -105,7 +105,7 @@ namespace PixelRaid
             SetAnimation(animation);
         }
 
-        private void PlayOneShot(PixelRaidWildHuntBossAnimation animation, PixelRaidWildHuntBossAnimation afterAnimation)
+        private void PlayOneShot(WildHuntAnimation animation, WildHuntAnimation afterAnimation)
         {
             if (GetFrames(animation).Length == 0)
             {
@@ -118,7 +118,7 @@ namespace PixelRaid
             SetAnimation(animation);
         }
 
-        private void SetAnimation(PixelRaidWildHuntBossAnimation animation)
+        private void SetAnimation(WildHuntAnimation animation)
         {
             currentAnimation = animation;
             frameIndex = 0;
@@ -144,22 +144,22 @@ namespace PixelRaid
             spriteRenderer.sprite = frames[frameIndex];
         }
 
-        private Sprite[] GetFrames(PixelRaidWildHuntBossAnimation animation)
+        private Sprite[] GetFrames(WildHuntAnimation animation)
         {
             return framesByAnimation.TryGetValue(animation, out Sprite[] frames) ? frames : System.Array.Empty<Sprite>();
         }
 
-        private float GetFramesPerSecond(PixelRaidWildHuntBossAnimation animation)
+        private float GetFramesPerSecond(WildHuntAnimation animation)
         {
             switch (animation)
             {
-                case PixelRaidWildHuntBossAnimation.Spawn:
+                case WildHuntAnimation.Spawn:
                     return spawnFramesPerSecond;
-                case PixelRaidWildHuntBossAnimation.Run:
+                case WildHuntAnimation.Run:
                     return runFramesPerSecond;
-                case PixelRaidWildHuntBossAnimation.Attack:
+                case WildHuntAnimation.Attack:
                     return attackFramesPerSecond;
-                case PixelRaidWildHuntBossAnimation.Hurt:
+                case WildHuntAnimation.Hurt:
                     return hurtFramesPerSecond;
                 default:
                     return idleFramesPerSecond;
@@ -168,14 +168,14 @@ namespace PixelRaid
 
         private void LoadFrames()
         {
-            LoadFrames(PixelRaidWildHuntBossAnimation.Spawn);
-            LoadFrames(PixelRaidWildHuntBossAnimation.Idle);
-            LoadFrames(PixelRaidWildHuntBossAnimation.Run);
-            LoadFrames(PixelRaidWildHuntBossAnimation.Attack);
-            LoadFrames(PixelRaidWildHuntBossAnimation.Hurt);
+            LoadFrames(WildHuntAnimation.Spawn);
+            LoadFrames(WildHuntAnimation.Idle);
+            LoadFrames(WildHuntAnimation.Run);
+            LoadFrames(WildHuntAnimation.Attack);
+            LoadFrames(WildHuntAnimation.Hurt);
         }
 
-        private void LoadFrames(PixelRaidWildHuntBossAnimation animation)
+        private void LoadFrames(WildHuntAnimation animation)
         {
             string folderPath = Path.Combine(Application.dataPath, frameRoot, animation.ToString());
             if (!Directory.Exists(folderPath))

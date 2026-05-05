@@ -1,12 +1,12 @@
 using UnityEngine;
 
-namespace PixelRaid
+namespace WitcherGame
 {
     [RequireComponent(typeof(Rigidbody2D))]
     [RequireComponent(typeof(BoxCollider2D))]
     [RequireComponent(typeof(SpriteRenderer))]
-    [RequireComponent(typeof(PixelRaidGeraltAnimator))]
-    public class PixelRaidPlayerController : MonoBehaviour
+    [RequireComponent(typeof(GeraltAnimator))]
+    public class GeraltController : MonoBehaviour
     {
         [SerializeField] private float moveSpeed = 5f;
         [SerializeField] private float roadY = -1.65f;
@@ -29,7 +29,7 @@ namespace PixelRaid
 
         private Rigidbody2D body;
         private SpriteRenderer spriteRenderer;
-        private PixelRaidGeraltAnimator geraltAnimator;
+        private GeraltAnimator geraltAnimator;
         private bool controlsEnabled = true;
         private float hurtLockTimer;
         private int currentHealth;
@@ -50,7 +50,7 @@ namespace PixelRaid
         {
             body = GetComponent<Rigidbody2D>();
             spriteRenderer = GetComponent<SpriteRenderer>();
-            geraltAnimator = GetComponent<PixelRaidGeraltAnimator>();
+            geraltAnimator = GetComponent<GeraltAnimator>();
             currentHealth = maxHealth;
             currentMana = maxMana;
             transform.localScale = Vector3.one * visualScale;
@@ -61,8 +61,8 @@ namespace PixelRaid
 
         private void Start()
         {
-            PixelRaidPlayerHud.CreateIfMissing(this);
-            PixelRaidWorldDirector.CreateIfMissing(this);
+            WitcherHud.CreateIfMissing(this);
+            WitcherWorldDirector.CreateIfMissing(this);
         }
 
         private void Update()
@@ -131,7 +131,7 @@ namespace PixelRaid
 
         private void OnTriggerStay2D(Collider2D other)
         {
-            PixelRaidEnemyPatrol enemy = other.GetComponent<PixelRaidEnemyPatrol>();
+            MonsterPatrol enemy = other.GetComponent<MonsterPatrol>();
             if (enemy != null && enemy.CanBeHit)
             {
                 TakeEnemyHit(enemy.ContactDamage, enemy.transform.position.x);
@@ -160,7 +160,7 @@ namespace PixelRaid
             int restoredAmount = currentHealth - previousHealth;
             if (restoredAmount > 0)
             {
-                PixelRaidCombatText.Spawn($"+{restoredAmount}", transform.position, new Color32(97, 231, 151, 255));
+                WitcherCombatText.Spawn($"+{restoredAmount}", transform.position, new Color32(97, 231, 151, 255));
                 StatsChanged?.Invoke();
             }
         }
@@ -172,7 +172,7 @@ namespace PixelRaid
             int restoredAmount = Mathf.RoundToInt(currentMana - previousMana);
             if (restoredAmount > 0)
             {
-                PixelRaidCombatText.Spawn($"+{restoredAmount} MP", transform.position, new Color32(89, 181, 255, 255));
+                WitcherCombatText.Spawn($"+{restoredAmount} MP", transform.position, new Color32(89, 181, 255, 255));
                 StatsChanged?.Invoke();
             }
         }
@@ -249,7 +249,7 @@ namespace PixelRaid
 
             int previousHealth = currentHealth;
             currentHealth = Mathf.Clamp(currentHealth - Mathf.Max(0, damage), 0, maxHealth);
-            PixelRaidCombatText.Spawn($"-{damage}", transform.position, new Color32(255, 72, 82, 255));
+            WitcherCombatText.Spawn($"-{damage}", transform.position, new Color32(255, 72, 82, 255));
             if (currentHealth != previousHealth)
             {
                 StatsChanged?.Invoke();
@@ -283,7 +283,7 @@ namespace PixelRaid
 
         private void TryHitBoss()
         {
-            PixelRaidWildHuntBossController boss = FindObjectOfType<PixelRaidWildHuntBossController>();
+            WildHuntBossController boss = FindObjectOfType<WildHuntBossController>();
             if (boss == null || !boss.CanBeHit)
             {
                 return;
@@ -298,10 +298,10 @@ namespace PixelRaid
 
         private void TryHitCommonEnemies()
         {
-            PixelRaidEnemyPatrol[] enemies = FindObjectsOfType<PixelRaidEnemyPatrol>();
+            MonsterPatrol[] enemies = FindObjectsOfType<MonsterPatrol>();
             for (int i = 0; i < enemies.Length; i++)
             {
-                PixelRaidEnemyPatrol enemy = enemies[i];
+                MonsterPatrol enemy = enemies[i];
                 if (enemy == null || !enemy.CanBeHit)
                 {
                     continue;

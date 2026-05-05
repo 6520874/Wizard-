@@ -1,8 +1,8 @@
 using UnityEngine;
 
-namespace PixelRaid
+namespace WitcherGame
 {
-    public class PixelRaidBossSpawnDirector : MonoBehaviour
+    public class WildHuntBossSpawnDirector : MonoBehaviour
     {
         [SerializeField] private float spawnDelay = 2.25f;
         [SerializeField] private Vector2 spawnPosition = new Vector2(6.7f, -1.88f);
@@ -36,8 +36,8 @@ namespace PixelRaid
 
             bossObject.AddComponent<Rigidbody2D>();
             bossObject.AddComponent<BoxCollider2D>();
-            bossObject.AddComponent<PixelRaidWildHuntBossAnimator>();
-            bossObject.AddComponent<PixelRaidWildHuntBossController>();
+            bossObject.AddComponent<WildHuntBossAnimator>();
+            bossObject.AddComponent<WildHuntBossController>();
         }
     }
 }

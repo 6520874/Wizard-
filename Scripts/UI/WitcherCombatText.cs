@@ -1,8 +1,8 @@
 using UnityEngine;
 
-namespace PixelRaid
+namespace WitcherGame
 {
-    public class PixelRaidCombatText : MonoBehaviour
+    public class WitcherCombatText : MonoBehaviour
     {
         private const float Lifetime = 0.72f;
         private const float RiseSpeed = 0.85f;
@@ -16,7 +16,7 @@ namespace PixelRaid
             GameObject textObject = new GameObject("Combat Text");
             textObject.transform.position = worldPosition + new Vector3(0f, 1.45f, -0.2f);
 
-            PixelRaidCombatText combatText = textObject.AddComponent<PixelRaidCombatText>();
+            WitcherCombatText combatText = textObject.AddComponent<WitcherCombatText>();
             combatText.Initialize(text, color);
         }
 

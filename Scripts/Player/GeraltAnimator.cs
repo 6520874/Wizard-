@@ -3,10 +3,10 @@ using System.IO;
 using System.Linq;
 using UnityEngine;
 
-namespace PixelRaid
+namespace WitcherGame
 {
     [RequireComponent(typeof(SpriteRenderer))]
-    public class PixelRaidGeraltAnimator : MonoBehaviour
+    public class GeraltAnimator : MonoBehaviour
     {
         [SerializeField] private string frameRoot = "Art/Geralt/Frames";
         [SerializeField] private float idleFramesPerSecond = 6f;
@@ -15,9 +15,9 @@ namespace PixelRaid
         [SerializeField] private float hurtFramesPerSecond = 12f;
         [SerializeField] private float pixelsPerUnit = 96f;
 
-        private readonly Dictionary<PixelRaidGeraltAnimation, Sprite[]> framesByAnimation = new Dictionary<PixelRaidGeraltAnimation, Sprite[]>();
+        private readonly Dictionary<GeraltAnimation, Sprite[]> framesByAnimation = new Dictionary<GeraltAnimation, Sprite[]>();
         private SpriteRenderer spriteRenderer;
-        private PixelRaidGeraltAnimation currentAnimation = PixelRaidGeraltAnimation.Idle;
+        private GeraltAnimation currentAnimation = GeraltAnimation.Idle;
         private int frameIndex;
         private float frameTimer;
 
@@ -28,7 +28,7 @@ namespace PixelRaid
         {
             spriteRenderer = GetComponent<SpriteRenderer>();
             LoadFrames();
-            Play(PixelRaidGeraltAnimation.Idle, true);
+            Play(GeraltAnimation.Idle, true);
         }
 
         private void Update()
@@ -55,7 +55,7 @@ namespace PixelRaid
                 return;
             }
 
-            Play(isMoving ? PixelRaidGeraltAnimation.Run : PixelRaidGeraltAnimation.Idle);
+            Play(isMoving ? GeraltAnimation.Run : GeraltAnimation.Idle);
         }
 
         public void PlaySlash()
@@ -66,24 +66,24 @@ namespace PixelRaid
             }
 
             IsSlashPlaying = true;
-            Play(PixelRaidGeraltAnimation.Slash, true);
+            Play(GeraltAnimation.Slash, true);
         }
 
         public void PlayHurt()
         {
             IsSlashPlaying = false;
             IsHurtPlaying = true;
-            Play(PixelRaidGeraltAnimation.Hurt, true);
+            Play(GeraltAnimation.Hurt, true);
         }
 
         public void ForceIdle()
         {
             IsSlashPlaying = false;
             IsHurtPlaying = false;
-            Play(PixelRaidGeraltAnimation.Idle, true);
+            Play(GeraltAnimation.Idle, true);
         }
 
-        private void Play(PixelRaidGeraltAnimation animation, bool restart = false)
+        private void Play(GeraltAnimation animation, bool restart = false)
         {
             if (!restart && currentAnimation == animation)
             {
@@ -103,12 +103,12 @@ namespace PixelRaid
         private void AdvanceFrame(Sprite[] frames)
         {
             frameIndex++;
-            bool isOneShot = currentAnimation == PixelRaidGeraltAnimation.Slash || currentAnimation == PixelRaidGeraltAnimation.Hurt;
+            bool isOneShot = currentAnimation == GeraltAnimation.Slash || currentAnimation == GeraltAnimation.Hurt;
             if (isOneShot && frameIndex >= frames.Length)
             {
                 IsSlashPlaying = false;
                 IsHurtPlaying = false;
-                Play(PixelRaidGeraltAnimation.Idle, true);
+                Play(GeraltAnimation.Idle, true);
                 return;
             }
 
@@ -116,20 +116,20 @@ namespace PixelRaid
             spriteRenderer.sprite = frames[frameIndex];
         }
 
-        private Sprite[] GetFrames(PixelRaidGeraltAnimation animation)
+        private Sprite[] GetFrames(GeraltAnimation animation)
         {
             return framesByAnimation.TryGetValue(animation, out Sprite[] frames) ? frames : System.Array.Empty<Sprite>();
         }
 
-        private float GetFramesPerSecond(PixelRaidGeraltAnimation animation)
+        private float GetFramesPerSecond(GeraltAnimation animation)
         {
             switch (animation)
             {
-                case PixelRaidGeraltAnimation.Run:
+                case GeraltAnimation.Run:
                     return runFramesPerSecond;
-                case PixelRaidGeraltAnimation.Slash:
+                case GeraltAnimation.Slash:
                     return slashFramesPerSecond;
-                case PixelRaidGeraltAnimation.Hurt:
+                case GeraltAnimation.Hurt:
                     return hurtFramesPerSecond;
                 default:
                     return idleFramesPerSecond;
@@ -138,13 +138,13 @@ namespace PixelRaid
 
         private void LoadFrames()
         {
-            LoadFrames(PixelRaidGeraltAnimation.Idle);
-            LoadFrames(PixelRaidGeraltAnimation.Run);
-            LoadFrames(PixelRaidGeraltAnimation.Slash);
-            LoadFrames(PixelRaidGeraltAnimation.Hurt);
+            LoadFrames(GeraltAnimation.Idle);
+            LoadFrames(GeraltAnimation.Run);
+            LoadFrames(GeraltAnimation.Slash);
+            LoadFrames(GeraltAnimation.Hurt);
         }
 
-        private void LoadFrames(PixelRaidGeraltAnimation animation)
+        private void LoadFrames(GeraltAnimation animation)
         {
             string folderPath = Path.Combine(Application.dataPath, frameRoot, animation.ToString());
             if (!Directory.Exists(folderPath))
@@ -177,13 +177,13 @@ namespace PixelRaid
             framesByAnimation[animation] = sprites.Count > 0 ? sprites.ToArray() : LoadFallbackFrames(animation);
         }
 
-        private Sprite[] LoadFallbackFrames(PixelRaidGeraltAnimation animation)
+        private Sprite[] LoadFallbackFrames(GeraltAnimation animation)
         {
-            int frameCount = PixelRaidSpriteLibrary.GetGeraltFrameCount(animation);
+            int frameCount = WitcherSpriteLibrary.GetGeraltFrameCount(animation);
             Sprite[] sprites = new Sprite[frameCount];
             for (int i = 0; i < sprites.Length; i++)
             {
-                sprites[i] = PixelRaidSpriteLibrary.GetGeraltFrame(animation, i);
+                sprites[i] = WitcherSpriteLibrary.GetGeraltFrame(animation, i);
             }
 
             return sprites;
