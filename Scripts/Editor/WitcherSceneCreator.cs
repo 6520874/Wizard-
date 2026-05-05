@@ -35,10 +35,11 @@ public static class WitcherSceneCreator
         Camera camera = cameraObject.AddComponent<Camera>();
         cameraObject.tag = "MainCamera";
         camera.orthographic = true;
-        camera.orthographicSize = 3f;
+        camera.orthographicSize = 3.8f;
         camera.backgroundColor = new Color32(4, 5, 6, 255);
         camera.clearFlags = CameraClearFlags.SolidColor;
         cameraObject.AddComponent<AudioListener>();
+        cameraObject.AddComponent<WitcherCameraFollow>();
         cameraObject.transform.position = new Vector3(0f, 0f, -10f);
     }
 
@@ -64,7 +65,7 @@ public static class WitcherSceneCreator
 
         Rigidbody2D body = playerObject.AddComponent<Rigidbody2D>();
         body.gravityScale = 0f;
-        body.constraints = RigidbodyConstraints2D.FreezePositionY | RigidbodyConstraints2D.FreezeRotation;
+        body.constraints = RigidbodyConstraints2D.FreezeRotation;
 
         BoxCollider2D boxCollider = playerObject.AddComponent<BoxCollider2D>();
         boxCollider.offset = new Vector2(0f, 0.65f);

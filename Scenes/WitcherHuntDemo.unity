@@ -191,7 +191,7 @@ Camera:
   far clip plane: 1000
   field of view: 60
   orthographic: 1
-  orthographic size: 3.8
+  orthographic size: 3
   m_Depth: 0
   m_CullingMask:
     serializedVersion: 2
@@ -315,7 +315,7 @@ MonoBehaviour:
   imagePath: Art/Backgrounds/Witcher_Village_Longroad.png
   pixelsPerUnit: 64
   sortingOrder: -50
-  fitToCamera: 0
+  fitToCamera: 1
   worldWidth: 64
   worldCenter: {x: 24, y: -0.35}
 --- !u!1 &300000
@@ -493,6 +493,7 @@ MonoBehaviour:
   frameRoot: Art/Geralt/Frames
   idleFramesPerSecond: 6
   runFramesPerSecond: 12
+  jumpFramesPerSecond: 10
   slashFramesPerSecond: 14
   hurtFramesPerSecond: 12
   pixelsPerUnit: 96
@@ -509,11 +510,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   moveSpeed: 5
-  roadY: -1.65
-  minRoadX: -7.6
-  maxRoadX: 7.6
+  verticalMoveSpeed: 3.25
+  minStageX: -8.2
+  maxStageX: 23.5
+  minStageY: -2.35
+  maxStageY: -0.55
   visualScale: 0.65
   attackRange: 1.45
+  laneAttackTolerance: 0.72
   hurtLockDuration: 0.35
   maxHealth: 100
   maxMana: 100
@@ -572,7 +576,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   spawnDelay: 2.25
-  spawnPosition: {x: 47.5, y: -1.58}
+  spawnPosition: {x: 6.7, y: -1.88}
   bossName: Wild Hunt Boss
 --- !u!50 &400003
 Rigidbody2D:
