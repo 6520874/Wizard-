@@ -9,11 +9,14 @@ namespace WitcherGame
     public class GeraltController : MonoBehaviour
     {
         [SerializeField] private float moveSpeed = 5f;
-        [SerializeField] private float roadY = -1.65f;
-        [SerializeField] private float minRoadX = -7.6f;
-        [SerializeField] private float maxRoadX = 7.6f;
+        [SerializeField] private float verticalMoveSpeed = 3.25f;
+        [SerializeField] private float minStageX = -8.2f;
+        [SerializeField] private float maxStageX = 23.5f;
+        [SerializeField] private float minStageY = -2.35f;
+        [SerializeField] private float maxStageY = -0.55f;
         [SerializeField] private float visualScale = 0.65f;
         [SerializeField] private float attackRange = 1.45f;
+        [SerializeField] private float laneAttackTolerance = 0.72f;
         [SerializeField] private float hurtLockDuration = 0.35f;
         [SerializeField] private int maxHealth = 100;
         [SerializeField] private int maxMana = 100;
@@ -55,8 +58,8 @@ namespace WitcherGame
             currentMana = maxMana;
             transform.localScale = Vector3.one * visualScale;
             body.gravityScale = 0f;
-            body.constraints = RigidbodyConstraints2D.FreezePositionY | RigidbodyConstraints2D.FreezeRotation;
-            SnapToRoad();
+            body.constraints = RigidbodyConstraints2D.FreezeRotation;
+            ClampToStage();
         }
 
         private void Start()
@@ -75,7 +78,7 @@ namespace WitcherGame
             {
                 body.velocity = Vector2.zero;
                 geraltAnimator.ForceIdle();
-                SnapToRoad();
+                ClampToStage();
                 return;
             }
 
@@ -83,7 +86,7 @@ namespace WitcherGame
             {
                 hurtLockTimer -= Time.deltaTime;
                 body.velocity = Vector2.zero;
-                SnapToRoad();
+                ClampToStage();
                 return;
             }
 
@@ -92,23 +95,24 @@ namespace WitcherGame
                 dashTimer -= Time.deltaTime;
                 body.velocity = new Vector2(lastFacingDirection * dashSpeed, 0f);
                 geraltAnimator.PlayLocomotion(true);
-                SnapToRoad();
+                ClampToStage();
                 return;
             }
 
-            float moveInput = Input.GetAxisRaw("Horizontal");
-            body.velocity = new Vector2(moveInput * moveSpeed, 0f);
-            SnapToRoad();
+            Vector2 moveInput = new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical"));
+            Vector2 movement = moveInput.sqrMagnitude > 1f ? moveInput.normalized : moveInput;
+            body.velocity = new Vector2(movement.x * moveSpeed, movement.y * verticalMoveSpeed);
+            ClampToStage();
 
-            if (moveInput != 0f)
+            if (Mathf.Abs(moveInput.x) > 0.01f)
             {
-                lastFacingDirection = Mathf.Sign(moveInput);
-                spriteRenderer.flipX = moveInput < 0f;
+                lastFacingDirection = Mathf.Sign(moveInput.x);
+                spriteRenderer.flipX = moveInput.x < 0f;
             }
 
             if (Input.GetKeyDown(KeyCode.LeftShift) || Input.GetKeyDown(KeyCode.RightShift))
             {
-                TryDash(moveInput);
+                TryDash(moveInput.x);
             }
             else if (Input.GetKeyDown(KeyCode.E))
             {
@@ -120,19 +124,21 @@ namespace WitcherGame
             }
             else
             {
-                geraltAnimator.PlayLocomotion(Mathf.Abs(moveInput) > 0.01f);
+                geraltAnimator.PlayLocomotion(movement.sqrMagnitude > 0.01f);
             }
+
+            UpdateDepthSorting();
         }
 
         private void LateUpdate()
         {
-            SnapToRoad();
+            ClampToStage();
         }
 
         private void OnTriggerStay2D(Collider2D other)
         {
             MonsterPatrol enemy = other.GetComponent<MonsterPatrol>();
-            if (enemy != null && enemy.CanBeHit)
+            if (enemy != null && enemy.CanBeHit && Mathf.Abs(enemy.transform.position.y - transform.position.y) <= laneAttackTolerance)
             {
                 TakeEnemyHit(enemy.ContactDamage, enemy.transform.position.x);
             }
@@ -177,18 +183,20 @@ namespace WitcherGame
             }
         }
 
-        public void ConfigureRoad(float roadYValue, float minX, float maxX)
+        public void ConfigureStage(float minX, float maxX, float minY, float maxY)
         {
-            roadY = roadYValue;
-            minRoadX = minX;
-            maxRoadX = maxX;
-            SnapToRoad();
+            minStageX = minX;
+            maxStageX = maxX;
+            minStageY = minY;
+            maxStageY = maxY;
+            ClampToStage();
         }
 
         public void WarpTo(Vector2 position)
         {
             transform.position = new Vector3(position.x, position.y, transform.position.z);
-            SnapToRoad();
+            body.velocity = Vector2.zero;
+            ClampToStage();
         }
 
         private void TrySlash()
@@ -260,7 +268,7 @@ namespace WitcherGame
             body.velocity = Vector2.zero;
             geraltAnimator.PlayHurt();
             controlsEnabled = currentHealth > 0;
-            SnapToRoad();
+            ClampToStage();
         }
 
         private void RegenerateMana()
@@ -273,12 +281,18 @@ namespace WitcherGame
             currentMana = Mathf.Min(maxMana, currentMana + manaRegenPerSecond * Time.deltaTime);
         }
 
-        private void SnapToRoad()
+        private void ClampToStage()
         {
             Vector3 position = transform.position;
-            position.x = Mathf.Clamp(position.x, minRoadX, maxRoadX);
-            position.y = roadY;
+            position.x = Mathf.Clamp(position.x, minStageX, maxStageX);
+            position.y = Mathf.Clamp(position.y, minStageY, maxStageY);
+
             transform.position = position;
+        }
+
+        private void UpdateDepthSorting()
+        {
+            spriteRenderer.sortingOrder = Mathf.RoundToInt((maxStageY - transform.position.y) * 100f) + 20;
         }
 
         private void TryHitBoss()
@@ -290,7 +304,8 @@ namespace WitcherGame
             }
 
             float horizontalDistance = Mathf.Abs(boss.transform.position.x - transform.position.x);
-            if (horizontalDistance <= attackRange)
+            float verticalDistance = Mathf.Abs(boss.transform.position.y - transform.position.y);
+            if (horizontalDistance <= attackRange && verticalDistance <= laneAttackTolerance)
             {
                 boss.TakeHit(transform.position.x);
             }
@@ -308,7 +323,8 @@ namespace WitcherGame
                 }
 
                 float horizontalDistance = Mathf.Abs(enemy.transform.position.x - transform.position.x);
-                if (horizontalDistance <= attackRange)
+                float verticalDistance = Mathf.Abs(enemy.transform.position.y - transform.position.y);
+                if (horizontalDistance <= attackRange && verticalDistance <= laneAttackTolerance)
                 {
                     enemy.TakeHit(transform.position.x);
                 }

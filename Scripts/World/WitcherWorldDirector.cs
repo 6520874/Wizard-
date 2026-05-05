@@ -5,9 +5,11 @@ namespace WitcherGame
 {
     public class WitcherWorldDirector : MonoBehaviour
     {
-        private const float RoadY = -1.65f;
-        private const float MinRoadX = -7.6f;
-        private const float MaxRoadX = 7.6f;
+        private const float StartY = -1.65f;
+        private const float MinStageX = -7.6f;
+        private const float MaxStageX = 54f;
+        private const float MinStageY = -2.42f;
+        private const float MaxStageY = -0.72f;
 
         private readonly List<GameObject> spawnedEnemies = new List<GameObject>();
         private GeraltController player;
@@ -16,9 +18,15 @@ namespace WitcherGame
 
         private readonly RoomDefinition[] rooms =
         {
-            new RoomDefinition("霜林边境", new Color32(180, 210, 230, 255)),
-            new RoomDefinition("沉没沼泽", new Color32(91, 145, 139, 255)),
-            new RoomDefinition("墓园旧道", new Color32(128, 145, 166, 255))
+            new RoomDefinition(
+                "威伦荒村长路",
+                new Color32(170, 190, 205, 255),
+                new EnemySpawn(MonsterKind.Nekker, 4.8f, -2.06f),
+                new EnemySpawn(MonsterKind.Drowner, 9.6f, -1.28f),
+                new EnemySpawn(MonsterKind.Wraith, 15.4f, -2.2f),
+                new EnemySpawn(MonsterKind.Nekker, 22.5f, -1.08f),
+                new EnemySpawn(MonsterKind.Drowner, 30.6f, -1.82f),
+                new EnemySpawn(MonsterKind.Wraith, 39.4f, -1.16f))
         };
 
         public static WitcherWorldDirector CreateIfMissing(GeraltController target)
@@ -55,15 +63,6 @@ namespace WitcherGame
                 player = FindObjectOfType<GeraltController>();
                 return;
             }
-
-            if (player.transform.position.x >= MaxRoadX - 0.05f && Input.GetAxisRaw("Horizontal") > 0f)
-            {
-                EnterRoom(roomIndex + 1, true);
-            }
-            else if (player.transform.position.x <= MinRoadX + 0.05f && Input.GetAxisRaw("Horizontal") < 0f)
-            {
-                EnterRoom(roomIndex - 1, true);
-            }
         }
 
         private void EnterRoom(int requestedRoomIndex, bool preserveDirection)
@@ -77,14 +76,19 @@ namespace WitcherGame
             roomIndex = (requestedRoomIndex + rooms.Length) % rooms.Length;
             RoomDefinition room = rooms[roomIndex];
 
-            player.ConfigureRoad(RoadY, MinRoadX, MaxRoadX);
+            player.ConfigureStage(MinStageX, MaxStageX, MinStageY, MaxStageY);
             if (preserveDirection)
             {
-                float spawnX = requestedRoomIndex > previousRoom ? MinRoadX + 0.45f : MaxRoadX - 0.45f;
-                player.WarpTo(new Vector2(spawnX, RoadY));
+                float spawnX = requestedRoomIndex > previousRoom ? MinStageX + 0.45f : MaxStageX - 0.45f;
+                player.WarpTo(new Vector2(spawnX, StartY));
+            }
+            else
+            {
+                player.WarpTo(new Vector2(MinStageX + 1.15f, StartY));
             }
 
             ApplyRoomLook(room);
+            EnsureCameraFollow();
             RespawnEnemies(room);
 
             hud = hud == null ? FindObjectOfType<WitcherHud>() : hud;
@@ -125,17 +129,36 @@ namespace WitcherGame
             {
                 EnemySpawn spawn = room.Enemies[i];
                 GameObject enemyObject = new GameObject($"{spawn.Kind} Enemy");
-                enemyObject.transform.position = new Vector3(spawn.X, RoadY, 0f);
+                enemyObject.transform.position = new Vector3(spawn.X, spawn.Y, 0f);
 
                 SpriteRenderer renderer = enemyObject.AddComponent<SpriteRenderer>();
                 renderer.sortingOrder = 2;
 
                 enemyObject.AddComponent<BoxCollider2D>();
                 MonsterPatrol enemy = enemyObject.AddComponent<MonsterPatrol>();
-                float patrolWidth = spawn.Kind == MonsterKind.Drowner ? 1.4f : 2.1f;
-                enemy.Configure(spawn.Kind, new Vector2(patrolWidth, 0f));
+                Vector2 patrol = spawn.Kind == MonsterKind.Drowner ? new Vector2(1.5f, 0.38f) : new Vector2(2.4f, 0.28f);
+                enemy.Configure(spawn.Kind, patrol);
                 spawnedEnemies.Add(enemyObject);
             }
+        }
+
+        private void EnsureCameraFollow()
+        {
+            Camera camera = Camera.main;
+            if (camera == null || player == null)
+            {
+                return;
+            }
+
+            camera.orthographicSize = 3.8f;
+            WitcherCameraFollow follow = camera.GetComponent<WitcherCameraFollow>();
+            if (follow == null)
+            {
+                follow = camera.gameObject.AddComponent<WitcherCameraFollow>();
+            }
+
+            follow.SetTarget(player.transform);
+            follow.ConfigureBounds(MinStageX, MaxStageX, -0.2f, 0.55f);
         }
 
         private readonly struct RoomDefinition
@@ -154,14 +177,16 @@ namespace WitcherGame
 
         private readonly struct EnemySpawn
         {
-            public EnemySpawn(MonsterKind kind, float x)
+            public EnemySpawn(MonsterKind kind, float x, float y)
             {
                 Kind = kind;
                 X = x;
+                Y = y;
             }
 
             public MonsterKind Kind { get; }
             public float X { get; }
+            public float Y { get; }
         }
     }
 }

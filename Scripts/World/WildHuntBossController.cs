@@ -8,10 +8,12 @@ namespace WitcherGame
     [RequireComponent(typeof(WildHuntBossAnimator))]
     public class WildHuntBossController : MonoBehaviour
     {
-        [SerializeField] private float roadY = -1.88f;
         [SerializeField] private float moveSpeed = 1.55f;
         [SerializeField] private float stopDistance = 1.35f;
         [SerializeField] private float attackRange = 1.7f;
+        [SerializeField] private float laneAttackTolerance = 0.78f;
+        [SerializeField] private float minStageY = -2.42f;
+        [SerializeField] private float maxStageY = -0.72f;
         [SerializeField] private float attackCooldown = 1.45f;
         [SerializeField] private float hitStunDuration = 0.32f;
         [SerializeField] private int maxHealth = 8;
@@ -40,14 +42,14 @@ namespace WitcherGame
             Rigidbody2D body = GetComponent<Rigidbody2D>();
             body.bodyType = RigidbodyType2D.Kinematic;
             body.gravityScale = 0f;
-            body.constraints = RigidbodyConstraints2D.FreezePositionY | RigidbodyConstraints2D.FreezeRotation;
+            body.constraints = RigidbodyConstraints2D.FreezeRotation;
 
             BoxCollider2D boxCollider = GetComponent<BoxCollider2D>();
             boxCollider.offset = new Vector2(0f, 0.9f);
             boxCollider.size = new Vector2(1.7f, 1.75f);
 
             transform.localScale = Vector3.one * visualScale;
-            SnapToRoad();
+            ClampToStage();
         }
 
         private void Start()
@@ -58,7 +60,7 @@ namespace WitcherGame
 
         private void Update()
         {
-            SnapToRoad();
+            ClampToStage();
 
             if (!spawned)
             {
@@ -87,16 +89,18 @@ namespace WitcherGame
 
             attackCooldownTimer -= Time.deltaTime;
             float dx = player.transform.position.x - transform.position.x;
-            float distance = Mathf.Abs(dx);
+            float horizontalDistance = Mathf.Abs(dx);
+            float verticalDistance = Mathf.Abs(player.transform.position.y - transform.position.y);
             spriteRenderer.flipX = dx < 0f;
+            spriteRenderer.sortingOrder = Mathf.RoundToInt((-transform.position.y) * 100f) + 18;
 
             if (bossAnimator.CurrentAnimation == WildHuntAnimation.Attack && bossAnimator.IsOneShotPlaying)
             {
-                TryApplyAttackDamage(distance);
+                TryApplyAttackDamage(horizontalDistance);
                 return;
             }
 
-            if (distance <= attackRange && attackCooldownTimer <= 0f)
+            if (horizontalDistance <= attackRange && verticalDistance <= laneAttackTolerance && attackCooldownTimer <= 0f)
             {
                 attackCooldownTimer = attackCooldown;
                 attackDamageApplied = false;
@@ -104,10 +108,11 @@ namespace WitcherGame
                 return;
             }
 
-            if (distance > stopDistance)
+            if (horizontalDistance > stopDistance || verticalDistance > laneAttackTolerance * 0.75f)
             {
-                float direction = Mathf.Sign(dx);
-                transform.position += new Vector3(direction * moveSpeed * Time.deltaTime, 0f, 0f);
+                Vector3 target = new Vector3(player.transform.position.x, player.transform.position.y, transform.position.z);
+                transform.position = Vector3.MoveTowards(transform.position, target, moveSpeed * Time.deltaTime);
+                ClampToStage();
                 bossAnimator.PlayLocomotion(true);
             }
             else
@@ -130,7 +135,7 @@ namespace WitcherGame
             transform.position += new Vector3(knockDirection * 0.18f, 0f, 0f);
             spriteRenderer.flipX = attackerX < transform.position.x;
             bossAnimator.PlayHurt();
-            SnapToRoad();
+            ClampToStage();
         }
 
         private void TryApplyAttackDamage(float currentDistance)
@@ -141,16 +146,17 @@ namespace WitcherGame
             }
 
             attackDamageApplied = true;
-            if (player != null && currentDistance <= attackRange + 0.25f)
+            float verticalDistance = player == null ? float.MaxValue : Mathf.Abs(player.transform.position.y - transform.position.y);
+            if (player != null && currentDistance <= attackRange + 0.25f && verticalDistance <= laneAttackTolerance)
             {
                 player.TakeBossHit(transform.position.x);
             }
         }
 
-        private void SnapToRoad()
+        private void ClampToStage()
         {
             Vector3 position = transform.position;
-            position.y = roadY;
+            position.y = Mathf.Clamp(position.y, minStageY, maxStageY);
             transform.position = position;
         }
     }

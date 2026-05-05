@@ -62,6 +62,7 @@ namespace WitcherGame
             hitCooldownTimer -= Time.deltaTime;
             hurtFlashTimer -= Time.deltaTime;
             spriteRenderer.color = hurtFlashTimer > 0f ? Color.white : GetKindColor();
+            spriteRenderer.sortingOrder = Mathf.RoundToInt((-transform.position.y) * 100f) + 15;
 
             Vector3 target = GetMovementTarget();
             transform.position = Vector3.MoveTowards(transform.position, target, speed * Time.deltaTime);
@@ -127,10 +128,10 @@ namespace WitcherGame
         {
             if (player != null && player.IsAlive)
             {
-                float distance = Mathf.Abs(player.transform.position.x - transform.position.x);
-                if (distance <= chaseRange)
+                Vector2 toPlayer = player.transform.position - transform.position;
+                if (Mathf.Abs(toPlayer.x) <= chaseRange && Mathf.Abs(toPlayer.y) <= chaseRange * 0.72f)
                 {
-                    return new Vector3(player.transform.position.x, transform.position.y, transform.position.z);
+                    return new Vector3(player.transform.position.x, player.transform.position.y, transform.position.z);
                 }
             }
 
@@ -144,8 +145,8 @@ namespace WitcherGame
                 return;
             }
 
-            float distance = Mathf.Abs(player.transform.position.x - transform.position.x);
-            if (distance <= contactRange)
+            Vector2 distance = player.transform.position - transform.position;
+            if (Mathf.Abs(distance.x) <= contactRange && Mathf.Abs(distance.y) <= contactRange * 0.62f)
             {
                 hitCooldownTimer = hitCooldown;
                 player.TakeEnemyHit(contactDamage, transform.position.x);

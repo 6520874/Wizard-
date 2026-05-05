@@ -7,6 +7,7 @@ namespace WitcherGame
     {
         Idle,
         Run,
+        Jump,
         Slash,
         Hurt
     }
@@ -41,6 +42,8 @@ namespace WitcherGame
             {
                 case GeraltAnimation.Run:
                     return 9;
+                case GeraltAnimation.Jump:
+                    return 5;
                 case GeraltAnimation.Slash:
                     return 7;
                 case GeraltAnimation.Hurt:
@@ -78,6 +81,11 @@ namespace WitcherGame
         {
             int step = frame % 2 == 0 ? -1 : 1;
             int bob = animation == GeraltAnimation.Run && (frame == 1 || frame == 4) ? 1 : 0;
+            if (animation == GeraltAnimation.Jump)
+            {
+                bob = 2;
+            }
+
             int armSwing = animation == GeraltAnimation.Run ? step : 0;
 
             Color32 outline = new Color32(24, 22, 20, 255);
@@ -117,6 +125,11 @@ namespace WitcherGame
         {
             int forward = animation == GeraltAnimation.Run && frame % 2 == 0 ? 2 : 0;
             int back = animation == GeraltAnimation.Run && frame % 2 != 0 ? 2 : 0;
+            if (animation == GeraltAnimation.Jump)
+            {
+                forward = frame < 2 ? 1 : 3;
+                back = frame < 2 ? 2 : 1;
+            }
 
             Fill(texture, 11 - back, 5 + bob, 14 - back, 11 + bob, outline);
             Fill(texture, 12 - back, 6 + bob, 14 - back, 11 + bob, leather);

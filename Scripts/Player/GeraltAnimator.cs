@@ -11,6 +11,7 @@ namespace WitcherGame
         [SerializeField] private string frameRoot = "Art/Geralt/Frames";
         [SerializeField] private float idleFramesPerSecond = 6f;
         [SerializeField] private float runFramesPerSecond = 12f;
+        [SerializeField] private float jumpFramesPerSecond = 10f;
         [SerializeField] private float slashFramesPerSecond = 14f;
         [SerializeField] private float hurtFramesPerSecond = 12f;
         [SerializeField] private float pixelsPerUnit = 96f;
@@ -48,14 +49,30 @@ namespace WitcherGame
             }
         }
 
-        public void PlayLocomotion(bool isMoving)
+        public void PlayLocomotion(bool isMoving, bool isGrounded = true)
         {
             if (IsSlashPlaying || IsHurtPlaying)
             {
                 return;
             }
 
+            if (!isGrounded)
+            {
+                Play(GeraltAnimation.Jump);
+                return;
+            }
+
             Play(isMoving ? GeraltAnimation.Run : GeraltAnimation.Idle);
+        }
+
+        public void PlayJump()
+        {
+            if (IsSlashPlaying || IsHurtPlaying)
+            {
+                return;
+            }
+
+            Play(GeraltAnimation.Jump, true);
         }
 
         public void PlaySlash()
@@ -127,6 +144,8 @@ namespace WitcherGame
             {
                 case GeraltAnimation.Run:
                     return runFramesPerSecond;
+                case GeraltAnimation.Jump:
+                    return jumpFramesPerSecond;
                 case GeraltAnimation.Slash:
                     return slashFramesPerSecond;
                 case GeraltAnimation.Hurt:
@@ -140,6 +159,7 @@ namespace WitcherGame
         {
             LoadFrames(GeraltAnimation.Idle);
             LoadFrames(GeraltAnimation.Run);
+            LoadFrames(GeraltAnimation.Jump);
             LoadFrames(GeraltAnimation.Slash);
             LoadFrames(GeraltAnimation.Hurt);
         }

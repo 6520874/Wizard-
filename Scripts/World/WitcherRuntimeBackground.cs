@@ -6,10 +6,12 @@ namespace WitcherGame
     [RequireComponent(typeof(SpriteRenderer))]
     public class WitcherRuntimeBackground : MonoBehaviour
     {
-        [SerializeField] private string imagePath = "Art/Backgrounds/Mountain_Background_04.png";
+        [SerializeField] private string imagePath = "Art/Backgrounds/Witcher_Village_Longroad.png";
         [SerializeField] private float pixelsPerUnit = 64f;
         [SerializeField] private int sortingOrder = -50;
-        [SerializeField] private bool fitToCamera = true;
+        [SerializeField] private bool fitToCamera = false;
+        [SerializeField] private float worldWidth = 64f;
+        [SerializeField] private Vector2 worldCenter = new Vector2(24f, -0.35f);
 
         private SpriteRenderer spriteRenderer;
 
@@ -25,7 +27,22 @@ namespace WitcherGame
             if (fitToCamera)
             {
                 FitToCamera();
+                return;
             }
+
+            FitToWorld();
+        }
+
+        private void FitToWorld()
+        {
+            if (spriteRenderer.sprite == null || worldWidth <= 0f)
+            {
+                return;
+            }
+
+            float scale = worldWidth / spriteRenderer.sprite.bounds.size.x;
+            transform.localScale = new Vector3(scale, scale, 1f);
+            transform.position = new Vector3(worldCenter.x, worldCenter.y, 8f);
         }
 
         private void LoadSprite()

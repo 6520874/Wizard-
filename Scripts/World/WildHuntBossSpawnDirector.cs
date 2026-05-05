@@ -5,7 +5,7 @@ namespace WitcherGame
     public class WildHuntBossSpawnDirector : MonoBehaviour
     {
         [SerializeField] private float spawnDelay = 2.25f;
-        [SerializeField] private Vector2 spawnPosition = new Vector2(6.7f, -1.88f);
+        [SerializeField] private Vector2 spawnPosition = new Vector2(47.5f, -1.58f);
         [SerializeField] private string bossName = "Wild Hunt Boss";
 
         private float timer;
