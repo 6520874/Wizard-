@@ -425,7 +425,7 @@ namespace WitcherGame
         {
             GameObject obj = CreateUiObject(name, parent, size, position, new Vector2(0f, 1f));
             Text textComponent = obj.AddComponent<Text>();
-            textComponent.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
+            textComponent.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
             textComponent.text = text;
             textComponent.fontSize = fontSize;
             textComponent.alignment = anchor;
