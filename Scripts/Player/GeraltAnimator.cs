@@ -79,7 +79,7 @@ namespace WitcherGame
 
         public void PlaySlash()
         {
-            if (IsHurtPlaying || IsDeathPlaying)
+            if (IsSlashPlaying || IsHurtPlaying || IsDeathPlaying)
             {
                 return;
             }

@@ -209,6 +209,11 @@ namespace WitcherGame
 
         private void TrySlash()
         {
+            if (geraltAnimator.IsSlashPlaying || geraltAnimator.IsHurtPlaying || geraltAnimator.IsDeathPlaying)
+            {
+                return;
+            }
+
             if (currentMana < slashManaCost)
             {
                 geraltAnimator.PlayLocomotion(false);
