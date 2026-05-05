@@ -13,7 +13,7 @@ namespace WitcherGame
         [SerializeField] private float minStageX = -8.2f;
         [SerializeField] private float maxStageX = 23.5f;
         [SerializeField] private float minStageY = -2.55f;
-        [SerializeField] private float maxStageY = 0.18f;
+        [SerializeField] private float maxStageY = 0.0f;
         [SerializeField] private float visualScale = 0.65f;
         [SerializeField] private float attackRange = 1.45f;
         [SerializeField] private float laneAttackTolerance = 0.72f;
@@ -41,6 +41,7 @@ namespace WitcherGame
         private float dashCooldownTimer;
         private float invulnerableTimer;
         private float lastFacingDirection = 1f;
+        private bool defeatHandled;
 
         public int CurrentHealth => currentHealth;
         public int MaxHealth => maxHealth;
@@ -73,6 +74,13 @@ namespace WitcherGame
             RegenerateMana();
             dashCooldownTimer -= Time.deltaTime;
             invulnerableTimer -= Time.deltaTime;
+
+            if (!IsAlive)
+            {
+                body.velocity = Vector2.zero;
+                ClampToStage();
+                return;
+            }
 
             if (!controlsEnabled)
             {
@@ -266,9 +274,34 @@ namespace WitcherGame
             float knockDirection = transform.position.x >= attackerX ? 1f : -1f;
             transform.position += new Vector3(knockDirection * 0.18f, 0f, 0f);
             body.velocity = Vector2.zero;
-            geraltAnimator.PlayHurt();
+            if (currentHealth <= 0)
+            {
+                HandleDefeat();
+            }
+            else
+            {
+                geraltAnimator.PlayHurt();
+            }
+
             controlsEnabled = currentHealth > 0;
             ClampToStage();
+        }
+
+        private void HandleDefeat()
+        {
+            if (defeatHandled)
+            {
+                return;
+            }
+
+            defeatHandled = true;
+            controlsEnabled = false;
+            geraltAnimator.PlayDeath();
+            WitcherHud hud = FindObjectOfType<WitcherHud>();
+            if (hud != null)
+            {
+                hud.ShowDefeatScreen();
+            }
         }
 
         private void RegenerateMana()

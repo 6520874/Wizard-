@@ -22,6 +22,7 @@ namespace WitcherGame
         [SerializeField] private float chaseRange = 2.4f;
         [SerializeField] private float contactRange = 1.08f;
         [SerializeField] private float hitCooldown = 0.75f;
+        [SerializeField] private float deathDuration = 0.5f;
         [SerializeField] private int maxHealth = 2;
         [SerializeField] private int contactDamage = 8;
 
@@ -33,8 +34,11 @@ namespace WitcherGame
         private int health;
         private float hitCooldownTimer;
         private float hurtFlashTimer;
+        private bool dying;
+        private float deathTimer;
+        private Vector3 deathStartScale;
 
-        public bool CanBeHit => health > 0;
+        public bool CanBeHit => health > 0 && !dying;
         public int ContactDamage => contactDamage;
 
         private void Awake()
@@ -53,6 +57,12 @@ namespace WitcherGame
 
         private void Update()
         {
+            if (dying)
+            {
+                UpdateDeathAnimation();
+                return;
+            }
+
             if (health <= 0)
             {
                 return;
@@ -106,20 +116,56 @@ namespace WitcherGame
 
             if (health <= 0)
             {
-                if (player == null)
-                {
-                    player = FindObjectOfType<GeraltController>();
-                }
+                StartDeathAnimation();
+            }
+        }
 
-                if (player != null)
-                {
-                    player.RestoreMana(enemyKind == MonsterKind.Wraith ? 16 : 10);
-                    if (enemyKind == MonsterKind.Drowner)
-                    {
-                        player.RestoreHealth(6);
-                    }
-                }
+        private void StartDeathAnimation()
+        {
+            if (dying)
+            {
+                return;
+            }
 
+            dying = true;
+            deathTimer = 0f;
+            deathStartScale = transform.localScale;
+            BoxCollider2D boxCollider = GetComponent<BoxCollider2D>();
+            if (boxCollider != null)
+            {
+                boxCollider.enabled = false;
+            }
+
+            if (player == null)
+            {
+                player = FindObjectOfType<GeraltController>();
+            }
+
+            if (player != null)
+            {
+                player.RestoreMana(enemyKind == MonsterKind.Wraith ? 16 : 10);
+                if (enemyKind == MonsterKind.Drowner)
+                {
+                    player.RestoreHealth(6);
+                }
+            }
+
+            WitcherCombatText.Spawn("击杀", transform.position + Vector3.up * 0.35f, new Color32(179, 228, 255, 255));
+        }
+
+        private void UpdateDeathAnimation()
+        {
+            deathTimer += Time.deltaTime;
+            float t = Mathf.Clamp01(deathTimer / deathDuration);
+            float sink = Mathf.Lerp(0f, -0.24f, t);
+            transform.localScale = new Vector3(deathStartScale.x * Mathf.Lerp(1f, 1.18f, t), deathStartScale.y * Mathf.Lerp(1f, 0.18f, t), deathStartScale.z);
+            transform.position += new Vector3(0f, sink * Time.deltaTime, 0f);
+            Color color = GetKindColor();
+            color.a = Mathf.Lerp(1f, 0f, t);
+            spriteRenderer.color = color;
+
+            if (t >= 1f)
+            {
                 Destroy(gameObject);
             }
         }

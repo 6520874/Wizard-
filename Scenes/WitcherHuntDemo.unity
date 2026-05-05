@@ -514,7 +514,7 @@ MonoBehaviour:
   minStageX: -8.2
   maxStageX: 23.5
   minStageY: -2.55
-  maxStageY: 0.18
+  maxStageY: 5
   visualScale: 0.65
   attackRange: 1.45
   laneAttackTolerance: 0.72

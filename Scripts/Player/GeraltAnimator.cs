@@ -14,6 +14,7 @@ namespace WitcherGame
         [SerializeField] private float jumpFramesPerSecond = 10f;
         [SerializeField] private float slashFramesPerSecond = 14f;
         [SerializeField] private float hurtFramesPerSecond = 12f;
+        [SerializeField] private float deathFramesPerSecond = 9f;
         [SerializeField] private float pixelsPerUnit = 96f;
 
         private readonly Dictionary<GeraltAnimation, Sprite[]> framesByAnimation = new Dictionary<GeraltAnimation, Sprite[]>();
@@ -24,6 +25,7 @@ namespace WitcherGame
 
         public bool IsSlashPlaying { get; private set; }
         public bool IsHurtPlaying { get; private set; }
+        public bool IsDeathPlaying { get; private set; }
 
         private void Awake()
         {
@@ -51,7 +53,7 @@ namespace WitcherGame
 
         public void PlayLocomotion(bool isMoving, bool isGrounded = true)
         {
-            if (IsSlashPlaying || IsHurtPlaying)
+            if (IsSlashPlaying || IsHurtPlaying || IsDeathPlaying)
             {
                 return;
             }
@@ -67,7 +69,7 @@ namespace WitcherGame
 
         public void PlayJump()
         {
-            if (IsSlashPlaying || IsHurtPlaying)
+            if (IsSlashPlaying || IsHurtPlaying || IsDeathPlaying)
             {
                 return;
             }
@@ -77,7 +79,7 @@ namespace WitcherGame
 
         public void PlaySlash()
         {
-            if (IsHurtPlaying)
+            if (IsHurtPlaying || IsDeathPlaying)
             {
                 return;
             }
@@ -88,13 +90,31 @@ namespace WitcherGame
 
         public void PlayHurt()
         {
+            if (IsDeathPlaying)
+            {
+                return;
+            }
+
             IsSlashPlaying = false;
             IsHurtPlaying = true;
             Play(GeraltAnimation.Hurt, true);
         }
 
+        public void PlayDeath()
+        {
+            IsSlashPlaying = false;
+            IsHurtPlaying = false;
+            IsDeathPlaying = true;
+            Play(GeraltAnimation.Death, true);
+        }
+
         public void ForceIdle()
         {
+            if (IsDeathPlaying)
+            {
+                return;
+            }
+
             IsSlashPlaying = false;
             IsHurtPlaying = false;
             Play(GeraltAnimation.Idle, true);
@@ -120,6 +140,13 @@ namespace WitcherGame
         private void AdvanceFrame(Sprite[] frames)
         {
             frameIndex++;
+            if (currentAnimation == GeraltAnimation.Death && frameIndex >= frames.Length)
+            {
+                frameIndex = frames.Length - 1;
+                spriteRenderer.sprite = frames[frameIndex];
+                return;
+            }
+
             bool isOneShot = currentAnimation == GeraltAnimation.Slash || currentAnimation == GeraltAnimation.Hurt;
             if (isOneShot && frameIndex >= frames.Length)
             {
@@ -150,6 +177,8 @@ namespace WitcherGame
                     return slashFramesPerSecond;
                 case GeraltAnimation.Hurt:
                     return hurtFramesPerSecond;
+                case GeraltAnimation.Death:
+                    return deathFramesPerSecond;
                 default:
                     return idleFramesPerSecond;
             }
@@ -162,6 +191,7 @@ namespace WitcherGame
             LoadFrames(GeraltAnimation.Jump);
             LoadFrames(GeraltAnimation.Slash);
             LoadFrames(GeraltAnimation.Hurt);
+            LoadFrames(GeraltAnimation.Death);
         }
 
         private void LoadFrames(GeraltAnimation animation)

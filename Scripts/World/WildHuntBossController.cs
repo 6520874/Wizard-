@@ -16,6 +16,7 @@ namespace WitcherGame
         [SerializeField] private float maxStageY = 0.18f;
         [SerializeField] private float attackCooldown = 1.45f;
         [SerializeField] private float hitStunDuration = 0.32f;
+        [SerializeField] private float deathDuration = 1.1f;
         [SerializeField] private int maxHealth = 8;
         [SerializeField] private float visualScale = 0.82f;
 
@@ -27,8 +28,10 @@ namespace WitcherGame
         private float hitStunTimer;
         private bool attackDamageApplied;
         private bool spawned;
+        private bool dying;
+        private float deathTimer;
 
-        public bool CanBeHit => spawned && hitStunTimer <= 0f && health > 0;
+        public bool CanBeHit => spawned && hitStunTimer <= 0f && health > 0 && !dying;
         public bool HasSpawned => spawned;
         public int CurrentHealth => health;
         public int MaxHealth => maxHealth;
@@ -62,6 +65,12 @@ namespace WitcherGame
         {
             ClampToStage();
 
+            if (dying)
+            {
+                UpdateDeathAnimation();
+                return;
+            }
+
             if (!spawned)
             {
                 spawned = !bossAnimator.IsOneShotPlaying;
@@ -70,7 +79,6 @@ namespace WitcherGame
 
             if (health <= 0)
             {
-                bossAnimator.PlayLocomotion(false);
                 return;
             }
 
@@ -130,12 +138,54 @@ namespace WitcherGame
 
             health--;
             WitcherCombatText.Spawn("-1", transform.position, new Color32(149, 221, 255, 255));
+            if (health <= 0)
+            {
+                StartDeathAnimation();
+                return;
+            }
+
             hitStunTimer = hitStunDuration;
             float knockDirection = transform.position.x >= attackerX ? 1f : -1f;
             transform.position += new Vector3(knockDirection * 0.18f, 0f, 0f);
             spriteRenderer.flipX = attackerX < transform.position.x;
             bossAnimator.PlayHurt();
             ClampToStage();
+        }
+
+        private void StartDeathAnimation()
+        {
+            if (dying)
+            {
+                return;
+            }
+
+            dying = true;
+            deathTimer = 0f;
+            attackDamageApplied = true;
+            hitStunTimer = 0f;
+            BoxCollider2D boxCollider = GetComponent<BoxCollider2D>();
+            if (boxCollider != null)
+            {
+                boxCollider.enabled = false;
+            }
+
+            bossAnimator.PlayDeath();
+            WitcherCombatText.Spawn("狂猎倒下", transform.position + Vector3.up * 1.2f, new Color32(118, 219, 255, 255));
+        }
+
+        private void UpdateDeathAnimation()
+        {
+            deathTimer += Time.deltaTime;
+            float t = Mathf.Clamp01(deathTimer / deathDuration);
+            Color color = spriteRenderer.color;
+            color.a = Mathf.Lerp(1f, 0f, t);
+            spriteRenderer.color = color;
+            transform.localScale = Vector3.one * visualScale * Mathf.Lerp(1f, 0.9f, t);
+
+            if (t >= 1f)
+            {
+                Destroy(gameObject);
+            }
         }
 
         private void TryApplyAttackDamage(float currentDistance)

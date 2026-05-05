@@ -1,5 +1,6 @@
 using System.IO;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 namespace WitcherGame
@@ -24,6 +25,7 @@ namespace WitcherGame
         private GameObject bossStatusRoot;
         private Image bossHealthFill;
         private Text bossHealthText;
+        private GameObject gameOverRoot;
 
         public static WitcherHud CreateIfMissing(GeraltController target)
         {
@@ -78,6 +80,12 @@ namespace WitcherGame
                 {
                     return;
                 }
+            }
+
+            if (gameOverRoot != null && gameOverRoot.activeSelf && (Input.GetKeyDown(KeyCode.R) || Input.GetKeyDown(KeyCode.Return)))
+            {
+                RestartCurrentScene();
+                return;
             }
 
             UpdateBars();
@@ -157,7 +165,18 @@ namespace WitcherGame
             AddOutline(roomText, new Color32(0, 0, 0, 220), new Vector2(1f, -1f));
 
             BuildBossBar();
+            BuildGameOverPanel();
             UpdateBars();
+        }
+
+        public void ShowDefeatScreen()
+        {
+            if (gameOverRoot == null)
+            {
+                BuildGameOverPanel();
+            }
+
+            gameOverRoot.SetActive(true);
         }
 
         private void BuildPortraitBadge(Transform parent)
@@ -316,6 +335,80 @@ namespace WitcherGame
             bossHealthText = CreateText("Boss Health Value", bossStatusRoot.transform, "8/8", 13, TextAnchor.MiddleRight, new Vector2(316f, -5f), new Vector2(92f, 20f));
             bossHealthText.color = new Color32(236, 246, 251, 255);
             bossStatusRoot.SetActive(false);
+        }
+
+        private void BuildGameOverPanel()
+        {
+            if (gameOverRoot != null)
+            {
+                Destroy(gameOverRoot);
+            }
+
+            gameOverRoot = CreateUiObject("Defeat Overlay", transform, new Vector2(520f, 260f), Vector2.zero, new Vector2(0.5f, 0.5f));
+
+            Image dim = CreateImage("Defeat Screen Dim", gameOverRoot.transform, new Vector2(2400f, 1400f), Vector2.zero, new Color32(0, 0, 0, 138));
+            CenterRect(dim.rectTransform, Vector2.zero, new Vector2(2400f, 1400f));
+            dim.sprite = WitcherSpriteLibrary.GetSolidSprite(new Color32(0, 0, 0, 138));
+
+            Image panel = CreateCenteredImage("Defeat Panel", gameOverRoot.transform, new Vector2(520f, 260f), Vector2.zero, new Color32(15, 18, 22, 236));
+            CenterRect(panel.rectTransform, Vector2.zero, new Vector2(520f, 260f));
+            panel.sprite = WitcherSpriteLibrary.GetSolidSprite(new Color32(15, 18, 22, 236));
+            AddOutline(panel, new Color32(130, 31, 33, 255), new Vector2(4f, -4f));
+
+            Text title = CreateText("Defeat Title", panel.transform, "你失败了", 48, TextAnchor.MiddleCenter, Vector2.zero, new Vector2(520f, 70f));
+            CenterRect(title.rectTransform, new Vector2(0f, 68f), new Vector2(520f, 70f));
+            title.color = new Color32(255, 70, 64, 255);
+            AddOutline(title, new Color32(0, 0, 0, 255), new Vector2(3f, -3f));
+
+            Text subtitle = CreateText("Defeat Subtitle", panel.transform, "猎魔人的道路还没有结束", 19, TextAnchor.MiddleCenter, Vector2.zero, new Vector2(520f, 34f));
+            CenterRect(subtitle.rectTransform, new Vector2(0f, 12f), new Vector2(520f, 34f));
+            subtitle.color = new Color32(226, 219, 199, 255);
+            AddOutline(subtitle, new Color32(0, 0, 0, 240), new Vector2(2f, -2f));
+
+            Button retryButton = CreateButton("Retry Button", panel.transform, "再来一次", new Vector2(0f, -72f), new Vector2(190f, 50f));
+            retryButton.onClick.AddListener(RestartCurrentScene);
+
+            gameOverRoot.SetActive(false);
+        }
+
+        private static Button CreateButton(string name, Transform parent, string label, Vector2 position, Vector2 size)
+        {
+            Image image = CreateCenteredImage(name, parent, size, position, new Color32(96, 18, 22, 255));
+            CenterRect(image.rectTransform, position, size);
+            image.sprite = WitcherSpriteLibrary.GetSolidSprite(new Color32(96, 18, 22, 255));
+            AddOutline(image, new Color32(225, 172, 90, 255), new Vector2(2f, -2f));
+
+            Button button = image.gameObject.AddComponent<Button>();
+            ColorBlock colors = button.colors;
+            colors.normalColor = new Color32(126, 22, 27, 255);
+            colors.highlightedColor = new Color32(178, 39, 42, 255);
+            colors.pressedColor = new Color32(70, 10, 16, 255);
+            colors.selectedColor = colors.highlightedColor;
+            button.colors = colors;
+
+            Text text = CreateText(name + " Text", image.transform, label, 22, TextAnchor.MiddleCenter, Vector2.zero, size);
+            RectTransform textRect = text.rectTransform;
+            textRect.anchorMin = Vector2.zero;
+            textRect.anchorMax = Vector2.one;
+            textRect.offsetMin = Vector2.zero;
+            textRect.offsetMax = Vector2.zero;
+            text.color = new Color32(255, 241, 210, 255);
+            AddOutline(text, new Color32(0, 0, 0, 255), new Vector2(2f, -2f));
+            return button;
+        }
+
+        private static void CenterRect(RectTransform rect, Vector2 anchoredPosition, Vector2 size)
+        {
+            rect.anchorMin = new Vector2(0.5f, 0.5f);
+            rect.anchorMax = new Vector2(0.5f, 0.5f);
+            rect.pivot = new Vector2(0.5f, 0.5f);
+            rect.anchoredPosition = anchoredPosition;
+            rect.sizeDelta = size;
+        }
+
+        private static void RestartCurrentScene()
+        {
+            SceneManager.LoadScene(SceneManager.GetActiveScene().path);
         }
 
         private void UpdateBossBar()

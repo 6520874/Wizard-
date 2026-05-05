@@ -11,7 +11,8 @@ namespace WitcherGame
         Idle,
         Run,
         Attack,
-        Hurt
+        Hurt,
+        Death
     }
 
     [RequireComponent(typeof(SpriteRenderer))]
@@ -23,6 +24,7 @@ namespace WitcherGame
         [SerializeField] private float runFramesPerSecond = 12f;
         [SerializeField] private float attackFramesPerSecond = 12f;
         [SerializeField] private float hurtFramesPerSecond = 12f;
+        [SerializeField] private float deathFramesPerSecond = 9f;
         [SerializeField] private float pixelsPerUnit = 64f;
 
         private readonly Dictionary<WildHuntAnimation, Sprite[]> framesByAnimation = new Dictionary<WildHuntAnimation, Sprite[]>();
@@ -32,8 +34,10 @@ namespace WitcherGame
         private int frameIndex;
         private float frameTimer;
         private bool oneShotPlaying;
+        private bool deathPlaying;
 
         public bool IsOneShotPlaying => oneShotPlaying;
+        public bool IsDeathPlaying => deathPlaying;
         public WildHuntAnimation CurrentAnimation => currentAnimation;
 
         public float NormalizedFrame
@@ -71,7 +75,7 @@ namespace WitcherGame
 
         public void PlayLocomotion(bool isMoving)
         {
-            if (oneShotPlaying)
+            if (oneShotPlaying || deathPlaying)
             {
                 return;
             }
@@ -86,12 +90,29 @@ namespace WitcherGame
 
         public void PlayAttack()
         {
+            if (deathPlaying)
+            {
+                return;
+            }
+
             PlayOneShot(WildHuntAnimation.Attack, WildHuntAnimation.Idle);
         }
 
         public void PlayHurt()
         {
+            if (deathPlaying)
+            {
+                return;
+            }
+
             PlayOneShot(WildHuntAnimation.Hurt, WildHuntAnimation.Idle);
+        }
+
+        public void PlayDeath()
+        {
+            deathPlaying = true;
+            oneShotPlaying = false;
+            SetAnimation(WildHuntAnimation.Death);
         }
 
         private void PlayLoop(WildHuntAnimation animation, bool restart = false)
@@ -133,6 +154,13 @@ namespace WitcherGame
         private void AdvanceFrame(Sprite[] frames)
         {
             frameIndex++;
+            if (deathPlaying && frameIndex >= frames.Length)
+            {
+                frameIndex = frames.Length - 1;
+                spriteRenderer.sprite = frames[frameIndex];
+                return;
+            }
+
             if (oneShotPlaying && frameIndex >= frames.Length)
             {
                 oneShotPlaying = false;
@@ -161,6 +189,8 @@ namespace WitcherGame
                     return attackFramesPerSecond;
                 case WildHuntAnimation.Hurt:
                     return hurtFramesPerSecond;
+                case WildHuntAnimation.Death:
+                    return deathFramesPerSecond;
                 default:
                     return idleFramesPerSecond;
             }
@@ -173,6 +203,11 @@ namespace WitcherGame
             LoadFrames(WildHuntAnimation.Run);
             LoadFrames(WildHuntAnimation.Attack);
             LoadFrames(WildHuntAnimation.Hurt);
+            LoadFrames(WildHuntAnimation.Death);
+            if (framesByAnimation[WildHuntAnimation.Death].Length == 0)
+            {
+                framesByAnimation[WildHuntAnimation.Death] = framesByAnimation[WildHuntAnimation.Hurt];
+            }
         }
 
         private void LoadFrames(WildHuntAnimation animation)

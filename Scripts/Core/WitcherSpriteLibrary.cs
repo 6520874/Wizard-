@@ -9,7 +9,8 @@ namespace WitcherGame
         Run,
         Jump,
         Slash,
-        Hurt
+        Hurt,
+        Death
     }
 
     public static class WitcherSpriteLibrary
@@ -48,6 +49,8 @@ namespace WitcherGame
                     return 7;
                 case GeraltAnimation.Hurt:
                     return 7;
+                case GeraltAnimation.Death:
+                    return 6;
                 default:
                     return 9;
             }
@@ -98,6 +101,12 @@ namespace WitcherGame
             Color32 sword = new Color32(202, 212, 218, 255);
             Color32 swordShade = new Color32(125, 139, 146, 255);
             Color32 slash = new Color32(235, 242, 245, 160);
+
+            if (animation == GeraltAnimation.Death)
+            {
+                DrawDeadGeralt(texture, frame, outline, skin, hair, armor, leather, red, boot, sword, swordShade);
+                return;
+            }
 
             DrawLine(texture, 11, 21 + bob, 5, 30 + bob, swordShade);
             DrawLine(texture, 12, 21 + bob, 6, 30 + bob, sword);
@@ -174,6 +183,34 @@ namespace WitcherGame
             Fill(texture, 20 + armSwing, 13 + bob, 24 + armSwing, 17 + bob, outline);
             Fill(texture, 20 + armSwing, 14 + bob, 23 + armSwing, 16 + bob, leather);
             Fill(texture, 23 + armSwing, 12 + bob, 25 + armSwing, 14 + bob, skin);
+        }
+
+        private static void DrawDeadGeralt(Texture2D texture, int frame, Color32 outline, Color32 skin, Color32 hair, Color32 armor, Color32 leather, Color32 red, Color32 boot, Color32 sword, Color32 swordShade)
+        {
+            int drop = Mathf.Min(frame, 4);
+            int y = 6 - drop / 2;
+            if (frame < 3)
+            {
+                Fill(texture, 10, 12 - drop, 21, 18 - drop, outline);
+                Fill(texture, 11, 13 - drop, 20, 17 - drop, armor);
+                Fill(texture, 8, 8, 13, 12, outline);
+                Fill(texture, 18, 8, 23, 12, outline);
+                Fill(texture, 11, 20 - drop, 20, 26 - drop, outline);
+                Fill(texture, 12, 20 - drop, 19, 25 - drop, hair);
+                Fill(texture, 13, 19 - drop, 19, 23 - drop, skin);
+                return;
+            }
+
+            DrawLine(texture, 7, y + 10, 25, y + 15, swordShade);
+            DrawLine(texture, 8, y + 11, 26, y + 16, sword);
+            Fill(texture, 7, y + 4, 25, y + 10, outline);
+            Fill(texture, 8, y + 5, 24, y + 9, armor);
+            Fill(texture, 12, y + 5, 18, y + 7, leather);
+            Fill(texture, 18, y + 4, 25, y + 6, boot);
+            Fill(texture, 6, y + 8, 13, y + 14, outline);
+            Fill(texture, 7, y + 9, 12, y + 13, hair);
+            Fill(texture, 8, y + 8, 13, y + 11, skin);
+            Fill(texture, 10, y + 10, 11, y + 11, red);
         }
 
         private static void Clear(Texture2D texture)
