@@ -72,7 +72,7 @@ namespace WitcherGame
             hitCooldownTimer -= Time.deltaTime;
             hurtFlashTimer -= Time.deltaTime;
             spriteRenderer.color = hurtFlashTimer > 0f ? Color.white : GetKindColor();
-            spriteRenderer.sortingOrder = Mathf.RoundToInt((-transform.position.y) * 100f) + 15;
+            spriteRenderer.sortingOrder = Mathf.RoundToInt((5f - transform.position.y) * 100f) + 15;
 
             Vector3 target = GetMovementTarget();
             transform.position = Vector3.MoveTowards(transform.position, target, speed * Time.deltaTime);

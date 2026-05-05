@@ -13,7 +13,7 @@ namespace WitcherGame
         [SerializeField] private float attackRange = 1.7f;
         [SerializeField] private float laneAttackTolerance = 0.78f;
         [SerializeField] private float minStageY = -2.55f;
-        [SerializeField] private float maxStageY = 0.18f;
+        [SerializeField] private float maxStageY = 5f;
         [SerializeField] private float attackCooldown = 1.45f;
         [SerializeField] private float hitStunDuration = 0.32f;
         [SerializeField] private float deathDuration = 1.1f;
@@ -100,7 +100,7 @@ namespace WitcherGame
             float horizontalDistance = Mathf.Abs(dx);
             float verticalDistance = Mathf.Abs(player.transform.position.y - transform.position.y);
             spriteRenderer.flipX = dx < 0f;
-            spriteRenderer.sortingOrder = Mathf.RoundToInt((-transform.position.y) * 100f) + 18;
+            spriteRenderer.sortingOrder = Mathf.RoundToInt((maxStageY - transform.position.y) * 100f) + 18;
 
             if (bossAnimator.CurrentAnimation == WildHuntAnimation.Attack && bossAnimator.IsOneShotPlaying)
             {

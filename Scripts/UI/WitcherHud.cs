@@ -1,5 +1,6 @@
 using System.IO;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
@@ -106,6 +107,7 @@ namespace WitcherGame
 
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
             canvas.sortingOrder = 100;
+            EnsureEventSystem();
             if (gameObject.GetComponent<CanvasScaler>() == null)
             {
                 gameObject.AddComponent<CanvasScaler>();
@@ -395,6 +397,18 @@ namespace WitcherGame
             text.color = new Color32(255, 241, 210, 255);
             AddOutline(text, new Color32(0, 0, 0, 255), new Vector2(2f, -2f));
             return button;
+        }
+
+        private static void EnsureEventSystem()
+        {
+            if (FindObjectOfType<EventSystem>() != null)
+            {
+                return;
+            }
+
+            GameObject eventSystemObject = new GameObject("EventSystem");
+            eventSystemObject.AddComponent<EventSystem>();
+            eventSystemObject.AddComponent<StandaloneInputModule>();
         }
 
         private static void CenterRect(RectTransform rect, Vector2 anchoredPosition, Vector2 size)

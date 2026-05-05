@@ -13,7 +13,7 @@ namespace WitcherGame
         [SerializeField] private float minStageX = -8.2f;
         [SerializeField] private float maxStageX = 23.5f;
         [SerializeField] private float minStageY = -2.55f;
-        [SerializeField] private float maxStageY = 0.0f;
+        [SerializeField] private float maxStageY = 5f;
         [SerializeField] private float visualScale = 0.65f;
         [SerializeField] private float attackRange = 1.45f;
         [SerializeField] private float laneAttackTolerance = 0.72f;

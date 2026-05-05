@@ -9,7 +9,7 @@ namespace WitcherGame
         private const float MinStageX = -7.6f;
         private const float MaxStageX = 54f;
         private const float MinStageY = -2.55f;
-        private const float MaxStageY = 0.18f;
+        private const float MaxStageY = 5f;
 
         private readonly List<GameObject> spawnedEnemies = new List<GameObject>();
         private GeraltController player;
@@ -158,7 +158,7 @@ namespace WitcherGame
             }
 
             follow.SetTarget(player.transform);
-            follow.ConfigureBounds(MinStageX, MaxStageX, -0.2f, 0.55f);
+            follow.ConfigureBounds(MinStageX, MaxStageX, MinStageY + 1.25f, MaxStageY);
         }
 
         private readonly struct RoomDefinition
