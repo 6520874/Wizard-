@@ -21,8 +21,6 @@ namespace WitcherGame
             new RoomDefinition(
                 "威伦荒村长路",
                 new Color32(170, 190, 205, 255),
-                new EnemySpawn(MonsterKind.Nekker, 4.8f, -2.06f),
-                new EnemySpawn(MonsterKind.Drowner, 9.6f, -1.28f),
                 new EnemySpawn(MonsterKind.Wraith, 15.4f, -2.2f),
                 new EnemySpawn(MonsterKind.Nekker, 22.5f, -1.08f),
                 new EnemySpawn(MonsterKind.Drowner, 30.6f, -1.82f),
