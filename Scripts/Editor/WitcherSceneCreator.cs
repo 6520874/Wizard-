@@ -16,6 +16,7 @@ public static class WitcherSceneCreator
         CreateBackground();
         CreatePlayer();
         CreateBossSpawner();
+        CreateStoryBootstrap();
 
         EditorSceneManager.SaveScene(scene, ScenePath);
         EditorSceneManager.OpenScene(ScenePath);
@@ -79,5 +80,11 @@ public static class WitcherSceneCreator
     {
         GameObject spawnerObject = new GameObject("BossSpawner");
         spawnerObject.AddComponent<WildHuntBossSpawnDirector>();
+    }
+
+    private static void CreateStoryBootstrap()
+    {
+        GameObject storyObject = new GameObject("Story Bootstrap");
+        storyObject.AddComponent<OpeningStoryManager>();
     }
 }
