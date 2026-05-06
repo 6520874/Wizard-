@@ -21,9 +21,7 @@ namespace WitcherGame
         {
             new RoomDefinition(
                 "威伦荒村长路",
-                new Color32(170, 190, 205, 255),
-                new EnemySpawn(MonsterKind.Nekker, -2.3f, -1.95f, 12f),
-                new EnemySpawn(MonsterKind.Drowner, 0.2f, -1.18f, 12f))
+                new Color32(170, 190, 205, 255))
         };
 
         public static WitcherWorldDirector CreateIfMissing(GeraltController target)
