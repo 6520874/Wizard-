@@ -7,7 +7,7 @@ namespace WitcherGame
     {
         private const float StartY = -1.65f;
         private const float MinStageX = -7.6f;
-        private const float MaxStageX = 54f;
+        private const float MaxStageX = 236.8f;
         private const float MinStageY = -2.55f;
         private const float MaxStageY = 5f;
 
@@ -15,16 +15,15 @@ namespace WitcherGame
         private GeraltController player;
         private WitcherHud hud;
         private int roomIndex;
+        private GameObject bossGateObject;
 
         private readonly RoomDefinition[] rooms =
         {
             new RoomDefinition(
                 "威伦荒村长路",
                 new Color32(170, 190, 205, 255),
-                new EnemySpawn(MonsterKind.Wraith, 15.4f, -2.2f),
-                new EnemySpawn(MonsterKind.Nekker, 22.5f, -1.08f),
-                new EnemySpawn(MonsterKind.Drowner, 30.6f, -1.82f),
-                new EnemySpawn(MonsterKind.Wraith, 39.4f, -1.16f))
+                new EnemySpawn(MonsterKind.Nekker, -2.3f, -1.95f, 12f),
+                new EnemySpawn(MonsterKind.Drowner, 0.2f, -1.18f, 12f))
         };
 
         public static WitcherWorldDirector CreateIfMissing(GeraltController target)
@@ -87,6 +86,7 @@ namespace WitcherGame
 
             ApplyRoomLook(room);
             EnsureCameraFollow();
+            BuildBossGate();
             RespawnEnemies(room);
 
             hud = hud == null ? FindObjectOfType<WitcherHud>() : hud;
@@ -135,9 +135,31 @@ namespace WitcherGame
                 enemyObject.AddComponent<BoxCollider2D>();
                 MonsterPatrol enemy = enemyObject.AddComponent<MonsterPatrol>();
                 Vector2 patrol = spawn.Kind == MonsterKind.Drowner ? new Vector2(1.5f, 0.38f) : new Vector2(2.4f, 0.28f);
-                enemy.Configure(spawn.Kind, patrol);
+                if (spawn.ChaseDistance > 0f)
+                {
+                    enemy.Configure(spawn.Kind, patrol, spawn.ChaseDistance);
+                }
+                else
+                {
+                    enemy.Configure(spawn.Kind, patrol);
+                }
+
                 spawnedEnemies.Add(enemyObject);
             }
+        }
+
+        private void BuildBossGate()
+        {
+            if (bossGateObject != null)
+            {
+                Destroy(bossGateObject);
+            }
+
+            bossGateObject = new GameObject("Wild Hunt Boss Gate");
+            bossGateObject.transform.position = new Vector3(203f, -1.6f, 0f);
+            bossGateObject.AddComponent<SpriteRenderer>();
+            bossGateObject.AddComponent<BoxCollider2D>();
+            bossGateObject.AddComponent<WitcherBossGate>();
         }
 
         private void EnsureCameraFollow()
@@ -175,16 +197,18 @@ namespace WitcherGame
 
         private readonly struct EnemySpawn
         {
-            public EnemySpawn(MonsterKind kind, float x, float y)
+            public EnemySpawn(MonsterKind kind, float x, float y, float chaseDistance = 0f)
             {
                 Kind = kind;
                 X = x;
                 Y = y;
+                ChaseDistance = chaseDistance;
             }
 
             public MonsterKind Kind { get; }
             public float X { get; }
             public float Y { get; }
+            public float ChaseDistance { get; }
         }
     }
 }

@@ -101,6 +101,12 @@ namespace WitcherGame
             endPosition = startPosition + (Vector3)patrolOffset;
         }
 
+        public void Configure(MonsterKind kind, Vector2 patrol, float chaseDistance)
+        {
+            Configure(kind, patrol);
+            chaseRange = Mathf.Max(chaseRange, chaseDistance);
+        }
+
         public void TakeHit(float attackerX)
         {
             if (!CanBeHit)

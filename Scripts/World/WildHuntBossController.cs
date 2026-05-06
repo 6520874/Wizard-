@@ -30,6 +30,7 @@ namespace WitcherGame
         private bool spawned;
         private bool dying;
         private float deathTimer;
+        private bool equipmentDropped;
 
         public bool CanBeHit => spawned && hitStunTimer <= 0f && health > 0 && !dying;
         public bool HasSpawned => spawned;
@@ -181,6 +182,12 @@ namespace WitcherGame
             color.a = Mathf.Lerp(1f, 0f, t);
             spriteRenderer.color = color;
             transform.localScale = Vector3.one * visualScale * Mathf.Lerp(1f, 0.9f, t);
+
+            if (!equipmentDropped && t >= 0.62f)
+            {
+                equipmentDropped = true;
+                WitcherEquipmentDrop.SpawnAt(transform.position + new Vector3(0.55f, 0.15f, 0f));
+            }
 
             if (t >= 1f)
             {

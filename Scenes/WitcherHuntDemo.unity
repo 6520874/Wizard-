@@ -313,11 +313,19 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   imagePath: Art/Backgrounds/Witcher_Village_Longroad.png
+  segmentImagePaths:
+  - Art/Backgrounds/Witcher_Longroad_Segment_01.png
+  - Art/Backgrounds/Witcher_Longroad_Segment_02.png
+  - Art/Backgrounds/Witcher_Longroad_Segment_03.png
+  - Art/Backgrounds/Witcher_Longroad_Segment_04.png
   pixelsPerUnit: 64
   sortingOrder: -50
-  fitToCamera: 1
+  fitToCamera: 0
   worldWidth: 64
   worldCenter: {x: 24, y: -0.35}
+  segmentWorldWidth: 64
+  segmentOverlap: 1.2
+  seamFogWidth: 2.1
 --- !u!1 &300000
 GameObject:
   m_ObjectHideFlags: 0
@@ -512,7 +520,7 @@ MonoBehaviour:
   moveSpeed: 5
   verticalMoveSpeed: 3.25
   minStageX: -8.2
-  maxStageX: 23.5
+  maxStageX: 236.8
   minStageY: -2.55
   maxStageY: 5
   visualScale: 0.65
@@ -576,8 +584,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   spawnDelay: 2.25
-  spawnPosition: {x: 6.7, y: -1.88}
+  spawnPosition: {x: 224, y: -1.58}
   bossName: Wild Hunt Boss
+  autoSpawn: 0
 --- !u!50 &400003
 Rigidbody2D:
   serializedVersion: 4

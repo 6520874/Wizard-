@@ -11,7 +11,7 @@ namespace WitcherGame
         [SerializeField] private float moveSpeed = 5f;
         [SerializeField] private float verticalMoveSpeed = 3.25f;
         [SerializeField] private float minStageX = -8.2f;
-        [SerializeField] private float maxStageX = 23.5f;
+        [SerializeField] private float maxStageX = 236.8f;
         [SerializeField] private float minStageY = -2.55f;
         [SerializeField] private float maxStageY = 5f;
         [SerializeField] private float visualScale = 0.65f;
