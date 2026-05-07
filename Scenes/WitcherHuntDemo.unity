@@ -537,7 +537,7 @@ MonoBehaviour:
   flameManaCost: 24
   flameCooldown: 0.7
   flameLineLength: 6.8
-  flameLineWidth: 1.25
+  flameLineWidth: 0.58
   flameLineDamage: 2
   flameVisualDuration: 0.32
 --- !u!1 &400000

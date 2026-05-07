@@ -1,3 +1,4 @@
+using System.IO;
 using UnityEngine;
 
 namespace WitcherGame
@@ -5,15 +6,15 @@ namespace WitcherGame
     public class WitcherFlameLine : MonoBehaviour
     {
         private const int SortingBoost = 38;
+        private const string FlameSpritePath = "Art/Effects/HunterFlameBeam.png";
+        private const float FlameSpritePixelsPerUnit = 256f;
 
-        private SpriteRenderer glowRenderer;
-        private SpriteRenderer bodyRenderer;
-        private SpriteRenderer coreRenderer;
+        private static Sprite cachedFlameSprite;
+
+        private SpriteRenderer flameRenderer;
         private float lifetime = 0.32f;
         private float timer;
-        private float glowAlpha;
-        private float bodyAlpha;
-        private float coreAlpha;
+        private float startAlpha;
 
         public static void Spawn(Vector3 origin, float facingDirection, float length, float width, int damage, float duration)
         {
@@ -28,33 +29,73 @@ namespace WitcherGame
             lifetime = Mathf.Max(0.08f, duration);
             transform.position = origin + new Vector3(direction * length * 0.5f, 0f, 0f);
 
-            Sprite solidSprite = WitcherSpriteLibrary.GetSolidSprite(Color.white);
-            glowRenderer = CreateLayer("Glow", solidSprite, new Color32(255, 68, 12, 82), new Vector3(length, width * 1.35f, 1f), -0.02f);
-            bodyRenderer = CreateLayer("Flame Body", solidSprite, new Color32(255, 92, 17, 198), new Vector3(length, width, 1f), 0f);
-            coreRenderer = CreateLayer("White Hot Core", solidSprite, new Color32(255, 232, 113, 232), new Vector3(length * 0.86f, width * 0.34f, 1f), 0.02f);
-            glowAlpha = glowRenderer.color.a;
-            bodyAlpha = bodyRenderer.color.a;
-            coreAlpha = coreRenderer.color.a;
+            flameRenderer = CreateFlameRenderer(length, width, direction);
+            startAlpha = flameRenderer.color.a;
 
             int sortingOrder = Mathf.RoundToInt((5f - origin.y) * 100f) + SortingBoost;
-            glowRenderer.sortingOrder = sortingOrder;
-            bodyRenderer.sortingOrder = sortingOrder + 1;
-            coreRenderer.sortingOrder = sortingOrder + 2;
+            flameRenderer.sortingOrder = sortingOrder;
 
             ApplyDamage(origin, direction, length, width, damage);
         }
 
-        private SpriteRenderer CreateLayer(string layerName, Sprite sprite, Color32 color, Vector3 scale, float zOffset)
+        private SpriteRenderer CreateFlameRenderer(float length, float hitWidth, float direction)
         {
-            GameObject layer = new GameObject(layerName);
+            GameObject layer = new GameObject("Flame Sprite");
             layer.transform.SetParent(transform, false);
-            layer.transform.localPosition = new Vector3(0f, 0f, zOffset);
-            layer.transform.localScale = scale;
+            layer.transform.localPosition = Vector3.zero;
 
             SpriteRenderer renderer = layer.AddComponent<SpriteRenderer>();
-            renderer.sprite = sprite;
-            renderer.color = color;
+            renderer.sprite = LoadFlameSprite();
+            renderer.color = Color.white;
+            renderer.flipX = direction < 0f;
+
+            if (renderer.sprite == null)
+            {
+                renderer.sprite = WitcherSpriteLibrary.GetSolidSprite(new Color32(255, 92, 17, 220));
+                renderer.color = new Color32(255, 92, 17, 220);
+                layer.transform.localScale = new Vector3(length, hitWidth, 1f);
+                return renderer;
+            }
+
+            Vector2 spriteSize = renderer.sprite.bounds.size;
+            float visualHeight = Mathf.Max(0.74f, hitWidth * 1.75f);
+            layer.transform.localScale = new Vector3(
+                length / spriteSize.x,
+                visualHeight / spriteSize.y,
+                1f);
             return renderer;
+        }
+
+        private static Sprite LoadFlameSprite()
+        {
+            if (cachedFlameSprite != null)
+            {
+                return cachedFlameSprite;
+            }
+
+            string absolutePath = Path.Combine(Application.dataPath, FlameSpritePath);
+            if (!File.Exists(absolutePath))
+            {
+                Debug.LogWarning($"Flame beam image not found: {absolutePath}");
+                return null;
+            }
+
+            Texture2D texture = new Texture2D(2, 2, TextureFormat.RGBA32, false);
+            if (!texture.LoadImage(File.ReadAllBytes(absolutePath)))
+            {
+                Debug.LogWarning($"Could not load flame beam image: {absolutePath}");
+                return null;
+            }
+
+            texture.filterMode = FilterMode.Bilinear;
+            texture.wrapMode = TextureWrapMode.Clamp;
+            cachedFlameSprite = Sprite.Create(
+                texture,
+                new Rect(0f, 0f, texture.width, texture.height),
+                new Vector2(0.5f, 0.5f),
+                FlameSpritePixelsPerUnit);
+            cachedFlameSprite.name = "HunterFlameBeam";
+            return cachedFlameSprite;
         }
 
         private static void ApplyDamage(Vector3 origin, float direction, float length, float width, int damage)
@@ -98,9 +139,7 @@ namespace WitcherGame
             float pulse = 1f + Mathf.Sin(normalized * Mathf.PI) * 0.22f;
             transform.localScale = new Vector3(1f, pulse, 1f);
 
-            Fade(glowRenderer, normalized, glowAlpha);
-            Fade(bodyRenderer, normalized, bodyAlpha);
-            Fade(coreRenderer, normalized, coreAlpha);
+            Fade(flameRenderer, normalized, startAlpha);
 
             if (normalized >= 1f)
             {

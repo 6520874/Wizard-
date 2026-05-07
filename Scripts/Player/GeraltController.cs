@@ -32,7 +32,7 @@ namespace WitcherGame
         [SerializeField] private int flameManaCost = 24;
         [SerializeField] private float flameCooldown = 0.7f;
         [SerializeField] private float flameLineLength = 6.8f;
-        [SerializeField] private float flameLineWidth = 1.25f;
+        [SerializeField] private float flameLineWidth = 0.58f;
         [SerializeField] private int flameLineDamage = 2;
         [SerializeField] private float flameVisualDuration = 0.32f;
 
