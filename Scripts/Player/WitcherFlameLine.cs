@@ -6,15 +6,23 @@ namespace WitcherGame
     public class WitcherFlameLine : MonoBehaviour
     {
         private const int SortingBoost = 38;
+        private const string FlameSheetPath = "Art/Effects/HunterFlameBeamSheet.png";
         private const string FlameSpritePath = "Art/Effects/HunterFlameBeam.png";
+        private const int FlameSheetColumns = 4;
+        private const int FlameSheetRows = 4;
         private const float FlameSpritePixelsPerUnit = 256f;
 
+        private static Sprite[] cachedFlameFrames;
         private static Sprite cachedFlameSprite;
 
         private SpriteRenderer flameRenderer;
+        private Transform flameLayer;
         private float lifetime = 0.32f;
         private float timer;
         private float startAlpha;
+        private float targetLength;
+        private float targetVisualHeight;
+        private float direction;
 
         public static void Spawn(Vector3 origin, float facingDirection, float length, float width, int damage, float duration)
         {
@@ -25,9 +33,11 @@ namespace WitcherGame
 
         private void Configure(Vector3 origin, float facingDirection, float length, float width, int damage, float duration)
         {
-            float direction = facingDirection >= 0f ? 1f : -1f;
+            direction = facingDirection >= 0f ? 1f : -1f;
             lifetime = Mathf.Max(0.08f, duration);
             transform.position = origin + new Vector3(direction * length * 0.5f, 0f, 0f);
+            targetLength = length;
+            targetVisualHeight = Mathf.Max(0.74f, width * 1.75f);
 
             flameRenderer = CreateFlameRenderer(length, width, direction);
             startAlpha = flameRenderer.color.a;
@@ -43,9 +53,11 @@ namespace WitcherGame
             GameObject layer = new GameObject("Flame Sprite");
             layer.transform.SetParent(transform, false);
             layer.transform.localPosition = Vector3.zero;
+            flameLayer = layer.transform;
 
             SpriteRenderer renderer = layer.AddComponent<SpriteRenderer>();
-            renderer.sprite = LoadFlameSprite();
+            Sprite[] frames = LoadFlameFrames();
+            renderer.sprite = frames.Length > 0 ? frames[0] : LoadFlameSprite();
             renderer.color = Color.white;
             renderer.flipX = direction < 0f;
 
@@ -58,12 +70,54 @@ namespace WitcherGame
             }
 
             Vector2 spriteSize = renderer.sprite.bounds.size;
-            float visualHeight = Mathf.Max(0.74f, hitWidth * 1.75f);
             layer.transform.localScale = new Vector3(
                 length / spriteSize.x,
-                visualHeight / spriteSize.y,
+                targetVisualHeight / spriteSize.y,
                 1f);
             return renderer;
+        }
+
+        private static Sprite[] LoadFlameFrames()
+        {
+            if (cachedFlameFrames != null)
+            {
+                return cachedFlameFrames;
+            }
+
+            string absolutePath = Path.Combine(Application.dataPath, FlameSheetPath);
+            if (!File.Exists(absolutePath))
+            {
+                cachedFlameFrames = System.Array.Empty<Sprite>();
+                return cachedFlameFrames;
+            }
+
+            Texture2D texture = new Texture2D(2, 2, TextureFormat.RGBA32, false);
+            if (!texture.LoadImage(File.ReadAllBytes(absolutePath)))
+            {
+                Debug.LogWarning($"Could not load flame beam sheet: {absolutePath}");
+                cachedFlameFrames = System.Array.Empty<Sprite>();
+                return cachedFlameFrames;
+            }
+
+            texture.filterMode = FilterMode.Bilinear;
+            texture.wrapMode = TextureWrapMode.Clamp;
+
+            int frameWidth = texture.width / FlameSheetColumns;
+            int frameHeight = texture.height / FlameSheetRows;
+            cachedFlameFrames = new Sprite[FlameSheetColumns * FlameSheetRows];
+            for (int row = 0; row < FlameSheetRows; row++)
+            {
+                for (int column = 0; column < FlameSheetColumns; column++)
+                {
+                    int index = row * FlameSheetColumns + column;
+                    Rect rect = new Rect(column * frameWidth, texture.height - (row + 1) * frameHeight, frameWidth, frameHeight);
+                    Sprite frame = Sprite.Create(texture, rect, new Vector2(0.5f, 0.5f), FlameSpritePixelsPerUnit);
+                    frame.name = $"HunterFlameBeam_{index:00}";
+                    cachedFlameFrames[index] = frame;
+                }
+            }
+
+            return cachedFlameFrames;
         }
 
         private static Sprite LoadFlameSprite()
@@ -136,7 +190,15 @@ namespace WitcherGame
         {
             timer += Time.deltaTime;
             float normalized = Mathf.Clamp01(timer / lifetime);
-            float pulse = 1f + Mathf.Sin(normalized * Mathf.PI) * 0.22f;
+            Sprite[] frames = LoadFlameFrames();
+            if (frames.Length > 0)
+            {
+                int frameIndex = Mathf.Min(frames.Length - 1, Mathf.FloorToInt(normalized * frames.Length));
+                flameRenderer.sprite = frames[frameIndex];
+                ScaleCurrentFrame(normalized);
+            }
+
+            float pulse = 1f + Mathf.Sin(normalized * Mathf.PI) * 0.12f;
             transform.localScale = new Vector3(1f, pulse, 1f);
 
             Fade(flameRenderer, normalized, startAlpha);
@@ -145,6 +207,24 @@ namespace WitcherGame
             {
                 Destroy(gameObject);
             }
+        }
+
+        private void ScaleCurrentFrame(float normalized)
+        {
+            if (flameRenderer == null || flameRenderer.sprite == null || flameLayer == null)
+            {
+                return;
+            }
+
+            Vector2 spriteSize = flameRenderer.sprite.bounds.size;
+            float lengthGrowth = Mathf.Clamp01(normalized / 0.34f);
+            float visualLength = Mathf.Lerp(targetLength * 0.28f, targetLength, lengthGrowth);
+            float fadeTail = normalized > 0.72f ? Mathf.Lerp(1f, 0.82f, (normalized - 0.72f) / 0.28f) : 1f;
+            flameLayer.localScale = new Vector3(
+                visualLength / spriteSize.x,
+                targetVisualHeight / spriteSize.y * fadeTail,
+                1f);
+            flameLayer.localPosition = new Vector3(direction * (visualLength - targetLength) * 0.5f, 0f, 0f);
         }
 
         private static void Fade(SpriteRenderer renderer, float normalized, float startAlpha)
