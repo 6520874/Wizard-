@@ -6,7 +6,7 @@ namespace WitcherGame
     public class WildHuntBossSpawnDirector : MonoBehaviour
     {
         [SerializeField] private float spawnDelay = 1.2f;
-        [SerializeField] private Vector2 spawnPosition = new Vector2(224f, -1.58f);
+        [SerializeField] private Vector2 spawnPosition = new Vector2(48f, -1.58f);
         [SerializeField] private string bossName = "Black Moon Stalker";
         [SerializeField] private bool autoSpawn = true;
         [SerializeField] private bool hordeMode = true;
@@ -16,7 +16,7 @@ namespace WitcherGame
         [SerializeField] private float spawnDistanceAhead = 10f;
         [SerializeField] private float spawnDistanceBehind = 7f;
         [SerializeField] private float minStageX = -7.6f;
-        [SerializeField] private float maxStageX = 236.8f;
+        [SerializeField] private float maxStageX = 55.6f;
         [SerializeField] private float minSpawnY = -2.35f;
         [SerializeField] private float maxSpawnY = 3.8f;
         [SerializeField] private int hordeHealth = 3;

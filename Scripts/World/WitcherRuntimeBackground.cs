@@ -8,13 +8,7 @@ namespace WitcherGame
     {
         [SerializeField] private string imagePath = "Art/Backgrounds/Witcher_Village_Longroad.png";
         [SerializeField]
-        private string[] segmentImagePaths =
-        {
-            "Art/Backgrounds/Witcher_Longroad_Segment_01.png",
-            "Art/Backgrounds/Witcher_Longroad_Segment_02.png",
-            "Art/Backgrounds/Witcher_Longroad_Segment_03.png",
-            "Art/Backgrounds/Witcher_Longroad_Segment_04.png"
-        };
+        private string[] segmentImagePaths = System.Array.Empty<string>();
         [SerializeField] private float pixelsPerUnit = 64f;
         [SerializeField] private int sortingOrder = -50;
         [SerializeField] private bool fitToCamera = false;
@@ -37,6 +31,7 @@ namespace WitcherGame
                 return;
             }
 
+            ClearSegmentChildren();
             LoadSprite(spriteRenderer, imagePath);
         }
 
@@ -72,10 +67,7 @@ namespace WitcherGame
 
         private void BuildSegmentedBackground()
         {
-            for (int i = transform.childCount - 1; i >= 0; i--)
-            {
-                Destroy(transform.GetChild(i).gameObject);
-            }
+            ClearSegmentChildren();
 
             float spacing = Mathf.Max(0.1f, segmentWorldWidth - segmentOverlap);
             float startX = worldCenter.x;
@@ -100,6 +92,14 @@ namespace WitcherGame
                 {
                     CreateSeamFog(i, startX + i * spacing - segmentWorldWidth * 0.5f + segmentOverlap * 0.5f);
                 }
+            }
+        }
+
+        private void ClearSegmentChildren()
+        {
+            for (int i = transform.childCount - 1; i >= 0; i--)
+            {
+                Destroy(transform.GetChild(i).gameObject);
             }
         }
 

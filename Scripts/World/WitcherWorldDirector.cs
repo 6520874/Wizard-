@@ -7,7 +7,7 @@ namespace WitcherGame
     {
         private const float StartY = -1.65f;
         private const float MinStageX = -7.6f;
-        private const float MaxStageX = 236.8f;
+        private const float MaxStageX = 55.6f;
         private const float MinStageY = -2.55f;
         private const float MaxStageY = 5f;
 
