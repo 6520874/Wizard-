@@ -15,7 +15,6 @@ namespace WitcherGame
         private GeraltController player;
         private WitcherHud hud;
         private int roomIndex;
-        private GameObject bossGateObject;
 
         private readonly RoomDefinition[] rooms =
         {
@@ -84,7 +83,6 @@ namespace WitcherGame
 
             ApplyRoomLook(room);
             EnsureCameraFollow();
-            BuildBossGate();
             RespawnEnemies(room);
 
             hud = hud == null ? FindObjectOfType<WitcherHud>() : hud;
@@ -144,20 +142,6 @@ namespace WitcherGame
 
                 spawnedEnemies.Add(enemyObject);
             }
-        }
-
-        private void BuildBossGate()
-        {
-            if (bossGateObject != null)
-            {
-                Destroy(bossGateObject);
-            }
-
-            bossGateObject = new GameObject("Wild Hunt Boss Gate");
-            bossGateObject.transform.position = new Vector3(203f, -1.6f, 0f);
-            bossGateObject.AddComponent<SpriteRenderer>();
-            bossGateObject.AddComponent<BoxCollider2D>();
-            bossGateObject.AddComponent<WitcherBossGate>();
         }
 
         private void EnsureCameraFollow()

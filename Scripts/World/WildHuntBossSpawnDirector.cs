@@ -7,7 +7,7 @@ namespace WitcherGame
         [SerializeField] private float spawnDelay = 2.25f;
         [SerializeField] private Vector2 spawnPosition = new Vector2(224f, -1.58f);
         [SerializeField] private string bossName = "Wild Hunt Boss";
-        [SerializeField] private bool autoSpawn;
+        [SerializeField] private bool autoSpawn = true;
 
         private float timer;
         private bool spawned;
