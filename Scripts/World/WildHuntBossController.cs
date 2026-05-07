@@ -31,6 +31,7 @@ namespace WitcherGame
         private bool dying;
         private float deathTimer;
         private bool equipmentDropped;
+        private bool shouldDropEquipment = true;
 
         public bool CanBeHit => spawned && hitStunTimer <= 0f && health > 0 && !dying;
         public bool HasSpawned => spawned;
@@ -60,6 +61,17 @@ namespace WitcherGame
         {
             player = FindObjectOfType<GeraltController>();
             bossAnimator.PlaySpawn();
+        }
+
+        public void ConfigureHordeVariant(int healthValue, float speedValue, float scaleValue, bool dropEquipmentOnDeath)
+        {
+            maxHealth = Mathf.Max(1, healthValue);
+            health = maxHealth;
+            moveSpeed = Mathf.Max(0.1f, speedValue);
+            visualScale = Mathf.Max(0.1f, scaleValue);
+            shouldDropEquipment = dropEquipmentOnDeath;
+            attackCooldown = Mathf.Max(attackCooldown, 1.65f);
+            transform.localScale = Vector3.one * visualScale;
         }
 
         private void Update()
@@ -171,7 +183,7 @@ namespace WitcherGame
             }
 
             bossAnimator.PlayDeath();
-            WitcherCombatText.Spawn("狂猎倒下", transform.position + Vector3.up * 1.2f, new Color32(118, 219, 255, 255));
+            WitcherCombatText.Spawn("黑月骑士倒下", transform.position + Vector3.up * 1.2f, new Color32(118, 219, 255, 255));
         }
 
         private void UpdateDeathAnimation()
@@ -183,7 +195,7 @@ namespace WitcherGame
             spriteRenderer.color = color;
             transform.localScale = Vector3.one * visualScale * Mathf.Lerp(1f, 0.9f, t);
 
-            if (!equipmentDropped && t >= 0.62f)
+            if (shouldDropEquipment && !equipmentDropped && t >= 0.62f)
             {
                 equipmentDropped = true;
                 WitcherEquipmentDrop.SpawnAt(transform.position + new Vector3(0.55f, 0.15f, 0f));

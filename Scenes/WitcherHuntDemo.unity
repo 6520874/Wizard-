@@ -583,10 +583,24 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7c3f6d8e6da94d1893f3dd36f69c60da, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  spawnDelay: 2.25
+  spawnDelay: 1.2
   spawnPosition: {x: 224, y: -1.58}
-  bossName: Wild Hunt Boss
+  bossName: Black Moon Stalker
   autoSpawn: 1
+  hordeMode: 1
+  spawnInterval: 1.25
+  spawnBatchSize: 2
+  maxAliveBosses: 10
+  spawnDistanceAhead: 10
+  spawnDistanceBehind: 7
+  minStageX: -7.6
+  maxStageX: 236.8
+  minSpawnY: -2.35
+  maxSpawnY: 3.8
+  hordeHealth: 3
+  hordeMoveSpeed: 2.15
+  hordeScale: 0.58
+  hordeDropsEquipment: 0
 --- !u!50 &400003
 Rigidbody2D:
   serializedVersion: 4

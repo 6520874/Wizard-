@@ -335,17 +335,21 @@ namespace WitcherGame
 
         private void TryHitBoss()
         {
-            WildHuntBossController boss = FindObjectOfType<WildHuntBossController>();
-            if (boss == null || !boss.CanBeHit)
+            WildHuntBossController[] bosses = FindObjectsOfType<WildHuntBossController>();
+            for (int i = 0; i < bosses.Length; i++)
             {
-                return;
-            }
+                WildHuntBossController boss = bosses[i];
+                if (boss == null || !boss.CanBeHit)
+                {
+                    continue;
+                }
 
-            float horizontalDistance = Mathf.Abs(boss.transform.position.x - transform.position.x);
-            float verticalDistance = Mathf.Abs(boss.transform.position.y - transform.position.y);
-            if (horizontalDistance <= attackRange && verticalDistance <= laneAttackTolerance)
-            {
-                boss.TakeHit(transform.position.x);
+                float horizontalDistance = Mathf.Abs(boss.transform.position.x - transform.position.x);
+                float verticalDistance = Mathf.Abs(boss.transform.position.y - transform.position.y);
+                if (horizontalDistance <= attackRange && verticalDistance <= laneAttackTolerance)
+                {
+                    boss.TakeHit(transform.position.x);
+                }
             }
         }
 
