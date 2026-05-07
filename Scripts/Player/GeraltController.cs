@@ -22,13 +22,19 @@ namespace WitcherGame
         [SerializeField] private int maxMana = 100;
         [SerializeField] private int slashManaCost = 12;
         [SerializeField] private float manaRegenPerSecond = 9f;
-        [SerializeField] private int bossHitDamage = 16;
+        [SerializeField] private int bossHitDamage = 6;
         [SerializeField] private float dashSpeed = 12f;
         [SerializeField] private float dashDuration = 0.16f;
         [SerializeField] private float dashCooldown = 0.55f;
         [SerializeField] private int dashManaCost = 18;
         [SerializeField] private int healManaCost = 35;
         [SerializeField] private int healAmount = 22;
+        [SerializeField] private int flameManaCost = 24;
+        [SerializeField] private float flameCooldown = 0.7f;
+        [SerializeField] private float flameLineLength = 6.8f;
+        [SerializeField] private float flameLineWidth = 1.25f;
+        [SerializeField] private int flameLineDamage = 2;
+        [SerializeField] private float flameVisualDuration = 0.32f;
 
         private Rigidbody2D body;
         private SpriteRenderer spriteRenderer;
@@ -39,6 +45,7 @@ namespace WitcherGame
         private float currentMana;
         private float dashTimer;
         private float dashCooldownTimer;
+        private float flameCooldownTimer;
         private float invulnerableTimer;
         private float lastFacingDirection = 1f;
         private bool defeatHandled;
@@ -73,6 +80,7 @@ namespace WitcherGame
         {
             RegenerateMana();
             dashCooldownTimer -= Time.deltaTime;
+            flameCooldownTimer -= Time.deltaTime;
             invulnerableTimer -= Time.deltaTime;
 
             if (!IsAlive)
@@ -126,7 +134,11 @@ namespace WitcherGame
             {
                 TryHeal();
             }
-            else if (Input.GetButtonDown("Fire1") || Input.GetKeyDown(KeyCode.J))
+            else if (Input.GetKeyDown(KeyCode.J))
+            {
+                TryCastFlameLine();
+            }
+            else if (Input.GetButtonDown("Fire1") || Input.GetKeyDown(KeyCode.K))
             {
                 TrySlash();
             }
@@ -225,6 +237,30 @@ namespace WitcherGame
             geraltAnimator.PlaySlash();
             TryHitBoss();
             TryHitCommonEnemies();
+        }
+
+        private void TryCastFlameLine()
+        {
+            if (geraltAnimator.IsSlashPlaying || geraltAnimator.IsHurtPlaying || geraltAnimator.IsDeathPlaying)
+            {
+                return;
+            }
+
+            if (flameCooldownTimer > 0f || currentMana < flameManaCost)
+            {
+                geraltAnimator.PlayLocomotion(false);
+                return;
+            }
+
+            currentMana = Mathf.Max(0f, currentMana - flameManaCost);
+            StatsChanged?.Invoke();
+            flameCooldownTimer = flameCooldown;
+            body.velocity = Vector2.zero;
+            geraltAnimator.PlaySlash();
+
+            Vector3 origin = transform.position + new Vector3(lastFacingDirection * 0.9f, 0.34f, 0f);
+            WitcherFlameLine.Spawn(origin, lastFacingDirection, flameLineLength, flameLineWidth, flameLineDamage, flameVisualDuration);
+            WitcherCombatText.Spawn("火焰印记", transform.position + Vector3.up * 1.25f, new Color32(255, 143, 58, 255));
         }
 
         private void TryDash(float moveInput)

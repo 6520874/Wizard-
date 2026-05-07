@@ -126,6 +126,26 @@ namespace WitcherGame
             }
         }
 
+        public void TakeMagicHit(int damage, float attackerX)
+        {
+            if (!CanBeHit)
+            {
+                return;
+            }
+
+            int actualDamage = Mathf.Max(1, damage);
+            health -= actualDamage;
+            WitcherCombatText.Spawn($"-{actualDamage}", transform.position, new Color32(255, 151, 65, 255));
+            hurtFlashTimer = 0.16f;
+            float knockDirection = transform.position.x >= attackerX ? 1f : -1f;
+            transform.position += new Vector3(knockDirection * 0.2f, 0f, 0f);
+
+            if (health <= 0)
+            {
+                StartDeathAnimation();
+            }
+        }
+
         private void StartDeathAnimation()
         {
             if (dying)

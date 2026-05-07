@@ -531,13 +531,19 @@ MonoBehaviour:
   maxMana: 100
   slashManaCost: 12
   manaRegenPerSecond: 9
-  bossHitDamage: 16
+  bossHitDamage: 6
   dashSpeed: 12
   dashDuration: 0.16
   dashCooldown: 0.55
   dashManaCost: 18
   healManaCost: 35
   healAmount: 22
+  flameManaCost: 24
+  flameCooldown: 0.7
+  flameLineLength: 6.8
+  flameLineWidth: 1.25
+  flameLineDamage: 2
+  flameVisualDuration: 0.32
 --- !u!1 &400000
 GameObject:
   m_ObjectHideFlags: 0

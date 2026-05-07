@@ -34,6 +34,7 @@ namespace WitcherGame
         private bool shouldDropEquipment = true;
 
         public bool CanBeHit => spawned && hitStunTimer <= 0f && health > 0 && !dying;
+        public bool CanTakeMagicHit => spawned && health > 0 && !dying;
         public bool HasSpawned => spawned;
         public int CurrentHealth => health;
         public int MaxHealth => maxHealth;
@@ -160,6 +161,30 @@ namespace WitcherGame
             hitStunTimer = hitStunDuration;
             float knockDirection = transform.position.x >= attackerX ? 1f : -1f;
             transform.position += new Vector3(knockDirection * 0.18f, 0f, 0f);
+            spriteRenderer.flipX = attackerX < transform.position.x;
+            bossAnimator.PlayHurt();
+            ClampToStage();
+        }
+
+        public void TakeMagicHit(int damage, float attackerX)
+        {
+            if (!CanTakeMagicHit)
+            {
+                return;
+            }
+
+            int actualDamage = Mathf.Max(1, damage);
+            health -= actualDamage;
+            WitcherCombatText.Spawn($"-{actualDamage}", transform.position, new Color32(255, 151, 65, 255));
+            if (health <= 0)
+            {
+                StartDeathAnimation();
+                return;
+            }
+
+            hitStunTimer = Mathf.Max(hitStunTimer, hitStunDuration * 0.75f);
+            float knockDirection = transform.position.x >= attackerX ? 1f : -1f;
+            transform.position += new Vector3(knockDirection * 0.12f, 0f, 0f);
             spriteRenderer.flipX = attackerX < transform.position.x;
             bossAnimator.PlayHurt();
             ClampToStage();
