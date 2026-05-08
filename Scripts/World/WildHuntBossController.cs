@@ -32,6 +32,7 @@ namespace WitcherGame
         private float deathTimer;
         private bool equipmentDropped;
         private bool shouldDropEquipment = true;
+        private float hurtFlashTimer;
 
         public bool CanBeHit => spawned && hitStunTimer <= 0f && health > 0 && !dying;
         public bool CanTakeMagicHit => spawned && health > 0 && !dying;
@@ -71,7 +72,9 @@ namespace WitcherGame
             moveSpeed = Mathf.Max(0.1f, speedValue);
             visualScale = Mathf.Max(0.1f, scaleValue);
             shouldDropEquipment = dropEquipmentOnDeath;
-            attackCooldown = Mathf.Max(attackCooldown, 1.65f);
+            attackCooldown = Mathf.Max(attackCooldown, 1.95f);
+            attackRange = Mathf.Min(attackRange, 1.55f);
+            laneAttackTolerance = Mathf.Min(laneAttackTolerance, 0.72f);
             transform.localScale = Vector3.one * visualScale;
         }
 
@@ -99,6 +102,13 @@ namespace WitcherGame
             if (hitStunTimer > 0f)
             {
                 hitStunTimer -= Time.deltaTime;
+            }
+
+            hurtFlashTimer -= Time.deltaTime;
+            spriteRenderer.color = hurtFlashTimer > 0f ? new Color32(255, 244, 218, 255) : Color.white;
+
+            if (hitStunTimer > 0f)
+            {
                 return;
             }
 
@@ -151,7 +161,8 @@ namespace WitcherGame
             }
 
             health--;
-            WitcherCombatText.Spawn("-1", transform.position, new Color32(149, 221, 255, 255));
+            WitcherCombatText.Spawn("-1", transform.position + Vector3.up * 0.45f, new Color32(255, 239, 164, 255));
+            WitcherCombatFeedback.EnemyHit(transform.position);
             if (health <= 0)
             {
                 StartDeathAnimation();
@@ -159,8 +170,9 @@ namespace WitcherGame
             }
 
             hitStunTimer = hitStunDuration;
+            hurtFlashTimer = 0.09f;
             float knockDirection = transform.position.x >= attackerX ? 1f : -1f;
-            transform.position += new Vector3(knockDirection * 0.18f, 0f, 0f);
+            transform.position += new Vector3(knockDirection * 0.35f, 0f, 0f);
             spriteRenderer.flipX = attackerX < transform.position.x;
             bossAnimator.PlayHurt();
             ClampToStage();
@@ -175,7 +187,8 @@ namespace WitcherGame
 
             int actualDamage = Mathf.Max(1, damage);
             health -= actualDamage;
-            WitcherCombatText.Spawn($"-{actualDamage}", transform.position, new Color32(255, 151, 65, 255));
+            WitcherCombatText.Spawn($"-{actualDamage}", transform.position + Vector3.up * 0.45f, new Color32(255, 151, 65, 255));
+            WitcherCombatFeedback.HeavyEnemyHit(transform.position);
             if (health <= 0)
             {
                 StartDeathAnimation();
@@ -183,8 +196,9 @@ namespace WitcherGame
             }
 
             hitStunTimer = Mathf.Max(hitStunTimer, hitStunDuration * 0.75f);
+            hurtFlashTimer = 0.11f;
             float knockDirection = transform.position.x >= attackerX ? 1f : -1f;
-            transform.position += new Vector3(knockDirection * 0.12f, 0f, 0f);
+            transform.position += new Vector3(knockDirection * 0.26f, 0f, 0f);
             spriteRenderer.flipX = attackerX < transform.position.x;
             bossAnimator.PlayHurt();
             ClampToStage();

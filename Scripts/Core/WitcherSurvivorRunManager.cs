@@ -22,7 +22,7 @@ namespace WitcherGame
 
         private int level = 1;
         private int experience;
-        private int experienceToNext = 8;
+        private int experienceToNext = 7;
         private int kills;
         private int wave = 1;
         private int pendingLevelUps;
@@ -142,7 +142,7 @@ namespace WitcherGame
                 experience -= experienceToNext;
                 level++;
                 pendingLevelUps++;
-                experienceToNext = Mathf.RoundToInt(experienceToNext * 1.32f + 4f);
+                experienceToNext = Mathf.RoundToInt(experienceToNext * 1.25f + 4f);
             }
 
             if (pendingLevelUps > 0 && !choosingUpgrade)

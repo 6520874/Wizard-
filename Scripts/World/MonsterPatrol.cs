@@ -115,10 +115,11 @@ namespace WitcherGame
             }
 
             health--;
-            WitcherCombatText.Spawn("-1", transform.position, new Color32(255, 225, 126, 255));
-            hurtFlashTimer = 0.12f;
+            WitcherCombatText.Spawn("-1", transform.position + Vector3.up * 0.35f, new Color32(255, 225, 126, 255));
+            WitcherCombatFeedback.EnemyHit(transform.position, 0.06f, 0.028f);
+            hurtFlashTimer = 0.14f;
             float knockDirection = transform.position.x >= attackerX ? 1f : -1f;
-            transform.position += new Vector3(knockDirection * 0.22f, 0f, 0f);
+            transform.position += new Vector3(knockDirection * 0.34f, 0f, 0f);
 
             if (health <= 0)
             {
@@ -135,10 +136,11 @@ namespace WitcherGame
 
             int actualDamage = Mathf.Max(1, damage);
             health -= actualDamage;
-            WitcherCombatText.Spawn($"-{actualDamage}", transform.position, new Color32(255, 151, 65, 255));
-            hurtFlashTimer = 0.16f;
+            WitcherCombatText.Spawn($"-{actualDamage}", transform.position + Vector3.up * 0.35f, new Color32(255, 151, 65, 255));
+            WitcherCombatFeedback.EnemyHit(transform.position, 0.09f, 0.035f);
+            hurtFlashTimer = 0.18f;
             float knockDirection = transform.position.x >= attackerX ? 1f : -1f;
-            transform.position += new Vector3(knockDirection * 0.2f, 0f, 0f);
+            transform.position += new Vector3(knockDirection * 0.32f, 0f, 0f);
 
             if (health <= 0)
             {

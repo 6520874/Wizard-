@@ -13,6 +13,9 @@ namespace WitcherGame
         [SerializeField] private float maxY = 0.55f;
 
         private Vector3 velocity;
+        private float shakeTimer;
+        private float shakeDuration = 0.1f;
+        private float shakeStrength;
 
         public void SetTarget(Transform followTarget)
         {
@@ -25,6 +28,13 @@ namespace WitcherGame
             maxX = stageMaxX;
             minY = stageMinY;
             maxY = stageMaxY;
+        }
+
+        public void AddShake(float strength, float duration)
+        {
+            shakeStrength = Mathf.Max(shakeStrength, strength);
+            shakeDuration = Mathf.Max(0.01f, duration);
+            shakeTimer = Mathf.Max(shakeTimer, duration);
         }
 
         private void LateUpdate()
@@ -47,7 +57,20 @@ namespace WitcherGame
             }
 
             desiredPosition.y = Mathf.Clamp(desiredPosition.y, minY, maxY);
-            transform.position = Vector3.SmoothDamp(transform.position, desiredPosition, ref velocity, smoothTime);
+            Vector3 smoothedPosition = Vector3.SmoothDamp(transform.position, desiredPosition, ref velocity, smoothTime);
+            if (shakeTimer > 0f)
+            {
+                shakeTimer -= Time.unscaledDeltaTime;
+                float shake01 = Mathf.Clamp01(shakeTimer / shakeDuration);
+                Vector2 offsetShake = Random.insideUnitCircle * shakeStrength * shake01;
+                smoothedPosition += new Vector3(offsetShake.x, offsetShake.y, 0f);
+            }
+            else
+            {
+                shakeStrength = 0f;
+            }
+
+            transform.position = smoothedPosition;
         }
     }
 }

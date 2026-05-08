@@ -10,9 +10,9 @@ namespace WitcherGame
         [SerializeField] private string bossName = "Black Moon Stalker";
         [SerializeField] private bool autoSpawn = true;
         [SerializeField] private bool hordeMode = true;
-        [SerializeField] private float spawnInterval = 1.25f;
+        [SerializeField] private float spawnInterval = 1.45f;
         [SerializeField] private int spawnBatchSize = 2;
-        [SerializeField] private int maxAliveBosses = 10;
+        [SerializeField] private int maxAliveBosses = 8;
         [SerializeField] private float spawnDistanceAhead = 10f;
         [SerializeField] private float spawnDistanceBehind = 7f;
         [SerializeField] private float minStageX = -7.6f;
@@ -75,11 +75,11 @@ namespace WitcherGame
         public void ApplySurvivorWaveTuning(int wave)
         {
             int clampedWave = Mathf.Max(1, wave);
-            spawnInterval = Mathf.Max(0.48f, 1.25f - (clampedWave - 1) * 0.08f);
-            spawnBatchSize = Mathf.Clamp(2 + (clampedWave - 1) / 2, 2, 5);
-            maxAliveBosses = Mathf.Clamp(10 + clampedWave * 2, 10, 26);
-            hordeHealth = Mathf.Clamp(3 + (clampedWave - 1) / 2, 3, 10);
-            hordeMoveSpeed = Mathf.Min(3.45f, 2.15f + (clampedWave - 1) * 0.08f);
+            spawnInterval = Mathf.Max(0.62f, 1.45f - (clampedWave - 1) * 0.07f);
+            spawnBatchSize = Mathf.Clamp(2 + (clampedWave - 1) / 3, 2, 4);
+            maxAliveBosses = Mathf.Clamp(8 + clampedWave * 2, 8, 22);
+            hordeHealth = Mathf.Clamp(3 + (clampedWave - 1) / 3, 3, 8);
+            hordeMoveSpeed = Mathf.Min(3.15f, 2.05f + (clampedWave - 1) * 0.07f);
         }
 
         private void SpawnHordeBatch()

@@ -15,23 +15,23 @@ namespace WitcherGame
         [SerializeField] private float minStageY = -2.55f;
         [SerializeField] private float maxStageY = 5f;
         [SerializeField] private float visualScale = 0.65f;
-        [SerializeField] private float attackRange = 1.45f;
+        [SerializeField] private float attackRange = 1.65f;
         [SerializeField] private float laneAttackTolerance = 0.72f;
-        [SerializeField] private float hurtLockDuration = 0.35f;
-        [SerializeField] private int maxHealth = 100;
+        [SerializeField] private float hurtLockDuration = 0.48f;
+        [SerializeField] private int maxHealth = 120;
         [SerializeField] private int maxMana = 100;
-        [SerializeField] private int slashManaCost = 12;
-        [SerializeField] private float manaRegenPerSecond = 9f;
-        [SerializeField] private int bossHitDamage = 6;
+        [SerializeField] private int slashManaCost = 8;
+        [SerializeField] private float manaRegenPerSecond = 11f;
+        [SerializeField] private int bossHitDamage = 5;
         [SerializeField] private float dashSpeed = 12f;
         [SerializeField] private float dashDuration = 0.16f;
         [SerializeField] private float dashCooldown = 0.55f;
         [SerializeField] private int dashManaCost = 18;
         [SerializeField] private int healManaCost = 35;
         [SerializeField] private int healAmount = 22;
-        [SerializeField] private int flameManaCost = 24;
+        [SerializeField] private int flameManaCost = 20;
         [SerializeField] private float flameCooldown = 0.7f;
-        [SerializeField] private float flameLineLength = 6.8f;
+        [SerializeField] private float flameLineLength = 7.2f;
         [SerializeField] private float flameLineWidth = 0.58f;
         [SerializeField] private int flameLineDamage = 2;
         [SerializeField] private float flameVisualDuration = 0.32f;
@@ -343,14 +343,16 @@ namespace WitcherGame
 
             int previousHealth = currentHealth;
             currentHealth = Mathf.Clamp(currentHealth - Mathf.Max(0, damage), 0, maxHealth);
-            WitcherCombatText.Spawn($"-{damage}", transform.position, new Color32(255, 72, 82, 255));
+            WitcherCombatText.Spawn($"-{damage}", transform.position + Vector3.up * 0.95f, new Color32(255, 72, 82, 255));
+            WitcherCombatFeedback.PlayerHit(transform.position);
             if (currentHealth != previousHealth)
             {
                 StatsChanged?.Invoke();
             }
             hurtLockTimer = hurtLockDuration;
+            invulnerableTimer = Mathf.Max(invulnerableTimer, 0.32f);
             float knockDirection = transform.position.x >= attackerX ? 1f : -1f;
-            transform.position += new Vector3(knockDirection * 0.18f, 0f, 0f);
+            transform.position += new Vector3(knockDirection * 0.38f, 0f, 0f);
             body.velocity = Vector2.zero;
             if (currentHealth <= 0)
             {
