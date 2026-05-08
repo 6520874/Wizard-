@@ -74,6 +74,7 @@ namespace WitcherGame
         {
             WitcherHud.CreateIfMissing(this);
             WitcherWorldDirector.CreateIfMissing(this);
+            WitcherSurvivorRunManager.CreateIfMissing(this);
         }
 
         private void Update()
@@ -201,6 +202,42 @@ namespace WitcherGame
                 WitcherCombatText.Spawn($"+{restoredAmount} MP", transform.position, new Color32(89, 181, 255, 255));
                 StatsChanged?.Invoke();
             }
+        }
+
+        public void IncreaseMaxHealth(int amount)
+        {
+            maxHealth += Mathf.Max(1, amount);
+            currentHealth = Mathf.Clamp(currentHealth + amount, 0, maxHealth);
+            StatsChanged?.Invoke();
+        }
+
+        public void IncreaseMaxMana(int amount)
+        {
+            maxMana += Mathf.Max(1, amount);
+            currentMana = Mathf.Clamp(currentMana + amount, 0f, maxMana);
+            StatsChanged?.Invoke();
+        }
+
+        public void ImproveManaRegen(float amount)
+        {
+            manaRegenPerSecond += Mathf.Max(0.1f, amount);
+        }
+
+        public void ImproveFlameDamage(int amount)
+        {
+            flameLineDamage += Mathf.Max(1, amount);
+        }
+
+        public void ImproveFlameReach(float lengthAmount, float widthAmount)
+        {
+            flameLineLength += Mathf.Max(0.1f, lengthAmount);
+            flameLineWidth += Mathf.Max(0f, widthAmount);
+        }
+
+        public void ImproveMobility(float horizontalAmount, float verticalAmount)
+        {
+            moveSpeed += Mathf.Max(0.1f, horizontalAmount);
+            verticalMoveSpeed += Mathf.Max(0.05f, verticalAmount);
         }
 
         public void ConfigureStage(float minX, float maxX, float minY, float maxY)

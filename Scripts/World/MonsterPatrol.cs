@@ -177,6 +177,7 @@ namespace WitcherGame
             }
 
             WitcherCombatText.Spawn("击杀", transform.position + Vector3.up * 0.35f, new Color32(179, 228, 255, 255));
+            WitcherSurvivorRunManager.NotifyKill(transform.position, enemyKind == MonsterKind.Wraith ? 2 : 1);
         }
 
         private void UpdateDeathAnimation()

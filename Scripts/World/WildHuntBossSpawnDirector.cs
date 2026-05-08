@@ -72,6 +72,16 @@ namespace WitcherGame
             timer = 0f;
         }
 
+        public void ApplySurvivorWaveTuning(int wave)
+        {
+            int clampedWave = Mathf.Max(1, wave);
+            spawnInterval = Mathf.Max(0.48f, 1.25f - (clampedWave - 1) * 0.08f);
+            spawnBatchSize = Mathf.Clamp(2 + (clampedWave - 1) / 2, 2, 5);
+            maxAliveBosses = Mathf.Clamp(10 + clampedWave * 2, 10, 26);
+            hordeHealth = Mathf.Clamp(3 + (clampedWave - 1) / 2, 3, 10);
+            hordeMoveSpeed = Mathf.Min(3.45f, 2.15f + (clampedWave - 1) * 0.08f);
+        }
+
         private void SpawnHordeBatch()
         {
             int openSlots = Mathf.Max(0, maxAliveBosses - activeBosses.Count);

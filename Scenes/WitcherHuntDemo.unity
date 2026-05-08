@@ -500,6 +500,7 @@ MonoBehaviour:
   jumpFramesPerSecond: 10
   slashFramesPerSecond: 14
   hurtFramesPerSecond: 12
+  deathFramesPerSecond: 9
   pixelsPerUnit: 96
 --- !u!114 &300006
 MonoBehaviour:
@@ -630,6 +631,65 @@ Rigidbody2D:
   m_SleepingMode: 1
   m_CollisionDetection: 0
   m_Constraints: 0
+--- !u!1 &500000
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 500001}
+  - component: {fileID: 500002}
+  m_Layer: 0
+  m_Name: Story Bootstrap
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &500001
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 500000}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &500002
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 500000}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cf29c5e473b1c470eb09df76e42dccc6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  playOnStart: 0
+  skipIntroNarrationAndDialogue: 0
+  startFirstQuestWhenIntroSkipped: 0
+  typewriterCharactersPerSecond: 28
+  narrationLines:
+  - "\u9ED1\u6708\u5347\u8D77\u540E\u7684\u7B2C\u4E03\u4E2A\u51AC\u5929\uFF0C\u5317\u5883\u7684\u6751\u5E84\u5F00\u59CB\u4E00\u4E2A\u63A5\u4E00\u4E2A\u6C89\u9ED8\u3002"
+  - "\u6709\u4EBA\u8BF4\uFF0C\u662F\u761F\u75AB\u3002"
+  - "\u6709\u4EBA\u8BF4\uFF0C\u662F\u72FC\u7FA4\u3002"
+  - "\u4F46\u730E\u9B54\u4EBA\u77E5\u9053\u2026\u2026\u771F\u6B63\u4F1A\u5403\u4EBA\u7684\u4E1C\u897F\uFF0C\u5F80\u5F80\u62AB\u7740\u4EBA\u7684\u76AE\u3002"
+  villageSceneName: 
+  openingPanel: {fileID: 0}
+  narrationText: {fileID: 0}
+  continueHintText: {fileID: 0}
+  dialogueManager: {fileID: 0}
+  questManager: {fileID: 0}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
@@ -638,3 +698,4 @@ SceneRoots:
   - {fileID: 200001}
   - {fileID: 300001}
   - {fileID: 400001}
+  - {fileID: 500001}

@@ -13,6 +13,10 @@ namespace WitcherGame
     {
         [Header("Opening Narration")]
         [SerializeField] private bool playOnStart = true;
+        [Tooltip("勾选后跳过黑屏旁白和村长对话，直接进入可操作状态。适合调试割草战斗。")]
+        [SerializeField] private bool skipIntroNarrationAndDialogue;
+        [Tooltip("跳过引导时是否仍然创建第一主线任务。")]
+        [SerializeField] private bool startFirstQuestWhenIntroSkipped = true;
         [SerializeField] private float typewriterCharactersPerSecond = 28f;
         [SerializeField]
         [TextArea(2, 4)]
@@ -52,6 +56,12 @@ namespace WitcherGame
 
         private void Start()
         {
+            if (skipIntroNarrationAndDialogue)
+            {
+                SkipIntro();
+                return;
+            }
+
             if (playOnStart)
             {
                 BeginOpening();
@@ -73,6 +83,12 @@ namespace WitcherGame
 
         public void BeginOpening()
         {
+            if (skipIntroNarrationAndDialogue)
+            {
+                SkipIntro();
+                return;
+            }
+
             if (narrationLines == null || narrationLines.Length == 0)
             {
                 EnterVillageScene();
@@ -179,6 +195,33 @@ namespace WitcherGame
             if (dialogueManager != null)
             {
                 dialogueManager.StartDefaultVillageDialogue();
+            }
+        }
+
+        private void SkipIntro()
+        {
+            openingActive = false;
+            if (typingRoutine != null)
+            {
+                StopCoroutine(typingRoutine);
+                typingRoutine = null;
+            }
+
+            if (openingPanel != null)
+            {
+                openingPanel.SetActive(false);
+            }
+
+            EnsureStoryManagers();
+            DialogueManager activeDialogue = dialogueManager == null ? FindObjectOfType<DialogueManager>() : dialogueManager;
+            if (activeDialogue != null)
+            {
+                activeDialogue.HideDialogue();
+            }
+
+            if (startFirstQuestWhenIntroSkipped && questManager != null)
+            {
+                questManager.StartFirstMainQuest();
             }
         }
 

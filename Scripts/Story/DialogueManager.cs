@@ -94,6 +94,23 @@ namespace WitcherGame
             });
         }
 
+        public void HideDialogue()
+        {
+            if (typingRoutine != null)
+            {
+                StopCoroutine(typingRoutine);
+                typingRoutine = null;
+            }
+
+            isTyping = false;
+            dialogueActive = false;
+            onDialogueFinished = null;
+            if (dialoguePanel != null)
+            {
+                dialoguePanel.SetActive(false);
+            }
+        }
+
         public void StartDialogue(DialogueLine[] lines, Action onFinished = null)
         {
             if (lines == null || lines.Length == 0)
