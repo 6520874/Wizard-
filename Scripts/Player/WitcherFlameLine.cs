@@ -173,6 +173,16 @@ namespace WitcherGame
                     monster.TakeMagicHit(damage, origin.x);
                 }
             }
+
+            WitcherHordeMonsterController[] hordeMonsters = FindObjectsOfType<WitcherHordeMonsterController>();
+            for (int i = 0; i < hordeMonsters.Length; i++)
+            {
+                WitcherHordeMonsterController monster = hordeMonsters[i];
+                if (monster != null && IsInsideFlame(origin, direction, length, width, monster.transform.position))
+                {
+                    monster.TakeMagicHit(damage, origin.x);
+                }
+            }
         }
 
         private static bool IsInsideFlame(Vector3 origin, float direction, float length, float width, Vector3 target)

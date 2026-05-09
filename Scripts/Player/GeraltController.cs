@@ -430,6 +430,23 @@ namespace WitcherGame
 
         private void TryHitCommonEnemies()
         {
+            WitcherHordeMonsterController[] hordeMonsters = FindObjectsOfType<WitcherHordeMonsterController>();
+            for (int i = 0; i < hordeMonsters.Length; i++)
+            {
+                WitcherHordeMonsterController enemy = hordeMonsters[i];
+                if (enemy == null || !enemy.CanBeHit)
+                {
+                    continue;
+                }
+
+                float horizontalDistance = Mathf.Abs(enemy.transform.position.x - transform.position.x);
+                float verticalDistance = Mathf.Abs(enemy.transform.position.y - transform.position.y);
+                if (horizontalDistance <= attackRange && verticalDistance <= laneAttackTolerance)
+                {
+                    enemy.TakeHit(transform.position.x);
+                }
+            }
+
             MonsterPatrol[] enemies = FindObjectsOfType<MonsterPatrol>();
             for (int i = 0; i < enemies.Length; i++)
             {

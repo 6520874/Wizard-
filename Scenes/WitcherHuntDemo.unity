@@ -604,6 +604,9 @@ MonoBehaviour:
   hordeMoveSpeed: 2.15
   hordeScale: 0.58
   hordeDropsEquipment: 0
+  corruptedWolfWeight: 0.42
+  bloodWraithWeight: 0.34
+  blackKnightWeight: 0.24
 --- !u!50 &400003
 Rigidbody2D:
   serializedVersion: 4

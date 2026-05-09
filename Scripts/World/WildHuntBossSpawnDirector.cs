@@ -23,8 +23,11 @@ namespace WitcherGame
         [SerializeField] private float hordeMoveSpeed = 2.15f;
         [SerializeField] private float hordeScale = 0.58f;
         [SerializeField] private bool hordeDropsEquipment;
+        [SerializeField, Range(0f, 1f)] private float corruptedWolfWeight = 0.42f;
+        [SerializeField, Range(0f, 1f)] private float bloodWraithWeight = 0.34f;
+        [SerializeField, Range(0f, 1f)] private float blackKnightWeight = 0.24f;
 
-        private readonly List<WildHuntBossController> activeBosses = new List<WildHuntBossController>();
+        private readonly List<GameObject> activeHordeEnemies = new List<GameObject>();
         private GeraltController player;
         private float timer;
         private bool spawned;
@@ -84,11 +87,11 @@ namespace WitcherGame
 
         private void SpawnHordeBatch()
         {
-            int openSlots = Mathf.Max(0, maxAliveBosses - activeBosses.Count);
+            int openSlots = Mathf.Max(0, maxAliveBosses - activeHordeEnemies.Count);
             int count = Mathf.Min(Mathf.Max(1, spawnBatchSize), openSlots);
             for (int i = 0; i < count; i++)
             {
-                SpawnBoss(GetHordeSpawnPosition(i), true);
+                SpawnMixedHordeEnemy(GetHordeSpawnPosition(i));
             }
         }
 
@@ -129,17 +132,53 @@ namespace WitcherGame
             if (useHordeTuning)
             {
                 boss.ConfigureHordeVariant(hordeHealth, hordeMoveSpeed, hordeScale, hordeDropsEquipment);
-                activeBosses.Add(boss);
+                activeHordeEnemies.Add(bossObject);
             }
+        }
+
+        private void SpawnMixedHordeEnemy(Vector2 position)
+        {
+            float totalWeight = Mathf.Max(0.01f, corruptedWolfWeight + bloodWraithWeight + blackKnightWeight);
+            float roll = Random.value * totalWeight;
+            if (roll < corruptedWolfWeight)
+            {
+                SpawnHordeMonster(position, WitcherHordeMonsterKind.CorruptedWolf);
+                return;
+            }
+
+            if (roll < corruptedWolfWeight + bloodWraithWeight)
+            {
+                SpawnHordeMonster(position, WitcherHordeMonsterKind.BloodWraith);
+                return;
+            }
+
+            SpawnBoss(position, true);
+        }
+
+        private void SpawnHordeMonster(Vector2 position, WitcherHordeMonsterKind kind)
+        {
+            string enemyName = kind == WitcherHordeMonsterKind.BloodWraith ? "Blood Wraith" : "Corrupted Wolf";
+            GameObject enemyObject = new GameObject(enemyName);
+            enemyObject.transform.position = new Vector3(position.x, position.y, 0f);
+
+            SpriteRenderer spriteRenderer = enemyObject.AddComponent<SpriteRenderer>();
+            spriteRenderer.sortingOrder = 3;
+
+            enemyObject.AddComponent<BoxCollider2D>();
+            WitcherHordeMonsterController enemy = enemyObject.AddComponent<WitcherHordeMonsterController>();
+            int waveHealthBonus = Mathf.Max(0, hordeHealth - 3);
+            float speedBonus = Mathf.Max(0f, hordeMoveSpeed - 2.05f) * 0.35f;
+            enemy.Configure(kind, waveHealthBonus, speedBonus);
+            activeHordeEnemies.Add(enemyObject);
         }
 
         private void RemoveDestroyedBosses()
         {
-            for (int i = activeBosses.Count - 1; i >= 0; i--)
+            for (int i = activeHordeEnemies.Count - 1; i >= 0; i--)
             {
-                if (activeBosses[i] == null)
+                if (activeHordeEnemies[i] == null)
                 {
-                    activeBosses.RemoveAt(i);
+                    activeHordeEnemies.RemoveAt(i);
                 }
             }
         }
