@@ -10,6 +10,7 @@ namespace WitcherGame
         [SerializeField] private string bossName = "Black Moon Stalker";
         [SerializeField] private bool autoSpawn = true;
         [SerializeField] private bool hordeMode = true;
+        [SerializeField] private bool turnBasedEncounterMode = true;
         [SerializeField] private float spawnInterval = 1.45f;
         [SerializeField] private int spawnBatchSize = 2;
         [SerializeField] private int maxAliveBosses = 8;
@@ -88,7 +89,7 @@ namespace WitcherGame
         private void SpawnHordeBatch()
         {
             int openSlots = Mathf.Max(0, maxAliveBosses - activeHordeEnemies.Count);
-            int count = Mathf.Min(Mathf.Max(1, spawnBatchSize), openSlots);
+            int count = turnBasedEncounterMode ? Mathf.Min(1, openSlots) : Mathf.Min(Mathf.Max(1, spawnBatchSize), openSlots);
             for (int i = 0; i < count; i++)
             {
                 SpawnMixedHordeEnemy(GetHordeSpawnPosition(i));
@@ -134,6 +135,12 @@ namespace WitcherGame
                 boss.ConfigureHordeVariant(hordeHealth, hordeMoveSpeed, hordeScale, hordeDropsEquipment);
                 activeHordeEnemies.Add(bossObject);
             }
+
+            if (turnBasedEncounterMode)
+            {
+                BattleEncounterTrigger trigger = bossObject.AddComponent<BattleEncounterTrigger>();
+                trigger.ConfigureBoss(spriteRenderer.sprite, Mathf.Max(0, hordeHealth - 3));
+            }
         }
 
         private void SpawnMixedHordeEnemy(Vector2 position)
@@ -169,6 +176,13 @@ namespace WitcherGame
             int waveHealthBonus = Mathf.Max(0, hordeHealth - 3);
             float speedBonus = Mathf.Max(0f, hordeMoveSpeed - 2.05f) * 0.35f;
             enemy.Configure(kind, waveHealthBonus, speedBonus);
+            if (turnBasedEncounterMode)
+            {
+                BattleEncounterTrigger trigger = enemyObject.AddComponent<BattleEncounterTrigger>();
+                int encounterCount = kind == WitcherHordeMonsterKind.CorruptedWolf ? Random.Range(2, 4) : Random.Range(1, 3);
+                trigger.ConfigureMonster(kind, spriteRenderer.sprite, encounterCount, waveHealthBonus);
+            }
+
             activeHordeEnemies.Add(enemyObject);
         }
 

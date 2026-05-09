@@ -74,7 +74,7 @@ namespace WitcherGame
         {
             WitcherHud.CreateIfMissing(this);
             WitcherWorldDirector.CreateIfMissing(this);
-            WitcherSurvivorRunManager.CreateIfMissing(this);
+            TurnBasedBattleManager.CreateIfMissing(this);
         }
 
         private void Update()
@@ -202,6 +202,26 @@ namespace WitcherGame
                 WitcherCombatText.Spawn($"+{restoredAmount} MP", transform.position, new Color32(89, 181, 255, 255));
                 StatsChanged?.Invoke();
             }
+        }
+
+        public bool TrySpendMana(int amount)
+        {
+            int cost = Mathf.Max(0, amount);
+            if (currentMana < cost)
+            {
+                return false;
+            }
+
+            currentMana = Mathf.Max(0f, currentMana - cost);
+            StatsChanged?.Invoke();
+            return true;
+        }
+
+        public void TakeTurnBasedDamage(int damage, float attackerX)
+        {
+            hurtLockTimer = 0f;
+            invulnerableTimer = 0f;
+            TakeDamage(damage, attackerX);
         }
 
         public void IncreaseMaxHealth(int amount)
