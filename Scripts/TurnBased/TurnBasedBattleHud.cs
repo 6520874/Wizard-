@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -13,12 +14,14 @@ namespace WitcherGame
         private readonly List<Text> enemyRows = new List<Text>();
         private readonly List<EnemyVisualSlot> enemySlots = new List<EnemyVisualSlot>();
         private readonly List<Button> commandButtons = new List<Button>();
+        private static Sprite[] cachedFlameFrames;
 
         private TurnBasedBattleManager manager;
         private GameObject root;
         private Text messageText;
         private Text playerText;
         private Text potionText;
+        private Image flameEffect;
         private IReadOnlyList<TurnBasedEnemyState> visibleEnemies;
 
         private class EnemyVisualSlot
@@ -181,6 +184,42 @@ namespace WitcherGame
             yield return PlayEnemyFrames(slot, enemy.HurtFrames, enemy.Sprite, 0.075f, false, true);
         }
 
+        public IEnumerator PlayFlameSignEffect()
+        {
+            if (flameEffect == null)
+            {
+                yield break;
+            }
+
+            Sprite[] frames = LoadFlameFrames();
+            flameEffect.gameObject.SetActive(true);
+            flameEffect.color = Color.white;
+            flameEffect.rectTransform.anchoredPosition = new Vector2(60f, 72f);
+            flameEffect.rectTransform.sizeDelta = new Vector2(760f, 142f);
+            flameEffect.rectTransform.localScale = Vector3.one;
+
+            if (frames.Length == 0)
+            {
+                flameEffect.sprite = WitcherSpriteLibrary.GetSolidSprite(new Color32(255, 86, 20, 230));
+                yield return new WaitForSeconds(0.28f);
+                flameEffect.gameObject.SetActive(false);
+                yield break;
+            }
+
+            for (int i = 0; i < frames.Length; i++)
+            {
+                flameEffect.sprite = frames[i];
+                float t = frames.Length <= 1 ? 1f : (float)i / (frames.Length - 1);
+                flameEffect.rectTransform.localScale = new Vector3(Mathf.Lerp(0.35f, 1f, Mathf.Clamp01(t * 1.45f)), 1f + Mathf.Sin(t * Mathf.PI) * 0.13f, 1f);
+                Color color = Color.white;
+                color.a = t > 0.72f ? Mathf.Lerp(1f, 0.18f, (t - 0.72f) / 0.28f) : 1f;
+                flameEffect.color = color;
+                yield return new WaitForSeconds(0.045f);
+            }
+
+            flameEffect.gameObject.SetActive(false);
+        }
+
         private void BuildHud()
         {
             Canvas canvas = gameObject.GetComponent<Canvas>();
@@ -233,6 +272,11 @@ namespace WitcherGame
                     HomePosition = enemyImage.rectTransform.anchoredPosition
                 });
             }
+
+            flameEffect = CreateCenteredImage("Flame Sign Battle Effect", root.transform, new Vector2(760f, 142f), new Vector2(60f, 72f), Color.white);
+            flameEffect.preserveAspect = true;
+            flameEffect.raycastTarget = false;
+            flameEffect.gameObject.SetActive(false);
 
             Text enemyTitle = CreateText("Enemy Title", enemyPanel.transform, "敌群", 25, TextAnchor.MiddleLeft, new Vector2(20f, -14f), new Vector2(200f, 34f));
             enemyTitle.color = new Color32(255, 214, 132, 255);
@@ -316,6 +360,48 @@ namespace WitcherGame
         private static Sprite FirstFrame(Sprite[] frames, Sprite fallback)
         {
             return frames != null && frames.Length > 0 && frames[0] != null ? frames[0] : fallback;
+        }
+
+        private static Sprite[] LoadFlameFrames()
+        {
+            if (cachedFlameFrames != null)
+            {
+                return cachedFlameFrames;
+            }
+
+            string absolutePath = Path.Combine(Application.dataPath, "Art/Effects/HunterFlameBeamSheet.png");
+            if (!File.Exists(absolutePath))
+            {
+                cachedFlameFrames = System.Array.Empty<Sprite>();
+                return cachedFlameFrames;
+            }
+
+            Texture2D texture = new Texture2D(2, 2, TextureFormat.RGBA32, false);
+            if (!texture.LoadImage(File.ReadAllBytes(absolutePath)))
+            {
+                cachedFlameFrames = System.Array.Empty<Sprite>();
+                return cachedFlameFrames;
+            }
+
+            texture.filterMode = FilterMode.Bilinear;
+            texture.wrapMode = TextureWrapMode.Clamp;
+            const int columns = 4;
+            const int rows = 4;
+            int frameWidth = texture.width / columns;
+            int frameHeight = texture.height / rows;
+            cachedFlameFrames = new Sprite[columns * rows];
+            for (int row = 0; row < rows; row++)
+            {
+                for (int column = 0; column < columns; column++)
+                {
+                    int index = row * columns + column;
+                    Rect rect = new Rect(column * frameWidth, texture.height - (row + 1) * frameHeight, frameWidth, frameHeight);
+                    cachedFlameFrames[index] = Sprite.Create(texture, rect, new Vector2(0.5f, 0.5f), 256f);
+                    cachedFlameFrames[index].name = $"TurnBattleFlame_{index:00}";
+                }
+            }
+
+            return cachedFlameFrames;
         }
 
         private void AddCommandButton(Transform parent, string label, TurnBattleAction action, Vector2 position)

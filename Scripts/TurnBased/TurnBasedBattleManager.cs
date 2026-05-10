@@ -268,6 +268,7 @@ namespace WitcherGame
 
             battleHud.SetMessage(hitCount <= 1 ? "火焰法印吞噬了敌人！" : "火焰法印横扫敌群！");
             WitcherCombatFeedback.HeavyEnemyHit(player.transform.position + Vector3.right * 1.8f);
+            yield return battleHud.PlayFlameSignEffect();
             for (int i = 0; i < enemies.Count; i++)
             {
                 if (enemies[i].Health > 0 || enemies[i].HurtFrames != null)
