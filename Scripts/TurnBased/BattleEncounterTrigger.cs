@@ -19,6 +19,9 @@ namespace WitcherGame
         private TurnBasedEnemyVisualKind visualKind = TurnBasedEnemyVisualKind.CorruptedWolf;
         private bool consumed;
         private Collider2D encounterCollider;
+        private GeraltController player;
+        private float triggerHalfWidth = 1.25f;
+        private float triggerHalfHeight = 1.1f;
 
         public string EncounterTitle => encounterTitle;
 
@@ -26,6 +29,7 @@ namespace WitcherGame
         {
             encounterCollider = GetComponent<Collider2D>();
             encounterCollider.isTrigger = true;
+            EnsureKinematicBody();
         }
 
         public void ConfigureMonster(WitcherHordeMonsterKind kind, Sprite sprite, int count, int waveBonus)
@@ -42,6 +46,7 @@ namespace WitcherGame
                 enemyAttack = 10 + bonus;
                 enemyDefense = 3;
                 experienceReward = 4;
+                ConfigureTriggerBounds(new Vector2(0f, 0.82f), new Vector2(1.8f, 1.85f), 1.35f, 1.45f);
                 return;
             }
 
@@ -51,6 +56,7 @@ namespace WitcherGame
             enemyAttack = 8 + bonus;
             enemyDefense = 2;
             experienceReward = 3;
+            ConfigureTriggerBounds(new Vector2(0f, 0.48f), new Vector2(2.35f, 1.25f), 1.55f, 1.05f);
         }
 
         public void ConfigureBoss(Sprite sprite, int waveBonus)
@@ -64,6 +70,7 @@ namespace WitcherGame
             enemyAttack = 13 + Mathf.Max(0, waveBonus);
             enemyDefense = 5;
             experienceReward = 9;
+            ConfigureTriggerBounds(new Vector2(0f, 0.95f), new Vector2(2.35f, 1.95f), 1.65f, 1.35f);
         }
 
         public List<TurnBasedEnemyState> CreateBattleEnemies()
@@ -123,18 +130,83 @@ namespace WitcherGame
 
         private void Start()
         {
+            player = FindObjectOfType<GeraltController>();
             SetWorldLogicEnabled(false);
         }
 
-        private void OnTriggerEnter2D(Collider2D other)
+        private void Update()
         {
-            if (consumed || other.GetComponent<GeraltController>() == null)
+            if (consumed)
             {
                 return;
             }
 
-            TurnBasedBattleManager manager = TurnBasedBattleManager.CreateIfMissing(other.GetComponent<GeraltController>());
+            player = player == null ? FindObjectOfType<GeraltController>() : player;
+            if (player == null || !player.IsAlive)
+            {
+                return;
+            }
+
+            float horizontalDistance = Mathf.Abs(player.transform.position.x - transform.position.x);
+            float verticalDistance = Mathf.Abs(player.transform.position.y - transform.position.y);
+            if (horizontalDistance <= triggerHalfWidth && verticalDistance <= triggerHalfHeight)
+            {
+                TryStartBattle(player);
+            }
+        }
+
+        private void OnTriggerEnter2D(Collider2D other)
+        {
+            GeraltController touchingPlayer = other.GetComponent<GeraltController>();
+            TryStartBattle(touchingPlayer);
+        }
+
+        private void OnTriggerStay2D(Collider2D other)
+        {
+            GeraltController touchingPlayer = other.GetComponent<GeraltController>();
+            TryStartBattle(touchingPlayer);
+        }
+
+        private void TryStartBattle(GeraltController touchingPlayer)
+        {
+            if (consumed || touchingPlayer == null || !touchingPlayer.IsAlive)
+            {
+                return;
+            }
+
+            TurnBasedBattleManager manager = TurnBasedBattleManager.CreateIfMissing(touchingPlayer);
             manager.TryBeginBattle(this);
+        }
+
+        private void ConfigureTriggerBounds(Vector2 offset, Vector2 size, float halfWidth, float halfHeight)
+        {
+            triggerHalfWidth = Mathf.Max(0.1f, halfWidth);
+            triggerHalfHeight = Mathf.Max(0.1f, halfHeight);
+            BoxCollider2D boxCollider = encounterCollider as BoxCollider2D;
+            if (boxCollider == null)
+            {
+                boxCollider = GetComponent<BoxCollider2D>();
+            }
+
+            if (boxCollider != null)
+            {
+                boxCollider.isTrigger = true;
+                boxCollider.offset = offset;
+                boxCollider.size = size;
+            }
+        }
+
+        private void EnsureKinematicBody()
+        {
+            Rigidbody2D body = GetComponent<Rigidbody2D>();
+            if (body == null)
+            {
+                body = gameObject.AddComponent<Rigidbody2D>();
+            }
+
+            body.bodyType = RigidbodyType2D.Kinematic;
+            body.gravityScale = 0f;
+            body.constraints = RigidbodyConstraints2D.FreezeRotation;
         }
 
         private void SetWorldLogicEnabled(bool enabled)
