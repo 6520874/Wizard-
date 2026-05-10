@@ -21,7 +21,11 @@ namespace WitcherGame
         public int Attack;
         public int Defense;
         public int ExperienceReward;
+        public TurnBasedEnemyVisualKind VisualKind;
         public Sprite Sprite;
+        public Sprite[] IdleFrames;
+        public Sprite[] AttackFrames;
+        public Sprite[] HurtFrames;
         public GameObject SourceObject;
 
         public bool IsAlive => Health > 0;
@@ -225,7 +229,8 @@ namespace WitcherGame
 
         private IEnumerator PlayerAttack()
         {
-            TurnBasedEnemyState target = GetFirstLivingEnemy();
+            int targetIndex = GetFirstLivingEnemyIndex();
+            TurnBasedEnemyState target = targetIndex < 0 ? null : enemies[targetIndex];
             if (target == null)
             {
                 yield break;
@@ -236,7 +241,7 @@ namespace WitcherGame
             target.Health = Mathf.Max(0, target.Health - damage);
             battleHud.SetMessage($"猎魔人攻击 {target.Name}，造成 {damage} 点伤害！");
             WitcherCombatFeedback.EnemyHit(player.transform.position + Vector3.right * 1.2f, 0.06f, 0.025f);
-            yield return Wait(0.65f);
+            yield return battleHud.PlayEnemyHurt(targetIndex);
             battleHud.Refresh(enemies, player, potionCount);
             if (!target.IsAlive)
             {
@@ -263,7 +268,14 @@ namespace WitcherGame
 
             battleHud.SetMessage(hitCount <= 1 ? "火焰法印吞噬了敌人！" : "火焰法印横扫敌群！");
             WitcherCombatFeedback.HeavyEnemyHit(player.transform.position + Vector3.right * 1.8f);
-            yield return Wait(0.75f);
+            for (int i = 0; i < enemies.Count; i++)
+            {
+                if (enemies[i].Health > 0 || enemies[i].HurtFrames != null)
+                {
+                    yield return battleHud.PlayEnemyHurt(i, 0.08f);
+                }
+            }
+
             battleHud.Refresh(enemies, player, potionCount);
         }
 
@@ -304,8 +316,9 @@ namespace WitcherGame
 
         private IEnumerator EnemyPhase()
         {
-            foreach (TurnBasedEnemyState enemy in enemies)
+            for (int i = 0; i < enemies.Count; i++)
             {
+                TurnBasedEnemyState enemy = enemies[i];
                 if (!enemy.IsAlive || player == null || !player.IsAlive)
                 {
                     continue;
@@ -314,9 +327,10 @@ namespace WitcherGame
                 int rawDamage = Mathf.Max(1, enemy.Attack + Random.Range(-2, 3) - playerDefense);
                 int damage = defending ? Mathf.Max(1, Mathf.CeilToInt(rawDamage * 0.45f)) : rawDamage;
                 battleHud.SetMessage($"{enemy.Name} 发起攻击，造成 {damage} 点伤害！");
+                yield return battleHud.PlayEnemyAttack(i);
                 player.TakeTurnBasedDamage(damage, player.transform.position.x + 1f);
                 battleHud.Refresh(enemies, player, potionCount);
-                yield return Wait(0.72f);
+                yield return Wait(0.28f);
             }
         }
 
@@ -379,15 +393,21 @@ namespace WitcherGame
 
         private TurnBasedEnemyState GetFirstLivingEnemy()
         {
+            int index = GetFirstLivingEnemyIndex();
+            return index < 0 ? null : enemies[index];
+        }
+
+        private int GetFirstLivingEnemyIndex()
+        {
             for (int i = 0; i < enemies.Count; i++)
             {
                 if (enemies[i].IsAlive)
                 {
-                    return enemies[i];
+                    return i;
                 }
             }
 
-            return null;
+            return -1;
         }
 
         private IEnumerator Wait(float seconds)

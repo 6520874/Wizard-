@@ -16,6 +16,7 @@ namespace WitcherGame
         [SerializeField] private bool destroyOnWin = true;
 
         private Sprite battleSprite;
+        private TurnBasedEnemyVisualKind visualKind = TurnBasedEnemyVisualKind.CorruptedWolf;
         private bool consumed;
         private Collider2D encounterCollider;
 
@@ -30,6 +31,7 @@ namespace WitcherGame
         public void ConfigureMonster(WitcherHordeMonsterKind kind, Sprite sprite, int count, int waveBonus)
         {
             battleSprite = sprite;
+            visualKind = kind == WitcherHordeMonsterKind.BloodWraith ? TurnBasedEnemyVisualKind.BloodWraith : TurnBasedEnemyVisualKind.CorruptedWolf;
             enemyCount = Mathf.Clamp(count, 1, 3);
             int bonus = Mathf.Max(0, waveBonus);
             if (kind == WitcherHordeMonsterKind.BloodWraith)
@@ -54,6 +56,7 @@ namespace WitcherGame
         public void ConfigureBoss(Sprite sprite, int waveBonus)
         {
             battleSprite = sprite;
+            visualKind = TurnBasedEnemyVisualKind.BlackMoonKnight;
             enemyCount = 1;
             encounterTitle = "黑月骑士";
             enemyName = "黑月骑士";
@@ -68,7 +71,7 @@ namespace WitcherGame
             List<TurnBasedEnemyState> result = new List<TurnBasedEnemyState>();
             for (int i = 0; i < Mathf.Max(1, enemyCount); i++)
             {
-                result.Add(new TurnBasedEnemyState
+                TurnBasedEnemyState enemy = new TurnBasedEnemyState
                 {
                     Name = enemyCount <= 1 ? enemyName : $"{enemyName} {i + 1}",
                     MaxHealth = enemyHealth,
@@ -78,7 +81,9 @@ namespace WitcherGame
                     ExperienceReward = experienceReward,
                     Sprite = battleSprite,
                     SourceObject = gameObject
-                });
+                };
+                TurnBasedEnemyAnimationLibrary.FillAnimations(enemy, visualKind);
+                result.Add(enemy);
             }
 
             return result;
