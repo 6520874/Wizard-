@@ -3,6 +3,21 @@ using UnityEngine;
 
 namespace WitcherGame
 {
+    public enum WitcherFixedEncounterKind
+    {
+        CorruptedWolf,
+        BloodWraith,
+        BlackMoonKnight
+    }
+
+    [System.Serializable]
+    public struct WitcherFixedEncounterPoint
+    {
+        public WitcherFixedEncounterKind kind;
+        public Vector2 position;
+        public int enemyCount;
+    }
+
     public class WildHuntBossSpawnDirector : MonoBehaviour
     {
         [SerializeField] private float spawnDelay = 1.2f;
@@ -11,6 +26,15 @@ namespace WitcherGame
         [SerializeField] private bool autoSpawn = true;
         [SerializeField] private bool hordeMode = true;
         [SerializeField] private bool turnBasedEncounterMode = true;
+        [SerializeField] private bool useFixedEncounterPositions = true;
+        [SerializeField] private WitcherFixedEncounterPoint[] fixedEncounterPoints =
+        {
+            new WitcherFixedEncounterPoint { kind = WitcherFixedEncounterKind.CorruptedWolf, position = new Vector2(5.8f, -1.55f), enemyCount = 2 },
+            new WitcherFixedEncounterPoint { kind = WitcherFixedEncounterKind.BloodWraith, position = new Vector2(13.2f, -0.65f), enemyCount = 1 },
+            new WitcherFixedEncounterPoint { kind = WitcherFixedEncounterKind.CorruptedWolf, position = new Vector2(21.4f, 0.35f), enemyCount = 3 },
+            new WitcherFixedEncounterPoint { kind = WitcherFixedEncounterKind.BloodWraith, position = new Vector2(31.2f, -1.85f), enemyCount = 2 },
+            new WitcherFixedEncounterPoint { kind = WitcherFixedEncounterKind.BlackMoonKnight, position = new Vector2(43.6f, -0.9f), enemyCount = 1 }
+        };
         [SerializeField] private float spawnInterval = 1.45f;
         [SerializeField] private int spawnBatchSize = 2;
         [SerializeField] private int maxAliveBosses = 8;
@@ -51,6 +75,17 @@ namespace WitcherGame
             }
 
             timer = 0f;
+            if (turnBasedEncounterMode && useFixedEncounterPositions)
+            {
+                if (!spawned)
+                {
+                    spawned = true;
+                    SpawnFixedEncounterSet();
+                }
+
+                return;
+            }
+
             if (hordeMode)
             {
                 spawned = true;
@@ -63,6 +98,46 @@ namespace WitcherGame
                 spawned = true;
                 SpawnBoss(spawnPosition, false);
             }
+        }
+
+        private void SpawnFixedEncounterSet()
+        {
+            WitcherFixedEncounterPoint[] points = fixedEncounterPoints == null || fixedEncounterPoints.Length == 0
+                ? GetDefaultFixedEncounters()
+                : fixedEncounterPoints;
+
+            for (int i = 0; i < points.Length; i++)
+            {
+                WitcherFixedEncounterPoint point = points[i];
+                Vector2 position = new Vector2(
+                    Mathf.Clamp(point.position.x, minStageX, maxStageX),
+                    Mathf.Clamp(point.position.y, minSpawnY, maxSpawnY));
+
+                switch (point.kind)
+                {
+                    case WitcherFixedEncounterKind.BloodWraith:
+                        SpawnHordeMonster(position, WitcherHordeMonsterKind.BloodWraith, Mathf.Max(1, point.enemyCount));
+                        break;
+                    case WitcherFixedEncounterKind.BlackMoonKnight:
+                        SpawnBoss(position, true);
+                        break;
+                    default:
+                        SpawnHordeMonster(position, WitcherHordeMonsterKind.CorruptedWolf, Mathf.Max(1, point.enemyCount));
+                        break;
+                }
+            }
+        }
+
+        private WitcherFixedEncounterPoint[] GetDefaultFixedEncounters()
+        {
+            return new[]
+            {
+                new WitcherFixedEncounterPoint { kind = WitcherFixedEncounterKind.CorruptedWolf, position = new Vector2(5.8f, -1.55f), enemyCount = 2 },
+                new WitcherFixedEncounterPoint { kind = WitcherFixedEncounterKind.BloodWraith, position = new Vector2(13.2f, -0.65f), enemyCount = 1 },
+                new WitcherFixedEncounterPoint { kind = WitcherFixedEncounterKind.CorruptedWolf, position = new Vector2(21.4f, 0.35f), enemyCount = 3 },
+                new WitcherFixedEncounterPoint { kind = WitcherFixedEncounterKind.BloodWraith, position = new Vector2(31.2f, -1.85f), enemyCount = 2 },
+                new WitcherFixedEncounterPoint { kind = WitcherFixedEncounterKind.BlackMoonKnight, position = new Vector2(43.6f, -0.9f), enemyCount = 1 }
+            };
         }
 
         public void RequestBossSpawn()
@@ -164,6 +239,12 @@ namespace WitcherGame
 
         private void SpawnHordeMonster(Vector2 position, WitcherHordeMonsterKind kind)
         {
+            int encounterCount = kind == WitcherHordeMonsterKind.CorruptedWolf ? Random.Range(2, 4) : Random.Range(1, 3);
+            SpawnHordeMonster(position, kind, encounterCount);
+        }
+
+        private void SpawnHordeMonster(Vector2 position, WitcherHordeMonsterKind kind, int encounterCount)
+        {
             string enemyName = kind == WitcherHordeMonsterKind.BloodWraith ? "Blood Wraith" : "Corrupted Wolf";
             GameObject enemyObject = new GameObject(enemyName);
             enemyObject.transform.position = new Vector3(position.x, position.y, 0f);
@@ -179,8 +260,7 @@ namespace WitcherGame
             if (turnBasedEncounterMode)
             {
                 BattleEncounterTrigger trigger = enemyObject.AddComponent<BattleEncounterTrigger>();
-                int encounterCount = kind == WitcherHordeMonsterKind.CorruptedWolf ? Random.Range(2, 4) : Random.Range(1, 3);
-                trigger.ConfigureMonster(kind, spriteRenderer.sprite, encounterCount, waveHealthBonus);
+                trigger.ConfigureMonster(kind, spriteRenderer.sprite, Mathf.Max(1, encounterCount), waveHealthBonus);
             }
 
             activeHordeEnemies.Add(enemyObject);
@@ -194,6 +274,35 @@ namespace WitcherGame
                 {
                     activeHordeEnemies.RemoveAt(i);
                 }
+            }
+        }
+
+        private void OnDrawGizmosSelected()
+        {
+            if (!useFixedEncounterPositions)
+            {
+                return;
+            }
+
+            WitcherFixedEncounterPoint[] points = fixedEncounterPoints == null || fixedEncounterPoints.Length == 0
+                ? GetDefaultFixedEncounters()
+                : fixedEncounterPoints;
+            for (int i = 0; i < points.Length; i++)
+            {
+                switch (points[i].kind)
+                {
+                    case WitcherFixedEncounterKind.BloodWraith:
+                        Gizmos.color = new Color(0.78f, 0.25f, 0.92f, 0.85f);
+                        break;
+                    case WitcherFixedEncounterKind.BlackMoonKnight:
+                        Gizmos.color = new Color(0.2f, 0.7f, 1f, 0.85f);
+                        break;
+                    default:
+                        Gizmos.color = new Color(0.45f, 0.85f, 0.45f, 0.85f);
+                        break;
+                }
+
+                Gizmos.DrawWireSphere(points[i].position, 0.55f);
             }
         }
     }
