@@ -192,10 +192,18 @@ namespace WitcherGame
             }
 
             Sprite[] frames = LoadFlameFrames();
+            Rect targetRect = GetLivingEnemyVisualRect();
+            float startX = -390f;
+            float endX = Mathf.Max(targetRect.xMax + 92f, targetRect.xMin + 260f);
+            float width = Mathf.Clamp(endX - startX, 360f, 890f);
+            float centerX = startX + width * 0.5f;
+            float centerY = Mathf.Clamp(targetRect.center.y - 4f, -12f, 122f);
+            float height = Mathf.Clamp(targetRect.height * 0.86f, 96f, 180f);
+
             flameEffect.gameObject.SetActive(true);
             flameEffect.color = Color.white;
-            flameEffect.rectTransform.anchoredPosition = new Vector2(60f, 72f);
-            flameEffect.rectTransform.sizeDelta = new Vector2(760f, 142f);
+            flameEffect.rectTransform.anchoredPosition = new Vector2(centerX, centerY);
+            flameEffect.rectTransform.sizeDelta = new Vector2(width, height);
             flameEffect.rectTransform.localScale = Vector3.one;
 
             if (frames.Length == 0)
@@ -360,6 +368,51 @@ namespace WitcherGame
         private static Sprite FirstFrame(Sprite[] frames, Sprite fallback)
         {
             return frames != null && frames.Length > 0 && frames[0] != null ? frames[0] : fallback;
+        }
+
+        private Rect GetLivingEnemyVisualRect()
+        {
+            bool found = false;
+            float minX = 0f;
+            float maxX = 0f;
+            float minY = 0f;
+            float maxY = 0f;
+
+            for (int i = 0; i < enemySlots.Count; i++)
+            {
+                if (visibleEnemies == null || i >= visibleEnemies.Count || !visibleEnemies[i].IsAlive)
+                {
+                    continue;
+                }
+
+                EnemyVisualSlot slot = enemySlots[i];
+                if (!slot.Image.gameObject.activeSelf)
+                {
+                    continue;
+                }
+
+                Vector2 center = slot.Rect.anchoredPosition;
+                Vector2 size = slot.Rect.sizeDelta;
+                float halfWidth = size.x * 0.5f;
+                float halfHeight = size.y * 0.5f;
+                if (!found)
+                {
+                    minX = center.x - halfWidth;
+                    maxX = center.x + halfWidth;
+                    minY = center.y - halfHeight;
+                    maxY = center.y + halfHeight;
+                    found = true;
+                }
+                else
+                {
+                    minX = Mathf.Min(minX, center.x - halfWidth);
+                    maxX = Mathf.Max(maxX, center.x + halfWidth);
+                    minY = Mathf.Min(minY, center.y - halfHeight);
+                    maxY = Mathf.Max(maxY, center.y + halfHeight);
+                }
+            }
+
+            return found ? Rect.MinMaxRect(minX, minY, maxX, maxY) : Rect.MinMaxRect(-250f, 2f, 250f, 142f);
         }
 
         private static Sprite[] LoadFlameFrames()

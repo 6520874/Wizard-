@@ -36,6 +36,7 @@ namespace WitcherGame
         {
             battleSprite = sprite;
             visualKind = kind == WitcherHordeMonsterKind.BloodWraith ? TurnBasedEnemyVisualKind.BloodWraith : TurnBasedEnemyVisualKind.CorruptedWolf;
+            EnsureMapIdleAnimator();
             enemyCount = Mathf.Clamp(count, 1, 3);
             int bonus = Mathf.Max(0, waveBonus);
             if (kind == WitcherHordeMonsterKind.BloodWraith)
@@ -63,9 +64,10 @@ namespace WitcherGame
         {
             battleSprite = sprite;
             visualKind = TurnBasedEnemyVisualKind.BlackMoonKnight;
+            EnsureMapIdleAnimator();
             enemyCount = 1;
-            encounterTitle = "黑月骑士";
-            enemyName = "黑月骑士";
+            encounterTitle = "月夜骑士";
+            enemyName = "月夜骑士";
             enemyHealth = 72 + Mathf.Max(0, waveBonus) * 8;
             enemyAttack = 13 + Mathf.Max(0, waveBonus);
             enemyDefense = 5;
@@ -207,6 +209,17 @@ namespace WitcherGame
             body.bodyType = RigidbodyType2D.Kinematic;
             body.gravityScale = 0f;
             body.constraints = RigidbodyConstraints2D.FreezeRotation;
+        }
+
+        private void EnsureMapIdleAnimator()
+        {
+            MapEncounterIdleAnimator idleAnimator = GetComponent<MapEncounterIdleAnimator>();
+            if (idleAnimator == null)
+            {
+                idleAnimator = gameObject.AddComponent<MapEncounterIdleAnimator>();
+            }
+
+            idleAnimator.Configure(visualKind);
         }
 
         private void SetWorldLogicEnabled(bool enabled)
