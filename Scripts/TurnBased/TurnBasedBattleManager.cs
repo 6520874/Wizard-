@@ -46,7 +46,7 @@ namespace WitcherGame
         private static TurnBasedBattleManager instance;
 
         private readonly List<TurnBasedEnemyState> enemies = new List<TurnBasedEnemyState>();
-        private readonly List<Camera> pausedRenderCameras = new List<Camera>();
+        private readonly List<CameraRenderState> pausedRenderCameras = new List<CameraRenderState>();
         private GeraltController player;
         private GeraltAnimator playerAnimator;
         private TurnBasedBattleHud battleHud;
@@ -58,6 +58,14 @@ namespace WitcherGame
         private int potionCount;
 
         public bool BattleActive => battleActive;
+
+        private struct CameraRenderState
+        {
+            public Camera Camera;
+            public int CullingMask;
+            public CameraClearFlags ClearFlags;
+            public Color BackgroundColor;
+        }
 
         public static TurnBasedBattleManager CreateIfMissing(GeraltController target)
         {
@@ -416,8 +424,16 @@ namespace WitcherGame
                     continue;
                 }
 
-                pausedRenderCameras.Add(camera);
-                camera.enabled = false;
+                pausedRenderCameras.Add(new CameraRenderState
+                {
+                    Camera = camera,
+                    CullingMask = camera.cullingMask,
+                    ClearFlags = camera.clearFlags,
+                    BackgroundColor = camera.backgroundColor
+                });
+                camera.cullingMask = 0;
+                camera.clearFlags = CameraClearFlags.SolidColor;
+                camera.backgroundColor = new Color32(3, 5, 8, 255);
             }
 
             worldRenderingPaused = true;
@@ -432,9 +448,12 @@ namespace WitcherGame
 
             for (int i = 0; i < pausedRenderCameras.Count; i++)
             {
-                if (pausedRenderCameras[i] != null)
+                CameraRenderState state = pausedRenderCameras[i];
+                if (state.Camera != null)
                 {
-                    pausedRenderCameras[i].enabled = true;
+                    state.Camera.cullingMask = state.CullingMask;
+                    state.Camera.clearFlags = state.ClearFlags;
+                    state.Camera.backgroundColor = state.BackgroundColor;
                 }
             }
 
