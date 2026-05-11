@@ -12,7 +12,6 @@ namespace WitcherGame
         private const string HudName = "Turn Based Battle HUD";
 
         private readonly List<Text> enemyRows = new List<Text>();
-        private readonly List<Image> enemyHealthFills = new List<Image>();
         private readonly List<EnemyVisualSlot> enemySlots = new List<EnemyVisualSlot>();
         private readonly List<Button> commandButtons = new List<Button>();
         private static Sprite[] cachedFlameFrames;
@@ -31,6 +30,8 @@ namespace WitcherGame
             public RectTransform Rect;
             public Vector2 HomePosition;
             public Text DamageText;
+            public Image HealthBack;
+            public Image HealthFill;
             public bool Busy;
             public int IdleIndex;
             public float IdleTimer;
@@ -137,11 +138,7 @@ namespace WitcherGame
                     {
                         enemySlots[i].Image.gameObject.SetActive(false);
                         enemySlots[i].DamageText.gameObject.SetActive(false);
-                    }
-
-                    if (i < enemyHealthFills.Count)
-                    {
-                        SetFillWidth(enemyHealthFills[i], 0f, 178f);
+                        enemySlots[i].HealthBack.gameObject.SetActive(false);
                     }
                     continue;
                 }
@@ -150,16 +147,14 @@ namespace WitcherGame
                 string state = enemy.IsAlive ? $"HP {enemy.Health}/{enemy.MaxHealth}" : "已击败";
                 enemyRows[i].text = $"{enemy.Name}    {state}";
                 enemyRows[i].color = enemy.IsAlive ? new Color32(233, 238, 229, 255) : new Color32(128, 126, 119, 255);
-                if (i < enemyHealthFills.Count)
-                {
-                    float normalizedHealth = enemy.MaxHealth <= 0 ? 0f : Mathf.Clamp01((float)enemy.Health / enemy.MaxHealth);
-                    SetFillWidth(enemyHealthFills[i], normalizedHealth, 178f);
-                }
 
                 if (i < enemySlots.Count)
                 {
                     EnemyVisualSlot slot = enemySlots[i];
                     slot.Image.gameObject.SetActive(enemy.Sprite != null && enemy.IsAlive);
+                    slot.HealthBack.gameObject.SetActive(enemy.Sprite != null && enemy.IsAlive);
+                    float normalizedHealth = enemy.MaxHealth <= 0 ? 0f : Mathf.Clamp01((float)enemy.Health / enemy.MaxHealth);
+                    SetFillWidth(slot.HealthFill, normalizedHealth, 106f);
                     if (!slot.Busy)
                     {
                         slot.Image.sprite = FirstFrame(enemy.IdleFrames, enemy.Sprite);
@@ -307,12 +302,27 @@ namespace WitcherGame
                 damageText.color = new Color32(255, 80, 54, 255);
                 damageText.gameObject.SetActive(false);
                 AddOutline(damageText, new Color32(0, 0, 0, 255), new Vector2(3f, -3f));
+
+                Image healthBack = CreateCenteredImage($"Battle Enemy HP Back {i + 1}", enemyImage.transform, new Vector2(116f, 12f), new Vector2(0f, -72f), new Color32(12, 6, 7, 230));
+                healthBack.sprite = WitcherSpriteLibrary.GetSolidSprite(new Color32(12, 6, 7, 230));
+                healthBack.raycastTarget = false;
+                AddOutline(healthBack, new Color32(0, 0, 0, 220), new Vector2(1f, -1f));
+
+                GameObject healthFillObject = CreateUiObject($"Battle Enemy HP Fill {i + 1}", healthBack.transform, new Vector2(106f, 5f), new Vector2(-53f, 0f), new Vector2(0.5f, 0.5f));
+                RectTransform healthFillRect = healthFillObject.GetComponent<RectTransform>();
+                healthFillRect.pivot = new Vector2(0f, 0.5f);
+                Image healthFill = healthFillObject.AddComponent<Image>();
+                healthFill.sprite = WitcherSpriteLibrary.GetSolidSprite(new Color32(226, 34, 43, 255));
+                healthFill.color = new Color32(226, 34, 43, 255);
+                healthFill.raycastTarget = false;
                 enemySlots.Add(new EnemyVisualSlot
                 {
                     Image = enemyImage,
                     Rect = enemyImage.rectTransform,
                     HomePosition = enemyImage.rectTransform.anchoredPosition,
-                    DamageText = damageText
+                    DamageText = damageText,
+                    HealthBack = healthBack,
+                    HealthFill = healthFill
                 });
             }
 
@@ -326,21 +336,13 @@ namespace WitcherGame
             AddOutline(enemyTitle, Color.black, new Vector2(1f, -1f));
 
             enemyRows.Clear();
-            enemyHealthFills.Clear();
             for (int i = 0; i < 4; i++)
             {
-                float rowY = -56f - i * 32f;
+                float rowY = -56f - i * 29f;
                 Text row = CreateText($"Enemy Row {i + 1}", enemyPanel.transform, string.Empty, 18, TextAnchor.MiddleLeft, new Vector2(26f, rowY), new Vector2(370f, 25f));
                 row.color = new Color32(233, 238, 229, 255);
                 AddOutline(row, Color.black, new Vector2(1f, -1f));
                 enemyRows.Add(row);
-
-                Image hpBack = CreateImage($"Enemy HP Back {i + 1}", enemyPanel.transform, new Vector2(186f, 8f), new Vector2(220f, rowY - 22f), new Color32(20, 7, 9, 245));
-                hpBack.sprite = WitcherSpriteLibrary.GetSolidSprite(new Color32(20, 7, 9, 245));
-                Image hpFill = CreateImage($"Enemy HP Fill {i + 1}", hpBack.transform, new Vector2(178f, 4f), new Vector2(4f, -2f), new Color32(218, 31, 42, 255));
-                hpFill.sprite = WitcherSpriteLibrary.GetSolidSprite(new Color32(218, 31, 42, 255));
-                hpFill.rectTransform.pivot = new Vector2(0f, 1f);
-                enemyHealthFills.Add(hpFill);
             }
 
             Image commandPanel = CreateImage("Command Panel", root.transform, new Vector2(880f, 206f), new Vector2(40f, -318f), new Color32(10, 13, 18, 244));
