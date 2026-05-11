@@ -222,8 +222,7 @@ namespace WitcherGame
             }
 
             bossAnimator.PlayDeath();
-            WitcherCombatText.Spawn("黑月骑士倒下", transform.position + Vector3.up * 1.2f, new Color32(118, 219, 255, 255));
-            WitcherSurvivorRunManager.NotifyKill(transform.position, 3);
+            WitcherCombatText.Spawn("月夜骑士倒下", transform.position + Vector3.up * 1.2f, new Color32(118, 219, 255, 255));
         }
 
         private void UpdateDeathAnimation()

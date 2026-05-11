@@ -15,12 +15,9 @@ namespace WitcherGame
         [SerializeField] private float minStageY = -2.55f;
         [SerializeField] private float maxStageY = 5f;
         [SerializeField] private float visualScale = 0.65f;
-        [SerializeField] private float attackRange = 1.65f;
-        [SerializeField] private float laneAttackTolerance = 0.72f;
         [SerializeField] private float hurtLockDuration = 0.48f;
         [SerializeField] private int maxHealth = 120;
         [SerializeField] private int maxMana = 100;
-        [SerializeField] private int slashManaCost = 8;
         [SerializeField] private float manaRegenPerSecond = 11f;
         [SerializeField] private int bossHitDamage = 5;
         [SerializeField] private float dashSpeed = 12f;
@@ -29,12 +26,6 @@ namespace WitcherGame
         [SerializeField] private int dashManaCost = 18;
         [SerializeField] private int healManaCost = 35;
         [SerializeField] private int healAmount = 22;
-        [SerializeField] private int flameManaCost = 20;
-        [SerializeField] private float flameCooldown = 0.7f;
-        [SerializeField] private float flameLineLength = 7.2f;
-        [SerializeField] private float flameLineWidth = 0.58f;
-        [SerializeField] private int flameLineDamage = 2;
-        [SerializeField] private float flameVisualDuration = 0.32f;
 
         private Rigidbody2D body;
         private SpriteRenderer spriteRenderer;
@@ -45,7 +36,6 @@ namespace WitcherGame
         private float currentMana;
         private float dashTimer;
         private float dashCooldownTimer;
-        private float flameCooldownTimer;
         private float invulnerableTimer;
         private float lastFacingDirection = 1f;
         private bool defeatHandled;
@@ -81,7 +71,6 @@ namespace WitcherGame
         {
             RegenerateMana();
             dashCooldownTimer -= Time.deltaTime;
-            flameCooldownTimer -= Time.deltaTime;
             invulnerableTimer -= Time.deltaTime;
 
             if (!IsAlive)
@@ -135,14 +124,6 @@ namespace WitcherGame
             {
                 TryHeal();
             }
-            else if (Input.GetKeyDown(KeyCode.J))
-            {
-                TryCastFlameLine();
-            }
-            else if (Input.GetButtonDown("Fire1") || Input.GetKeyDown(KeyCode.K))
-            {
-                TrySlash();
-            }
             else
             {
                 geraltAnimator.PlayLocomotion(movement.sqrMagnitude > 0.01f);
@@ -154,15 +135,6 @@ namespace WitcherGame
         private void LateUpdate()
         {
             ClampToStage();
-        }
-
-        private void OnTriggerStay2D(Collider2D other)
-        {
-            MonsterPatrol enemy = other.GetComponent<MonsterPatrol>();
-            if (enemy != null && enemy.CanBeHit && Mathf.Abs(enemy.transform.position.y - transform.position.y) <= laneAttackTolerance)
-            {
-                TakeEnemyHit(enemy.ContactDamage, enemy.transform.position.x);
-            }
         }
 
         public void SetControlEnabled(bool isEnabled)
@@ -243,17 +215,6 @@ namespace WitcherGame
             manaRegenPerSecond += Mathf.Max(0.1f, amount);
         }
 
-        public void ImproveFlameDamage(int amount)
-        {
-            flameLineDamage += Mathf.Max(1, amount);
-        }
-
-        public void ImproveFlameReach(float lengthAmount, float widthAmount)
-        {
-            flameLineLength += Mathf.Max(0.1f, lengthAmount);
-            flameLineWidth += Mathf.Max(0f, widthAmount);
-        }
-
         public void ImproveMobility(float horizontalAmount, float verticalAmount)
         {
             moveSpeed += Mathf.Max(0.1f, horizontalAmount);
@@ -274,50 +235,6 @@ namespace WitcherGame
             transform.position = new Vector3(position.x, position.y, transform.position.z);
             body.velocity = Vector2.zero;
             ClampToStage();
-        }
-
-        private void TrySlash()
-        {
-            if (geraltAnimator.IsSlashPlaying || geraltAnimator.IsHurtPlaying || geraltAnimator.IsDeathPlaying)
-            {
-                return;
-            }
-
-            if (currentMana < slashManaCost)
-            {
-                geraltAnimator.PlayLocomotion(false);
-                return;
-            }
-
-            currentMana = Mathf.Max(0f, currentMana - slashManaCost);
-            StatsChanged?.Invoke();
-            geraltAnimator.PlaySlash();
-            TryHitBoss();
-            TryHitCommonEnemies();
-        }
-
-        private void TryCastFlameLine()
-        {
-            if (geraltAnimator.IsSlashPlaying || geraltAnimator.IsHurtPlaying || geraltAnimator.IsDeathPlaying)
-            {
-                return;
-            }
-
-            if (flameCooldownTimer > 0f || currentMana < flameManaCost)
-            {
-                geraltAnimator.PlayLocomotion(false);
-                return;
-            }
-
-            currentMana = Mathf.Max(0f, currentMana - flameManaCost);
-            StatsChanged?.Invoke();
-            flameCooldownTimer = flameCooldown;
-            body.velocity = Vector2.zero;
-            geraltAnimator.PlaySlash();
-
-            Vector3 origin = transform.position + new Vector3(lastFacingDirection * 0.9f, 0.34f, 0f);
-            WitcherFlameLine.Spawn(origin, lastFacingDirection, flameLineLength, flameLineWidth, flameLineDamage, flameVisualDuration);
-            WitcherCombatText.Spawn("火焰印记", transform.position + Vector3.up * 1.25f, new Color32(255, 143, 58, 255));
         }
 
         private void TryDash(float moveInput)
@@ -428,61 +345,5 @@ namespace WitcherGame
             spriteRenderer.sortingOrder = Mathf.RoundToInt((maxStageY - transform.position.y) * 100f) + 20;
         }
 
-        private void TryHitBoss()
-        {
-            WildHuntBossController[] bosses = FindObjectsOfType<WildHuntBossController>();
-            for (int i = 0; i < bosses.Length; i++)
-            {
-                WildHuntBossController boss = bosses[i];
-                if (boss == null || !boss.CanBeHit)
-                {
-                    continue;
-                }
-
-                float horizontalDistance = Mathf.Abs(boss.transform.position.x - transform.position.x);
-                float verticalDistance = Mathf.Abs(boss.transform.position.y - transform.position.y);
-                if (horizontalDistance <= attackRange && verticalDistance <= laneAttackTolerance)
-                {
-                    boss.TakeHit(transform.position.x);
-                }
-            }
-        }
-
-        private void TryHitCommonEnemies()
-        {
-            WitcherHordeMonsterController[] hordeMonsters = FindObjectsOfType<WitcherHordeMonsterController>();
-            for (int i = 0; i < hordeMonsters.Length; i++)
-            {
-                WitcherHordeMonsterController enemy = hordeMonsters[i];
-                if (enemy == null || !enemy.CanBeHit)
-                {
-                    continue;
-                }
-
-                float horizontalDistance = Mathf.Abs(enemy.transform.position.x - transform.position.x);
-                float verticalDistance = Mathf.Abs(enemy.transform.position.y - transform.position.y);
-                if (horizontalDistance <= attackRange && verticalDistance <= laneAttackTolerance)
-                {
-                    enemy.TakeHit(transform.position.x);
-                }
-            }
-
-            MonsterPatrol[] enemies = FindObjectsOfType<MonsterPatrol>();
-            for (int i = 0; i < enemies.Length; i++)
-            {
-                MonsterPatrol enemy = enemies[i];
-                if (enemy == null || !enemy.CanBeHit)
-                {
-                    continue;
-                }
-
-                float horizontalDistance = Mathf.Abs(enemy.transform.position.x - transform.position.x);
-                float verticalDistance = Mathf.Abs(enemy.transform.position.y - transform.position.y);
-                if (horizontalDistance <= attackRange && verticalDistance <= laneAttackTolerance)
-                {
-                    enemy.TakeHit(transform.position.x);
-                }
-            }
-        }
     }
 }

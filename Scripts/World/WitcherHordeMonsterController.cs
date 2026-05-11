@@ -27,7 +27,6 @@ namespace WitcherGame
         [SerializeField] private float deathDuration = 0.55f;
         [SerializeField] private int maxHealth = 2;
         [SerializeField] private int contactDamage = 4;
-        [SerializeField] private int experienceReward = 2;
         [SerializeField] private float visualScale = 0.72f;
         [SerializeField] private float minStageY = -2.55f;
         [SerializeField] private float maxStageY = 5f;
@@ -226,7 +225,6 @@ namespace WitcherGame
             }
 
             Play(deathFrames, 9f, true);
-            WitcherSurvivorRunManager.NotifyKill(transform.position, experienceReward);
             WitcherCombatText.Spawn(monsterKind == WitcherHordeMonsterKind.BloodWraith ? "怨灵消散" : "腐狼倒下", transform.position + Vector3.up * 0.55f, new Color32(180, 228, 255, 255));
         }
 
@@ -256,7 +254,6 @@ namespace WitcherGame
                 attackCooldown = 1.45f;
                 maxHealth = 4;
                 contactDamage = 5;
-                experienceReward = 3;
                 visualScale = 0.92f;
                 return;
             }
@@ -268,7 +265,6 @@ namespace WitcherGame
             attackCooldown = 1.05f;
             maxHealth = 2;
             contactDamage = 4;
-            experienceReward = 2;
             visualScale = 0.78f;
         }
 
