@@ -273,8 +273,8 @@ namespace WitcherGame
             root = CreateUiObject("Turn Battle Root", transform, Vector2.zero, Vector2.zero, new Vector2(0.5f, 0.5f));
             StretchToParent(root.GetComponent<RectTransform>());
 
-            Image dim = CreateCenteredImage("Turn Battle Dim", root.transform, new Vector2(2400f, 1400f), Vector2.zero, new Color32(0, 0, 0, 238));
-            dim.sprite = WitcherSpriteLibrary.GetSolidSprite(new Color32(0, 0, 0, 235));
+            Image dim = CreateCenteredImage("Turn Battle Dim", root.transform, new Vector2(2400f, 1400f), Vector2.zero, new Color32(3, 5, 8, 255));
+            dim.sprite = WitcherSpriteLibrary.GetSolidSprite(new Color32(3, 5, 8, 255));
 
             Image titlePlate = CreateCenteredImage("Battle Title Plate", root.transform, new Vector2(420f, 44f), new Vector2(0f, 236f), new Color32(12, 15, 19, 228));
             titlePlate.sprite = WitcherSpriteLibrary.GetSolidSprite(new Color32(12, 15, 19, 228));

@@ -46,6 +46,7 @@ namespace WitcherGame
         private static TurnBasedBattleManager instance;
 
         private readonly List<TurnBasedEnemyState> enemies = new List<TurnBasedEnemyState>();
+        private readonly List<Camera> pausedRenderCameras = new List<Camera>();
         private GeraltController player;
         private GeraltAnimator playerAnimator;
         private TurnBasedBattleHud battleHud;
@@ -53,6 +54,7 @@ namespace WitcherGame
         private bool battleActive;
         private bool resolvingTurn;
         private bool defending;
+        private bool worldRenderingPaused;
         private int potionCount;
 
         public bool BattleActive => battleActive;
@@ -144,6 +146,7 @@ namespace WitcherGame
 
             battleHud = TurnBasedBattleHud.CreateIfMissing(this);
             battleHud.Show(enemies, player, potionCount);
+            PauseWorldRendering();
             battleHud.SetMessage($"遭遇 {currentEncounter.EncounterTitle}！");
             return true;
         }
@@ -383,6 +386,7 @@ namespace WitcherGame
             }
 
             battleHud?.Hide();
+            ResumeWorldRendering();
             battleActive = false;
             resolvingTurn = false;
             defending = false;
@@ -393,6 +397,49 @@ namespace WitcherGame
             {
                 player.SetControlEnabled(true);
             }
+        }
+
+        private void PauseWorldRendering()
+        {
+            if (worldRenderingPaused)
+            {
+                return;
+            }
+
+            pausedRenderCameras.Clear();
+            Camera[] cameras = FindObjectsOfType<Camera>();
+            for (int i = 0; i < cameras.Length; i++)
+            {
+                Camera camera = cameras[i];
+                if (camera == null || !camera.enabled)
+                {
+                    continue;
+                }
+
+                pausedRenderCameras.Add(camera);
+                camera.enabled = false;
+            }
+
+            worldRenderingPaused = true;
+        }
+
+        private void ResumeWorldRendering()
+        {
+            if (!worldRenderingPaused)
+            {
+                return;
+            }
+
+            for (int i = 0; i < pausedRenderCameras.Count; i++)
+            {
+                if (pausedRenderCameras[i] != null)
+                {
+                    pausedRenderCameras[i].enabled = true;
+                }
+            }
+
+            pausedRenderCameras.Clear();
+            worldRenderingPaused = false;
         }
 
         private TurnBasedEnemyState GetFirstLivingEnemy()
