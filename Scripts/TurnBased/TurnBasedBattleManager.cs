@@ -241,7 +241,7 @@ namespace WitcherGame
             target.Health = Mathf.Max(0, target.Health - damage);
             battleHud.SetMessage($"猎魔人攻击 {target.Name}，造成 {damage} 点伤害！");
             WitcherCombatFeedback.EnemyHit(player.transform.position + Vector3.right * 1.2f, 0.06f, 0.025f);
-            yield return battleHud.PlayEnemyHurt(targetIndex);
+            yield return battleHud.PlayEnemyHurt(targetIndex, 0f, damage);
             battleHud.Refresh(enemies, player, potionCount);
             if (!target.IsAlive)
             {
@@ -254,8 +254,10 @@ namespace WitcherGame
         {
             playerAnimator?.PlaySlash();
             int hitCount = 0;
-            foreach (TurnBasedEnemyState enemy in enemies)
+            int[] damages = new int[enemies.Count];
+            for (int i = 0; i < enemies.Count; i++)
             {
+                TurnBasedEnemyState enemy = enemies[i];
                 if (!enemy.IsAlive)
                 {
                     continue;
@@ -263,6 +265,7 @@ namespace WitcherGame
 
                 int damage = Mathf.Max(1, flameBaseDamage + Random.Range(-4, 5) - enemy.Defense / 2);
                 enemy.Health = Mathf.Max(0, enemy.Health - damage);
+                damages[i] = damage;
                 hitCount++;
             }
 
@@ -271,9 +274,9 @@ namespace WitcherGame
             yield return battleHud.PlayFlameSignEffect();
             for (int i = 0; i < enemies.Count; i++)
             {
-                if (enemies[i].Health > 0 || enemies[i].HurtFrames != null)
+                if (damages[i] > 0)
                 {
-                    yield return battleHud.PlayEnemyHurt(i, 0.08f);
+                    yield return battleHud.PlayEnemyHurt(i, 0.08f, damages[i]);
                 }
             }
 
