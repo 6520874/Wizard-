@@ -15,6 +15,10 @@ namespace WitcherGame
         private readonly List<EnemyVisualSlot> enemySlots = new List<EnemyVisualSlot>();
         private readonly List<Button> commandButtons = new List<Button>();
         private static Sprite[] cachedFlameFrames;
+        private static Sprite cachedBattleBackdrop;
+        private static Sprite cachedFloorMist;
+        private static Sprite cachedGroundShadow;
+        private static Sprite cachedGroundGlow;
 
         private TurnBasedBattleManager manager;
         private GameObject root;
@@ -32,6 +36,8 @@ namespace WitcherGame
             public Text DamageText;
             public Image HealthBack;
             public Image HealthFill;
+            public Image GroundShadow;
+            public Image GroundGlow;
             public bool Busy;
             public int IdleIndex;
             public float IdleTimer;
@@ -139,6 +145,8 @@ namespace WitcherGame
                         enemySlots[i].Image.gameObject.SetActive(false);
                         enemySlots[i].DamageText.gameObject.SetActive(false);
                         enemySlots[i].HealthBack.gameObject.SetActive(false);
+                        enemySlots[i].GroundShadow.gameObject.SetActive(false);
+                        enemySlots[i].GroundGlow.gameObject.SetActive(false);
                     }
                     continue;
                 }
@@ -151,8 +159,11 @@ namespace WitcherGame
                 if (i < enemySlots.Count)
                 {
                     EnemyVisualSlot slot = enemySlots[i];
-                    slot.Image.gameObject.SetActive(enemy.Sprite != null && enemy.IsAlive);
-                    slot.HealthBack.gameObject.SetActive(enemy.Sprite != null && enemy.IsAlive);
+                    bool showEnemy = enemy.Sprite != null && enemy.IsAlive;
+                    slot.Image.gameObject.SetActive(showEnemy);
+                    slot.HealthBack.gameObject.SetActive(showEnemy);
+                    slot.GroundShadow.gameObject.SetActive(showEnemy);
+                    slot.GroundGlow.gameObject.SetActive(showEnemy);
                     float normalizedHealth = enemy.MaxHealth <= 0 ? 0f : Mathf.Clamp01((float)enemy.Health / enemy.MaxHealth);
                     SetFillWidth(slot.HealthFill, normalizedHealth, 106f);
                     if (!slot.Busy)
@@ -274,7 +285,20 @@ namespace WitcherGame
             StretchToParent(root.GetComponent<RectTransform>());
 
             Image dim = CreateCenteredImage("Turn Battle Dim", root.transform, new Vector2(2400f, 1400f), Vector2.zero, new Color32(3, 5, 8, 255));
-            dim.sprite = WitcherSpriteLibrary.GetSolidSprite(new Color32(3, 5, 8, 255));
+            dim.sprite = GetBattleBackdropSprite();
+            dim.color = Color.white;
+
+            Image horizonGlow = CreateCenteredImage("Battle Horizon Glow", root.transform, new Vector2(1060f, 190f), new Vector2(0f, 78f), new Color32(42, 79, 101, 82));
+            horizonGlow.sprite = GetFloorMistSprite();
+            horizonGlow.raycastTarget = false;
+
+            Image floorPlate = CreateCenteredImage("Battle Floor Plate", root.transform, new Vector2(930f, 118f), new Vector2(22f, -22f), new Color32(10, 15, 18, 192));
+            floorPlate.sprite = GetFloorMistSprite();
+            floorPlate.raycastTarget = false;
+
+            Image frontFog = CreateCenteredImage("Battle Front Fog", root.transform, new Vector2(1260f, 122f), new Vector2(0f, -84f), new Color32(92, 119, 127, 54));
+            frontFog.sprite = GetFloorMistSprite();
+            frontFog.raycastTarget = false;
 
             Image titlePlate = CreateCenteredImage("Battle Title Plate", root.transform, new Vector2(420f, 44f), new Vector2(0f, 236f), new Color32(12, 15, 19, 228));
             titlePlate.sprite = WitcherSpriteLibrary.GetSolidSprite(new Color32(12, 15, 19, 228));
@@ -291,7 +315,18 @@ namespace WitcherGame
             enemySlots.Clear();
             for (int i = 0; i < 4; i++)
             {
-                Image enemyImage = CreateCenteredImage($"Battle Enemy Sprite {i + 1}", root.transform, new Vector2(148f, 148f), new Vector2(-210f + i * 140f, 76f), Color.white);
+                Vector2 slotPosition = new Vector2(-210f + i * 140f, 76f);
+                Image groundGlow = CreateCenteredImage($"Battle Enemy Ground Glow {i + 1}", root.transform, new Vector2(142f, 38f), slotPosition + new Vector2(0f, -65f), new Color32(48, 128, 150, 82));
+                groundGlow.sprite = GetGroundGlowSprite();
+                groundGlow.raycastTarget = false;
+                groundGlow.gameObject.SetActive(false);
+
+                Image groundShadow = CreateCenteredImage($"Battle Enemy Ground Shadow {i + 1}", root.transform, new Vector2(128f, 30f), slotPosition + new Vector2(0f, -70f), new Color32(0, 0, 0, 164));
+                groundShadow.sprite = GetGroundShadowSprite();
+                groundShadow.raycastTarget = false;
+                groundShadow.gameObject.SetActive(false);
+
+                Image enemyImage = CreateCenteredImage($"Battle Enemy Sprite {i + 1}", root.transform, new Vector2(148f, 148f), slotPosition, Color.white);
                 enemyImage.preserveAspect = true;
                 enemyImage.raycastTarget = false;
                 enemyImage.gameObject.SetActive(false);
@@ -322,7 +357,9 @@ namespace WitcherGame
                     HomePosition = enemyImage.rectTransform.anchoredPosition,
                     DamageText = damageText,
                     HealthBack = healthBack,
-                    HealthFill = healthFill
+                    HealthFill = healthFill,
+                    GroundShadow = groundShadow,
+                    GroundGlow = groundGlow
                 });
             }
 
@@ -433,6 +470,94 @@ namespace WitcherGame
             }
 
             damageText.gameObject.SetActive(false);
+        }
+
+        private static Sprite GetBattleBackdropSprite()
+        {
+            if (cachedBattleBackdrop != null)
+            {
+                return cachedBattleBackdrop;
+            }
+
+            Texture2D texture = new Texture2D(8, 96, TextureFormat.RGBA32, false);
+            Color top = new Color32(8, 15, 23, 255);
+            Color center = new Color32(12, 23, 30, 255);
+            Color bottom = new Color32(2, 4, 7, 255);
+            for (int y = 0; y < texture.height; y++)
+            {
+                float t = (float)y / (texture.height - 1);
+                Color color = t < 0.58f
+                    ? Color.Lerp(bottom, center, t / 0.58f)
+                    : Color.Lerp(center, top, (t - 0.58f) / 0.42f);
+                for (int x = 0; x < texture.width; x++)
+                {
+                    float vignette = Mathf.Abs((x / (float)(texture.width - 1)) - 0.5f) * 0.18f;
+                    texture.SetPixel(x, y, Color.Lerp(color, Color.black, vignette));
+                }
+            }
+
+            texture.Apply();
+            texture.filterMode = FilterMode.Bilinear;
+            texture.wrapMode = TextureWrapMode.Clamp;
+            cachedBattleBackdrop = Sprite.Create(texture, new Rect(0f, 0f, texture.width, texture.height), new Vector2(0.5f, 0.5f), 96f);
+            cachedBattleBackdrop.name = "RuntimeBattleBackdrop";
+            return cachedBattleBackdrop;
+        }
+
+        private static Sprite GetFloorMistSprite()
+        {
+            if (cachedFloorMist != null)
+            {
+                return cachedFloorMist;
+            }
+
+            cachedFloorMist = CreateRadialSprite("RuntimeBattleMist", 96, 28, 0.88f);
+            return cachedFloorMist;
+        }
+
+        private static Sprite GetGroundShadowSprite()
+        {
+            if (cachedGroundShadow != null)
+            {
+                return cachedGroundShadow;
+            }
+
+            cachedGroundShadow = CreateRadialSprite("RuntimeEnemyGroundShadow", 96, 28, 1f);
+            return cachedGroundShadow;
+        }
+
+        private static Sprite GetGroundGlowSprite()
+        {
+            if (cachedGroundGlow != null)
+            {
+                return cachedGroundGlow;
+            }
+
+            cachedGroundGlow = CreateRadialSprite("RuntimeEnemyGroundGlow", 96, 28, 0.78f);
+            return cachedGroundGlow;
+        }
+
+        private static Sprite CreateRadialSprite(string name, int width, int height, float power)
+        {
+            Texture2D texture = new Texture2D(width, height, TextureFormat.RGBA32, false);
+            for (int y = 0; y < height; y++)
+            {
+                float ny = ((y + 0.5f) / height - 0.5f) * 2f;
+                for (int x = 0; x < width; x++)
+                {
+                    float nx = ((x + 0.5f) / width - 0.5f) * 2f;
+                    float distance = Mathf.Sqrt(nx * nx + ny * ny * 3.4f);
+                    float alpha = Mathf.Pow(Mathf.Clamp01(1f - distance), power);
+                    texture.SetPixel(x, y, new Color(1f, 1f, 1f, alpha));
+                }
+            }
+
+            texture.Apply();
+            texture.filterMode = FilterMode.Bilinear;
+            texture.wrapMode = TextureWrapMode.Clamp;
+            Sprite sprite = Sprite.Create(texture, new Rect(0f, 0f, width, height), new Vector2(0.5f, 0.5f), 96f);
+            sprite.name = name;
+            return sprite;
         }
 
         private static void SetFillWidth(Image fill, float normalized, float fullWidth)
