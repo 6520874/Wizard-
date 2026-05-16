@@ -50,6 +50,7 @@ public static class WitcherSceneCreator
         SpriteRenderer spriteRenderer = backgroundObject.AddComponent<SpriteRenderer>();
         spriteRenderer.sortingOrder = -50;
         backgroundObject.AddComponent<WitcherRuntimeBackground>();
+        backgroundObject.AddComponent<WitcherAtmosphereLayer>();
         backgroundObject.transform.position = new Vector3(0f, 0f, 8f);
     }
 

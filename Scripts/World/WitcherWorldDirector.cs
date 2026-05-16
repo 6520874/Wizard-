@@ -20,7 +20,11 @@ namespace WitcherGame
         {
             new RoomDefinition(
                 "威伦荒村长路",
-                new Color32(170, 190, 205, 255))
+                new Color32(126, 151, 166, 255),
+                new Color32(28, 50, 61, 90),
+                new Color32(148, 174, 176, 118),
+                0.74f,
+                0.82f)
         };
 
         public static WitcherWorldDirector CreateIfMissing(GeraltController target)
@@ -98,6 +102,14 @@ namespace WitcherGame
             if (background != null && background.TryGetComponent(out SpriteRenderer backgroundRenderer))
             {
                 backgroundRenderer.color = room.BackgroundTint;
+
+                WitcherAtmosphereLayer atmosphere = background.GetComponent<WitcherAtmosphereLayer>();
+                if (atmosphere == null)
+                {
+                    atmosphere = background.AddComponent<WitcherAtmosphereLayer>();
+                }
+
+                atmosphere.ApplyLook(room.AtmosphereTint, room.FogColor, room.FogStrength, room.VignetteStrength);
             }
 
             Camera camera = Camera.main;
@@ -165,15 +177,30 @@ namespace WitcherGame
 
         private readonly struct RoomDefinition
         {
-            public RoomDefinition(string name, Color32 backgroundTint, params EnemySpawn[] enemies)
+            public RoomDefinition(
+                string name,
+                Color32 backgroundTint,
+                Color32 atmosphereTint,
+                Color32 fogColor,
+                float fogStrength,
+                float vignetteStrength,
+                params EnemySpawn[] enemies)
             {
                 Name = name;
                 BackgroundTint = backgroundTint;
+                AtmosphereTint = atmosphereTint;
+                FogColor = fogColor;
+                FogStrength = fogStrength;
+                VignetteStrength = vignetteStrength;
                 Enemies = enemies;
             }
 
             public string Name { get; }
             public Color32 BackgroundTint { get; }
+            public Color32 AtmosphereTint { get; }
+            public Color32 FogColor { get; }
+            public float FogStrength { get; }
+            public float VignetteStrength { get; }
             public EnemySpawn[] Enemies { get; }
         }
 
