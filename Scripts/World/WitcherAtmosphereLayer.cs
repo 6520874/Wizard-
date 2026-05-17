@@ -5,12 +5,6 @@ namespace WitcherGame
 {
     public class WitcherAtmosphereLayer : MonoBehaviour
     {
-        private enum AtmosphereStyle
-        {
-            ColdFog,
-            CursedEmbers
-        }
-
         private const int TextureWidth = 192;
         private const int TextureHeight = 96;
 
@@ -20,7 +14,6 @@ namespace WitcherGame
         [SerializeField] private float worldWidth = 66f;
         [SerializeField] private float worldHeight = 9.4f;
         [SerializeField] private int sortingOrder = -45;
-        [SerializeField] private AtmosphereStyle style = AtmosphereStyle.CursedEmbers;
         [SerializeField] private Color32 atmosphereTint = new Color32(42, 19, 17, 104);
         [SerializeField] private Color32 fogColor = new Color32(120, 112, 100, 82);
         [SerializeField] private Color32 emberColor = new Color32(224, 82, 36, 148);
@@ -53,7 +46,6 @@ namespace WitcherGame
 
         public void ApplyLook(Color32 tint, Color32 fog, float fogAmount, float vignetteAmount)
         {
-            style = AtmosphereStyle.ColdFog;
             atmosphereTint = tint;
             fogColor = fog;
             emberStrength = 0f;
@@ -72,7 +64,6 @@ namespace WitcherGame
             float vignetteAmount,
             float emberAmount)
         {
-            style = AtmosphereStyle.CursedEmbers;
             atmosphereTint = tint;
             fogColor = fog;
             emberColor = ember;
@@ -86,11 +77,6 @@ namespace WitcherGame
 
         private void ApplyCurrentColors()
         {
-            SetColor("Atmosphere Tint", atmosphereTint);
-            SetColor("Atmosphere Horizon Shadow", style == AtmosphereStyle.CursedEmbers
-                ? new Color32(17, 8, 7, 138)
-                : new Color32(4, 8, 12, 118));
-            SetColor("Atmosphere Vignette", new Color32(0, 0, 0, (byte)Mathf.RoundToInt(210f * vignetteStrength)));
             SetColor("Atmosphere Ember Glow", WithAlpha(emberColor, emberStrength * 0.62f));
             SetColor("Atmosphere Ember Drift 01", WithAlpha(emberColor, emberStrength * 0.82f));
             SetColor("Atmosphere Ember Drift 02", WithAlpha(emberColor, emberStrength * 0.56f));
@@ -103,20 +89,11 @@ namespace WitcherGame
             layers.Clear();
             lastParentScale = transform.lossyScale;
 
-            SpriteRenderer tint = EnsureLayer("Atmosphere Tint", sortingOrder, GetSolidSprite());
-            tint.transform.position = new Vector3(worldCenter.x, worldCenter.y, 7.98f);
-            ScaleToWorld(tint, worldWidth, worldHeight, lastParentScale);
-
-            SpriteRenderer horizon = EnsureLayer("Atmosphere Horizon Shadow", sortingOrder + 1, GetVerticalFadeSprite());
-            horizon.transform.position = new Vector3(worldCenter.x, worldCenter.y - 1.55f, 7.97f);
-            ScaleToWorld(horizon, worldWidth, 3.8f, lastParentScale);
-
+            RemoveLayer("Atmosphere Tint");
+            RemoveLayer("Atmosphere Horizon Shadow");
             RemoveLayer("Atmosphere Fog Far");
             RemoveLayer("Atmosphere Fog Near");
-
-            SpriteRenderer vignette = EnsureLayer("Atmosphere Vignette", sortingOrder + 4, GetVignetteSprite());
-            vignette.transform.position = new Vector3(worldCenter.x, worldCenter.y, 7.94f);
-            ScaleToWorld(vignette, worldWidth, worldHeight, lastParentScale);
+            RemoveLayer("Atmosphere Vignette");
 
             SpriteRenderer emberGlow = EnsureLayer("Atmosphere Ember Glow", sortingOrder + 5, GetRadialGlowSprite());
             emberGlow.transform.position = new Vector3(worldCenter.x + 20f, worldCenter.y - 1.32f, 7.93f);
@@ -199,26 +176,6 @@ namespace WitcherGame
             renderer.transform.localScale = new Vector3(width / (size.x * parentX), height / (size.y * parentY), 1f);
         }
 
-        private static Sprite GetSolidSprite()
-        {
-            return WitcherSpriteLibrary.GetSolidSprite(Color.white);
-        }
-
-        private static Sprite GetFogSprite()
-        {
-            return GetOrCreateSprite("ColdFogBand", CreateFogTexture, 64f);
-        }
-
-        private static Sprite GetVerticalFadeSprite()
-        {
-            return GetOrCreateSprite("ColdHorizonShadow", CreateVerticalFadeTexture, 64f);
-        }
-
-        private static Sprite GetVignetteSprite()
-        {
-            return GetOrCreateSprite("ColdVignette", CreateVignetteTexture, 64f);
-        }
-
         private static Sprite GetRadialGlowSprite()
         {
             return GetOrCreateSprite("CursedEmberGlow", CreateRadialGlowTexture, 64f);
@@ -247,62 +204,6 @@ namespace WitcherGame
             sprite.name = key;
             GeneratedSprites[key] = sprite;
             return sprite;
-        }
-
-        private static Texture2D CreateFogTexture()
-        {
-            Texture2D texture = new Texture2D(TextureWidth, 32, TextureFormat.RGBA32, false);
-            for (int y = 0; y < texture.height; y++)
-            {
-                float vertical = 1f - Mathf.Abs((y + 0.5f) / texture.height - 0.5f) * 2f;
-                vertical = Mathf.Pow(Mathf.Clamp01(vertical), 0.65f);
-                for (int x = 0; x < texture.width; x++)
-                {
-                    float horizontal = 1f - Mathf.Abs((x + 0.5f) / texture.width - 0.5f) * 2f;
-                    float noise = Mathf.PerlinNoise(x * 0.075f, y * 0.18f);
-                    float alpha = Mathf.Clamp01(vertical * Mathf.Lerp(0.34f, 1f, horizontal) * Mathf.Lerp(0.7f, 1.18f, noise));
-                    texture.SetPixel(x, y, new Color(1f, 1f, 1f, alpha));
-                }
-            }
-
-            texture.Apply();
-            return texture;
-        }
-
-        private static Texture2D CreateVerticalFadeTexture()
-        {
-            Texture2D texture = new Texture2D(8, TextureHeight, TextureFormat.RGBA32, false);
-            for (int y = 0; y < texture.height; y++)
-            {
-                float t = (y + 0.5f) / texture.height;
-                float alpha = Mathf.SmoothStep(1f, 0f, t);
-                for (int x = 0; x < texture.width; x++)
-                {
-                    texture.SetPixel(x, y, new Color(1f, 1f, 1f, alpha));
-                }
-            }
-
-            texture.Apply();
-            return texture;
-        }
-
-        private static Texture2D CreateVignetteTexture()
-        {
-            Texture2D texture = new Texture2D(TextureWidth, TextureHeight, TextureFormat.RGBA32, false);
-            for (int y = 0; y < texture.height; y++)
-            {
-                float ny = ((y + 0.5f) / texture.height - 0.5f) * 2f;
-                for (int x = 0; x < texture.width; x++)
-                {
-                    float nx = ((x + 0.5f) / texture.width - 0.5f) * 2f;
-                    float distance = Mathf.Sqrt(nx * nx + ny * ny * 1.85f);
-                    float alpha = Mathf.SmoothStep(0.42f, 1.18f, distance);
-                    texture.SetPixel(x, y, new Color(1f, 1f, 1f, alpha));
-                }
-            }
-
-            texture.Apply();
-            return texture;
         }
 
         private static Texture2D CreateRadialGlowTexture()
