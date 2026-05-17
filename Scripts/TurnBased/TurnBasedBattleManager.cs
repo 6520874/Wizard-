@@ -248,6 +248,7 @@ namespace WitcherGame
             }
 
             playerAnimator?.PlaySlash();
+            yield return battleHud.PlayPlayerAttack();
             int damage = Mathf.Max(1, playerAttack + Random.Range(-3, 4) - target.Defense);
             target.Health = Mathf.Max(0, target.Health - damage);
             battleHud.SetMessage($"猎魔人攻击 {target.Name}，造成 {damage} 点伤害！");
@@ -264,6 +265,7 @@ namespace WitcherGame
         private IEnumerator PlayerFlameSign()
         {
             playerAnimator?.PlaySlash();
+            yield return battleHud.PlayPlayerAttack();
             int hitCount = 0;
             int[] damages = new int[enemies.Count];
             for (int i = 0; i < enemies.Count; i++)
@@ -344,6 +346,7 @@ namespace WitcherGame
                 battleHud.SetMessage($"{enemy.Name} 发起攻击，造成 {damage} 点伤害！");
                 yield return battleHud.PlayEnemyAttack(i);
                 player.TakeTurnBasedDamage(damage, player.transform.position.x + 1f);
+                yield return battleHud.PlayPlayerHurt();
                 battleHud.Refresh(enemies, player, potionCount);
                 yield return Wait(0.28f);
             }

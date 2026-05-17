@@ -16,17 +16,21 @@ namespace WitcherGame
         private readonly List<Button> commandButtons = new List<Button>();
         private static Sprite[] cachedFlameFrames;
         private static Sprite cachedBattleBackdrop;
-        private static Sprite cachedFloorMist;
         private static Sprite cachedGroundShadow;
         private static Sprite cachedGroundGlow;
         private static Sprite[] cachedGeraltIdleFrames;
+        private static Sprite[] cachedGeraltSlashFrames;
+        private static Sprite[] cachedGeraltHurtFrames;
 
         private TurnBasedBattleManager manager;
+        private GeraltAnimator playerAnimator;
         private GameObject root;
         private Text messageText;
         private Text playerText;
         private Text potionText;
         private Image playerFigure;
+        private Vector2 playerFigureHomePosition;
+        private bool playerFigureBusy;
         private Image playerHealthFill;
         private Image playerManaFill;
         private Image flameEffect;
@@ -97,6 +101,7 @@ namespace WitcherGame
 
         public void Show(IReadOnlyList<TurnBasedEnemyState> enemies, GeraltController player, int potionCount)
         {
+            playerAnimator = player == null ? null : player.GetComponent<GeraltAnimator>();
             if (root == null)
             {
                 BuildHud();
@@ -266,6 +271,16 @@ namespace WitcherGame
             flameEffect.gameObject.SetActive(false);
         }
 
+        public IEnumerator PlayPlayerAttack()
+        {
+            yield return PlayPlayerFrames(GetPlayerFrames(GeraltAnimation.Slash), 0.085f, new Vector2(44f, -6f), false);
+        }
+
+        public IEnumerator PlayPlayerHurt()
+        {
+            yield return PlayPlayerFrames(GetPlayerFrames(GeraltAnimation.Hurt), 0.09f, new Vector2(-22f, 0f), true);
+        }
+
         private void BuildHud()
         {
             Canvas canvas = gameObject.GetComponent<Canvas>();
@@ -301,17 +316,9 @@ namespace WitcherGame
             dim.sprite = GetBattleBackdropSprite();
             dim.color = Color.white;
 
-            Image horizonGlow = CreateCenteredImage("Battle Horizon Glow", root.transform, new Vector2(1060f, 190f), new Vector2(0f, 78f), new Color32(42, 79, 101, 82));
-            horizonGlow.sprite = GetFloorMistSprite();
-            horizonGlow.raycastTarget = false;
-
             Image floorPlate = CreateCenteredImage("Battle Floor Plate", root.transform, new Vector2(930f, 118f), new Vector2(22f, -22f), new Color32(10, 15, 18, 192));
-            floorPlate.sprite = GetFloorMistSprite();
+            floorPlate.sprite = WitcherSpriteLibrary.GetSolidSprite(new Color32(10, 15, 18, 192));
             floorPlate.raycastTarget = false;
-
-            Image frontFog = CreateCenteredImage("Battle Front Fog", root.transform, new Vector2(1260f, 122f), new Vector2(0f, -84f), new Color32(92, 119, 127, 54));
-            frontFog.sprite = GetFloorMistSprite();
-            frontFog.raycastTarget = false;
 
             Image titlePlate = CreateCenteredImage("Battle Title Plate", root.transform, new Vector2(420f, 44f), new Vector2(0f, 236f), new Color32(12, 15, 19, 228));
             titlePlate.sprite = WitcherSpriteLibrary.GetSolidSprite(new Color32(12, 15, 19, 228));
@@ -330,7 +337,8 @@ namespace WitcherGame
             playerShadow.raycastTarget = false;
 
             playerFigure = CreateCenteredImage("Battle Player Figure", root.transform, new Vector2(142f, 156f), new Vector2(-342f, 92f), Color.white);
-            playerFigure.sprite = LoadGeraltIdleFrame();
+            playerFigure.sprite = GetPlayerIdleFrame();
+            playerFigureHomePosition = playerFigure.rectTransform.anchoredPosition;
             playerFigure.preserveAspect = true;
             playerFigure.raycastTarget = false;
 
@@ -550,17 +558,6 @@ namespace WitcherGame
             return cachedBattleBackdrop;
         }
 
-        private static Sprite GetFloorMistSprite()
-        {
-            if (cachedFloorMist != null)
-            {
-                return cachedFloorMist;
-            }
-
-            cachedFloorMist = CreateRadialSprite("RuntimeBattleMist", 96, 28, 0.88f);
-            return cachedFloorMist;
-        }
-
         private static Sprite GetGroundShadowSprite()
         {
             if (cachedGroundShadow != null)
@@ -722,14 +719,50 @@ namespace WitcherGame
             return cachedFlameFrames;
         }
 
-        private void UpdatePlayerIdleFigure()
+        private IEnumerator PlayPlayerFrames(Sprite[] frames, float frameDuration, Vector2 motion, bool flash)
         {
             if (playerFigure == null)
+            {
+                yield break;
+            }
+
+            playerFigureBusy = true;
+            RectTransform rect = playerFigure.rectTransform;
+            Sprite[] safeFrames = frames != null && frames.Length > 0 ? frames : LoadGeraltIdleFrames();
+            Vector2 home = playerFigureHomePosition;
+
+            for (int i = 0; i < safeFrames.Length; i++)
+            {
+                if (safeFrames[i] != null)
+                {
+                    playerFigure.sprite = safeFrames[i];
+                }
+
+                float t = safeFrames.Length <= 1 ? 1f : (float)i / (safeFrames.Length - 1);
+                float pulse = Mathf.Sin(t * Mathf.PI);
+                rect.anchoredPosition = home + motion * pulse;
+                rect.localScale = Vector3.one * (1f + 0.045f * pulse);
+                playerFigure.color = flash && i % 2 == 0 ? new Color32(255, 228, 214, 255) : Color.white;
+                yield return new WaitForSeconds(frameDuration);
+            }
+
+            rect.anchoredPosition = home;
+            rect.localScale = Vector3.one;
+            playerFigure.color = Color.white;
+            playerFigure.sprite = GetPlayerIdleFrame();
+            playerIdleIndex = 0;
+            playerIdleTimer = 0f;
+            playerFigureBusy = false;
+        }
+
+        private void UpdatePlayerIdleFigure()
+        {
+            if (playerFigure == null || playerFigureBusy)
             {
                 return;
             }
 
-            Sprite[] frames = LoadGeraltIdleFrames();
+            Sprite[] frames = GetPlayerFrames(GeraltAnimation.Idle);
             if (frames.Length <= 1)
             {
                 return;
@@ -746,10 +779,32 @@ namespace WitcherGame
             playerFigure.sprite = frames[playerIdleIndex];
         }
 
-        private static Sprite LoadGeraltIdleFrame()
+        private Sprite GetPlayerIdleFrame()
         {
-            Sprite[] frames = LoadGeraltIdleFrames();
+            Sprite[] frames = GetPlayerFrames(GeraltAnimation.Idle);
             return frames.Length > 0 ? frames[0] : WitcherSpriteLibrary.GetGeraltFrame(GeraltAnimation.Idle, 0);
+        }
+
+        private Sprite[] GetPlayerFrames(GeraltAnimation animation)
+        {
+            if (playerAnimator != null)
+            {
+                Sprite[] frames = playerAnimator.GetFramesForBattleHud(animation);
+                if (frames != null && frames.Length > 0)
+                {
+                    return frames;
+                }
+            }
+
+            switch (animation)
+            {
+                case GeraltAnimation.Slash:
+                    return LoadGeraltSlashFrames();
+                case GeraltAnimation.Hurt:
+                    return LoadGeraltHurtFrames();
+                default:
+                    return LoadGeraltIdleFrames();
+            }
         }
 
         private static Sprite[] LoadGeraltIdleFrames()
@@ -759,11 +814,38 @@ namespace WitcherGame
                 return cachedGeraltIdleFrames;
             }
 
-            string folderPath = Path.Combine(Application.dataPath, "Art/Geralt/Frames/Idle");
+            cachedGeraltIdleFrames = LoadGeraltFrames(GeraltAnimation.Idle);
+            return cachedGeraltIdleFrames;
+        }
+
+        private static Sprite[] LoadGeraltSlashFrames()
+        {
+            if (cachedGeraltSlashFrames != null)
+            {
+                return cachedGeraltSlashFrames;
+            }
+
+            cachedGeraltSlashFrames = LoadGeraltFrames(GeraltAnimation.Slash);
+            return cachedGeraltSlashFrames;
+        }
+
+        private static Sprite[] LoadGeraltHurtFrames()
+        {
+            if (cachedGeraltHurtFrames != null)
+            {
+                return cachedGeraltHurtFrames;
+            }
+
+            cachedGeraltHurtFrames = LoadGeraltFrames(GeraltAnimation.Hurt);
+            return cachedGeraltHurtFrames;
+        }
+
+        private static Sprite[] LoadGeraltFrames(GeraltAnimation animation)
+        {
+            string folderPath = Path.Combine(Application.dataPath, "Art/Geralt/Frames", animation.ToString());
             if (!Directory.Exists(folderPath))
             {
-                cachedGeraltIdleFrames = CreateGeraltIdleFallbackFrames();
-                return cachedGeraltIdleFrames;
+                return CreateGeraltFallbackFrames(animation);
             }
 
             string[] filePaths = Directory.GetFiles(folderPath, "*.png");
@@ -789,17 +871,16 @@ namespace WitcherGame
                 frames.Add(frame);
             }
 
-            cachedGeraltIdleFrames = frames.Count > 0 ? frames.ToArray() : CreateGeraltIdleFallbackFrames();
-            return cachedGeraltIdleFrames;
+            return frames.Count > 0 ? frames.ToArray() : CreateGeraltFallbackFrames(animation);
         }
 
-        private static Sprite[] CreateGeraltIdleFallbackFrames()
+        private static Sprite[] CreateGeraltFallbackFrames(GeraltAnimation animation)
         {
-            int frameCount = WitcherSpriteLibrary.GetGeraltFrameCount(GeraltAnimation.Idle);
+            int frameCount = WitcherSpriteLibrary.GetGeraltFrameCount(animation);
             Sprite[] frames = new Sprite[frameCount];
             for (int i = 0; i < frames.Length; i++)
             {
-                frames[i] = WitcherSpriteLibrary.GetGeraltFrame(GeraltAnimation.Idle, i);
+                frames[i] = WitcherSpriteLibrary.GetGeraltFrame(animation, i);
             }
 
             return frames;

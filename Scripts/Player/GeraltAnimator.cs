@@ -120,6 +120,12 @@ namespace WitcherGame
             Play(GeraltAnimation.Idle, true);
         }
 
+        public Sprite[] GetFramesForBattleHud(GeraltAnimation animation)
+        {
+            Sprite[] frames = GetFrames(animation);
+            return frames.Length > 0 ? frames : LoadFallbackFrames(animation);
+        }
+
         private void Play(GeraltAnimation animation, bool restart = false)
         {
             if (!restart && currentAnimation == animation)
