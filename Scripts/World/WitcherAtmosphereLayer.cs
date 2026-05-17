@@ -90,8 +90,6 @@ namespace WitcherGame
             SetColor("Atmosphere Horizon Shadow", style == AtmosphereStyle.CursedEmbers
                 ? new Color32(17, 8, 7, 138)
                 : new Color32(4, 8, 12, 118));
-            SetColor("Atmosphere Fog Near", WithAlpha(fogColor, fogStrength * (style == AtmosphereStyle.CursedEmbers ? 0.74f : 0.92f)));
-            SetColor("Atmosphere Fog Far", WithAlpha(fogColor, fogStrength * (style == AtmosphereStyle.CursedEmbers ? 0.38f : 0.56f)));
             SetColor("Atmosphere Vignette", new Color32(0, 0, 0, (byte)Mathf.RoundToInt(210f * vignetteStrength)));
             SetColor("Atmosphere Ember Glow", WithAlpha(emberColor, emberStrength * 0.62f));
             SetColor("Atmosphere Ember Drift 01", WithAlpha(emberColor, emberStrength * 0.82f));
@@ -113,13 +111,8 @@ namespace WitcherGame
             horizon.transform.position = new Vector3(worldCenter.x, worldCenter.y - 1.55f, 7.97f);
             ScaleToWorld(horizon, worldWidth, 3.8f, lastParentScale);
 
-            SpriteRenderer farFog = EnsureLayer("Atmosphere Fog Far", sortingOrder + 2, GetFogSprite());
-            farFog.transform.position = new Vector3(worldCenter.x + 2.2f, worldCenter.y - 0.9f, 7.96f);
-            ScaleToWorld(farFog, worldWidth * 0.92f, 1.55f, lastParentScale);
-
-            SpriteRenderer nearFog = EnsureLayer("Atmosphere Fog Near", sortingOrder + 3, GetFogSprite());
-            nearFog.transform.position = new Vector3(worldCenter.x - 1.4f, worldCenter.y - 2.22f, 7.95f);
-            ScaleToWorld(nearFog, worldWidth * 1.08f, 1.28f, lastParentScale);
+            RemoveLayer("Atmosphere Fog Far");
+            RemoveLayer("Atmosphere Fog Near");
 
             SpriteRenderer vignette = EnsureLayer("Atmosphere Vignette", sortingOrder + 4, GetVignetteSprite());
             vignette.transform.position = new Vector3(worldCenter.x, worldCenter.y, 7.94f);
@@ -159,6 +152,24 @@ namespace WitcherGame
             renderer.color = Color.white;
             layers[layerName] = renderer;
             return renderer;
+        }
+
+        private void RemoveLayer(string layerName)
+        {
+            Transform existing = transform.Find(layerName);
+            if (existing != null)
+            {
+                if (Application.isPlaying)
+                {
+                    Destroy(existing.gameObject);
+                }
+                else
+                {
+                    DestroyImmediate(existing.gameObject);
+                }
+            }
+
+            layers.Remove(layerName);
         }
 
         private void SetColor(string layerName, Color32 color)

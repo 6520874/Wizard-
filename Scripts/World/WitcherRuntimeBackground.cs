@@ -17,6 +17,7 @@ namespace WitcherGame
         [SerializeField] private float segmentWorldWidth = 64f;
         [SerializeField] private float segmentOverlap = 1.2f;
         [SerializeField] private float seamFogWidth = 2.1f;
+        [SerializeField] private bool showSeamFog;
 
         private SpriteRenderer spriteRenderer;
 
@@ -88,7 +89,7 @@ namespace WitcherGame
 
                 segment.transform.position = new Vector3(startX + i * spacing, worldCenter.y, 8f);
 
-                if (i > 0)
+                if (showSeamFog && i > 0)
                 {
                     CreateSeamFog(i, startX + i * spacing - segmentWorldWidth * 0.5f + segmentOverlap * 0.5f);
                 }

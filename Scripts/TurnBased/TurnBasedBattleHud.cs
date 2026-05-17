@@ -16,6 +16,7 @@ namespace WitcherGame
         private readonly List<Button> commandButtons = new List<Button>();
         private static Sprite[] cachedFlameFrames;
         private static Sprite cachedBattleBackdrop;
+        private static Sprite cachedFloorMist;
         private static Sprite cachedGroundShadow;
         private static Sprite cachedGroundGlow;
         private static Sprite[] cachedGeraltIdleFrames;
@@ -316,9 +317,17 @@ namespace WitcherGame
             dim.sprite = GetBattleBackdropSprite();
             dim.color = Color.white;
 
+            Image horizonGlow = CreateCenteredImage("Battle Horizon Glow", root.transform, new Vector2(1060f, 190f), new Vector2(0f, 78f), new Color32(42, 79, 101, 82));
+            horizonGlow.sprite = GetFloorMistSprite();
+            horizonGlow.raycastTarget = false;
+
             Image floorPlate = CreateCenteredImage("Battle Floor Plate", root.transform, new Vector2(930f, 118f), new Vector2(22f, -22f), new Color32(10, 15, 18, 192));
-            floorPlate.sprite = WitcherSpriteLibrary.GetSolidSprite(new Color32(10, 15, 18, 192));
+            floorPlate.sprite = GetFloorMistSprite();
             floorPlate.raycastTarget = false;
+
+            Image frontFog = CreateCenteredImage("Battle Front Fog", root.transform, new Vector2(1260f, 122f), new Vector2(0f, -84f), new Color32(92, 119, 127, 54));
+            frontFog.sprite = GetFloorMistSprite();
+            frontFog.raycastTarget = false;
 
             Image titlePlate = CreateCenteredImage("Battle Title Plate", root.transform, new Vector2(420f, 44f), new Vector2(0f, 236f), new Color32(12, 15, 19, 228));
             titlePlate.sprite = WitcherSpriteLibrary.GetSolidSprite(new Color32(12, 15, 19, 228));
@@ -556,6 +565,17 @@ namespace WitcherGame
             cachedBattleBackdrop = Sprite.Create(texture, new Rect(0f, 0f, texture.width, texture.height), new Vector2(0.5f, 0.5f), 96f);
             cachedBattleBackdrop.name = "RuntimeBattleBackdrop";
             return cachedBattleBackdrop;
+        }
+
+        private static Sprite GetFloorMistSprite()
+        {
+            if (cachedFloorMist != null)
+            {
+                return cachedFloorMist;
+            }
+
+            cachedFloorMist = CreateRadialSprite("RuntimeBattleMist", 96, 28, 0.88f);
+            return cachedFloorMist;
         }
 
         private static Sprite GetGroundShadowSprite()
