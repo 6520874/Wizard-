@@ -19,16 +19,20 @@ namespace WitcherGame
         private static Sprite cachedFloorMist;
         private static Sprite cachedGroundShadow;
         private static Sprite cachedGroundGlow;
+        private static Sprite[] cachedGeraltIdleFrames;
 
         private TurnBasedBattleManager manager;
         private GameObject root;
         private Text messageText;
         private Text playerText;
         private Text potionText;
+        private Image playerFigure;
         private Image playerHealthFill;
         private Image playerManaFill;
         private Image flameEffect;
         private IReadOnlyList<TurnBasedEnemyState> visibleEnemies;
+        private int playerIdleIndex;
+        private float playerIdleTimer;
 
         private class EnemyVisualSlot
         {
@@ -52,6 +56,8 @@ namespace WitcherGame
             {
                 return;
             }
+
+            UpdatePlayerIdleFigure();
 
             for (int i = 0; i < enemySlots.Count && i < visibleEnemies.Count; i++)
             {
@@ -323,8 +329,8 @@ namespace WitcherGame
             playerShadow.sprite = GetGroundShadowSprite();
             playerShadow.raycastTarget = false;
 
-            Image playerFigure = CreateCenteredImage("Battle Player Figure", root.transform, new Vector2(142f, 156f), new Vector2(-342f, 92f), Color.white);
-            playerFigure.sprite = WitcherSpriteLibrary.GetGeraltFrame(GeraltAnimation.Idle, 0);
+            playerFigure = CreateCenteredImage("Battle Player Figure", root.transform, new Vector2(142f, 156f), new Vector2(-342f, 92f), Color.white);
+            playerFigure.sprite = LoadGeraltIdleFrame();
             playerFigure.preserveAspect = true;
             playerFigure.raycastTarget = false;
 
@@ -714,6 +720,89 @@ namespace WitcherGame
             }
 
             return cachedFlameFrames;
+        }
+
+        private void UpdatePlayerIdleFigure()
+        {
+            if (playerFigure == null)
+            {
+                return;
+            }
+
+            Sprite[] frames = LoadGeraltIdleFrames();
+            if (frames.Length <= 1)
+            {
+                return;
+            }
+
+            playerIdleTimer += Time.deltaTime;
+            if (playerIdleTimer < 0.16f)
+            {
+                return;
+            }
+
+            playerIdleTimer = 0f;
+            playerIdleIndex = (playerIdleIndex + 1) % frames.Length;
+            playerFigure.sprite = frames[playerIdleIndex];
+        }
+
+        private static Sprite LoadGeraltIdleFrame()
+        {
+            Sprite[] frames = LoadGeraltIdleFrames();
+            return frames.Length > 0 ? frames[0] : WitcherSpriteLibrary.GetGeraltFrame(GeraltAnimation.Idle, 0);
+        }
+
+        private static Sprite[] LoadGeraltIdleFrames()
+        {
+            if (cachedGeraltIdleFrames != null)
+            {
+                return cachedGeraltIdleFrames;
+            }
+
+            string folderPath = Path.Combine(Application.dataPath, "Art/Geralt/Frames/Idle");
+            if (!Directory.Exists(folderPath))
+            {
+                cachedGeraltIdleFrames = CreateGeraltIdleFallbackFrames();
+                return cachedGeraltIdleFrames;
+            }
+
+            string[] filePaths = Directory.GetFiles(folderPath, "*.png");
+            System.Array.Sort(filePaths, System.StringComparer.OrdinalIgnoreCase);
+
+            List<Sprite> frames = new List<Sprite>();
+            for (int i = 0; i < filePaths.Length; i++)
+            {
+                Texture2D texture = new Texture2D(2, 2, TextureFormat.RGBA32, false);
+                if (!texture.LoadImage(File.ReadAllBytes(filePaths[i])))
+                {
+                    continue;
+                }
+
+                texture.filterMode = FilterMode.Point;
+                texture.wrapMode = TextureWrapMode.Clamp;
+                Sprite frame = Sprite.Create(
+                    texture,
+                    new Rect(0f, 0f, texture.width, texture.height),
+                    new Vector2(0.5f, 0.08f),
+                    96f);
+                frame.name = Path.GetFileNameWithoutExtension(filePaths[i]);
+                frames.Add(frame);
+            }
+
+            cachedGeraltIdleFrames = frames.Count > 0 ? frames.ToArray() : CreateGeraltIdleFallbackFrames();
+            return cachedGeraltIdleFrames;
+        }
+
+        private static Sprite[] CreateGeraltIdleFallbackFrames()
+        {
+            int frameCount = WitcherSpriteLibrary.GetGeraltFrameCount(GeraltAnimation.Idle);
+            Sprite[] frames = new Sprite[frameCount];
+            for (int i = 0; i < frames.Length; i++)
+            {
+                frames[i] = WitcherSpriteLibrary.GetGeraltFrame(GeraltAnimation.Idle, i);
+            }
+
+            return frames;
         }
 
         private void AddCommandButton(Transform parent, string label, TurnBattleAction action, Vector2 position)
