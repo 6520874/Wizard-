@@ -5,6 +5,12 @@ namespace WitcherGame
 {
     public class WitcherAtmosphereLayer : MonoBehaviour
     {
+        private enum AtmosphereStyle
+        {
+            ColdFog,
+            CursedEmbers
+        }
+
         private const int TextureWidth = 192;
         private const int TextureHeight = 96;
 
@@ -14,10 +20,13 @@ namespace WitcherGame
         [SerializeField] private float worldWidth = 66f;
         [SerializeField] private float worldHeight = 9.4f;
         [SerializeField] private int sortingOrder = -45;
-        [SerializeField] private Color32 atmosphereTint = new Color32(28, 50, 61, 84);
-        [SerializeField] private Color32 fogColor = new Color32(148, 174, 176, 112);
-        [SerializeField, Range(0f, 1f)] private float fogStrength = 0.72f;
-        [SerializeField, Range(0f, 1f)] private float vignetteStrength = 0.82f;
+        [SerializeField] private AtmosphereStyle style = AtmosphereStyle.CursedEmbers;
+        [SerializeField] private Color32 atmosphereTint = new Color32(42, 19, 17, 104);
+        [SerializeField] private Color32 fogColor = new Color32(120, 112, 100, 82);
+        [SerializeField] private Color32 emberColor = new Color32(224, 82, 36, 148);
+        [SerializeField, Range(0f, 1f)] private float fogStrength = 0.48f;
+        [SerializeField, Range(0f, 1f)] private float vignetteStrength = 0.88f;
+        [SerializeField, Range(0f, 1f)] private float emberStrength = 0.78f;
 
         private readonly Dictionary<string, SpriteRenderer> layers = new Dictionary<string, SpriteRenderer>();
         private Vector3 lastParentScale;
@@ -29,7 +38,8 @@ namespace WitcherGame
 
         private void Start()
         {
-            ApplyLook(atmosphereTint, fogColor, fogStrength, vignetteStrength);
+            Rebuild();
+            ApplyCurrentColors();
         }
 
         private void LateUpdate()
@@ -43,10 +53,32 @@ namespace WitcherGame
 
         public void ApplyLook(Color32 tint, Color32 fog, float fogAmount, float vignetteAmount)
         {
+            style = AtmosphereStyle.ColdFog;
             atmosphereTint = tint;
             fogColor = fog;
+            emberStrength = 0f;
             fogStrength = Mathf.Clamp01(fogAmount);
             vignetteStrength = Mathf.Clamp01(vignetteAmount);
+
+            Rebuild();
+            ApplyCurrentColors();
+        }
+
+        public void ApplyCursedEmbers(
+            Color32 tint,
+            Color32 fog,
+            Color32 ember,
+            float fogAmount,
+            float vignetteAmount,
+            float emberAmount)
+        {
+            style = AtmosphereStyle.CursedEmbers;
+            atmosphereTint = tint;
+            fogColor = fog;
+            emberColor = ember;
+            fogStrength = Mathf.Clamp01(fogAmount);
+            vignetteStrength = Mathf.Clamp01(vignetteAmount);
+            emberStrength = Mathf.Clamp01(emberAmount);
 
             Rebuild();
             ApplyCurrentColors();
@@ -55,10 +87,17 @@ namespace WitcherGame
         private void ApplyCurrentColors()
         {
             SetColor("Atmosphere Tint", atmosphereTint);
-            SetColor("Atmosphere Horizon Shadow", new Color32(4, 8, 12, 118));
-            SetColor("Atmosphere Fog Near", WithAlpha(fogColor, fogStrength * 0.92f));
-            SetColor("Atmosphere Fog Far", WithAlpha(fogColor, fogStrength * 0.56f));
+            SetColor("Atmosphere Horizon Shadow", style == AtmosphereStyle.CursedEmbers
+                ? new Color32(17, 8, 7, 138)
+                : new Color32(4, 8, 12, 118));
+            SetColor("Atmosphere Fog Near", WithAlpha(fogColor, fogStrength * (style == AtmosphereStyle.CursedEmbers ? 0.74f : 0.92f)));
+            SetColor("Atmosphere Fog Far", WithAlpha(fogColor, fogStrength * (style == AtmosphereStyle.CursedEmbers ? 0.38f : 0.56f)));
             SetColor("Atmosphere Vignette", new Color32(0, 0, 0, (byte)Mathf.RoundToInt(210f * vignetteStrength)));
+            SetColor("Atmosphere Ember Glow", WithAlpha(emberColor, emberStrength * 0.62f));
+            SetColor("Atmosphere Ember Drift 01", WithAlpha(emberColor, emberStrength * 0.82f));
+            SetColor("Atmosphere Ember Drift 02", WithAlpha(emberColor, emberStrength * 0.56f));
+            SetColor("Atmosphere Ember Drift 03", WithAlpha(emberColor, emberStrength * 0.68f));
+            SetColor("Atmosphere Ember Drift 04", WithAlpha(emberColor, emberStrength * 0.48f));
         }
 
         private void Rebuild()
@@ -85,6 +124,22 @@ namespace WitcherGame
             SpriteRenderer vignette = EnsureLayer("Atmosphere Vignette", sortingOrder + 4, GetVignetteSprite());
             vignette.transform.position = new Vector3(worldCenter.x, worldCenter.y, 7.94f);
             ScaleToWorld(vignette, worldWidth, worldHeight, lastParentScale);
+
+            SpriteRenderer emberGlow = EnsureLayer("Atmosphere Ember Glow", sortingOrder + 5, GetRadialGlowSprite());
+            emberGlow.transform.position = new Vector3(worldCenter.x + 20f, worldCenter.y - 1.32f, 7.93f);
+            ScaleToWorld(emberGlow, worldWidth * 0.42f, worldHeight * 0.36f, lastParentScale);
+
+            CreateEmber("Atmosphere Ember Drift 01", worldCenter + new Vector2(10.6f, -0.9f), 0.16f, 0.28f);
+            CreateEmber("Atmosphere Ember Drift 02", worldCenter + new Vector2(20.2f, 0.22f), 0.11f, 0.22f);
+            CreateEmber("Atmosphere Ember Drift 03", worldCenter + new Vector2(30.8f, -0.18f), 0.14f, 0.26f);
+            CreateEmber("Atmosphere Ember Drift 04", worldCenter + new Vector2(38.4f, 0.74f), 0.09f, 0.2f);
+        }
+
+        private void CreateEmber(string layerName, Vector2 position, float width, float height)
+        {
+            SpriteRenderer ember = EnsureLayer(layerName, sortingOrder + 6, GetEmberSprite());
+            ember.transform.position = new Vector3(position.x, position.y, 7.92f);
+            ScaleToWorld(ember, width, height, lastParentScale);
         }
 
         private SpriteRenderer EnsureLayer(string layerName, int order, Sprite sprite)
@@ -151,6 +206,16 @@ namespace WitcherGame
         private static Sprite GetVignetteSprite()
         {
             return GetOrCreateSprite("ColdVignette", CreateVignetteTexture, 64f);
+        }
+
+        private static Sprite GetRadialGlowSprite()
+        {
+            return GetOrCreateSprite("CursedEmberGlow", CreateRadialGlowTexture, 64f);
+        }
+
+        private static Sprite GetEmberSprite()
+        {
+            return GetOrCreateSprite("CursedEmberSpark", CreateEmberTexture, 32f);
         }
 
         private static Sprite GetOrCreateSprite(string key, System.Func<Texture2D> factory, float pixelsPerUnit)
@@ -221,6 +286,44 @@ namespace WitcherGame
                     float nx = ((x + 0.5f) / texture.width - 0.5f) * 2f;
                     float distance = Mathf.Sqrt(nx * nx + ny * ny * 1.85f);
                     float alpha = Mathf.SmoothStep(0.42f, 1.18f, distance);
+                    texture.SetPixel(x, y, new Color(1f, 1f, 1f, alpha));
+                }
+            }
+
+            texture.Apply();
+            return texture;
+        }
+
+        private static Texture2D CreateRadialGlowTexture()
+        {
+            Texture2D texture = new Texture2D(TextureWidth, TextureHeight, TextureFormat.RGBA32, false);
+            for (int y = 0; y < texture.height; y++)
+            {
+                float ny = ((y + 0.5f) / texture.height - 0.5f) * 2f;
+                for (int x = 0; x < texture.width; x++)
+                {
+                    float nx = ((x + 0.5f) / texture.width - 0.5f) * 2f;
+                    float distance = Mathf.Sqrt(nx * nx + ny * ny * 2.6f);
+                    float alpha = Mathf.Pow(Mathf.Clamp01(1f - distance), 1.85f);
+                    texture.SetPixel(x, y, new Color(1f, 1f, 1f, alpha));
+                }
+            }
+
+            texture.Apply();
+            return texture;
+        }
+
+        private static Texture2D CreateEmberTexture()
+        {
+            Texture2D texture = new Texture2D(16, 16, TextureFormat.RGBA32, false);
+            for (int y = 0; y < texture.height; y++)
+            {
+                float ny = ((y + 0.5f) / texture.height - 0.5f) * 2f;
+                for (int x = 0; x < texture.width; x++)
+                {
+                    float nx = ((x + 0.5f) / texture.width - 0.5f) * 2f;
+                    float distance = Mathf.Sqrt(nx * nx + ny * ny);
+                    float alpha = Mathf.Pow(Mathf.Clamp01(1f - distance), 0.72f);
                     texture.SetPixel(x, y, new Color(1f, 1f, 1f, alpha));
                 }
             }

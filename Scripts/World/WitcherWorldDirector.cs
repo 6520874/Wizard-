@@ -20,11 +20,13 @@ namespace WitcherGame
         {
             new RoomDefinition(
                 "威伦荒村长路",
-                new Color32(126, 151, 166, 255),
-                new Color32(28, 50, 61, 90),
-                new Color32(148, 174, 176, 118),
-                0.74f,
-                0.82f)
+                new Color32(106, 92, 86, 255),
+                new Color32(42, 19, 17, 104),
+                new Color32(120, 112, 100, 82),
+                new Color32(224, 82, 36, 148),
+                0.48f,
+                0.88f,
+                0.78f)
         };
 
         public static WitcherWorldDirector CreateIfMissing(GeraltController target)
@@ -109,7 +111,13 @@ namespace WitcherGame
                     atmosphere = background.AddComponent<WitcherAtmosphereLayer>();
                 }
 
-                atmosphere.ApplyLook(room.AtmosphereTint, room.FogColor, room.FogStrength, room.VignetteStrength);
+                atmosphere.ApplyCursedEmbers(
+                    room.AtmosphereTint,
+                    room.FogColor,
+                    room.EmberColor,
+                    room.FogStrength,
+                    room.VignetteStrength,
+                    room.EmberStrength);
             }
 
             Camera camera = Camera.main;
@@ -182,16 +190,20 @@ namespace WitcherGame
                 Color32 backgroundTint,
                 Color32 atmosphereTint,
                 Color32 fogColor,
+                Color32 emberColor,
                 float fogStrength,
                 float vignetteStrength,
+                float emberStrength,
                 params EnemySpawn[] enemies)
             {
                 Name = name;
                 BackgroundTint = backgroundTint;
                 AtmosphereTint = atmosphereTint;
                 FogColor = fogColor;
+                EmberColor = emberColor;
                 FogStrength = fogStrength;
                 VignetteStrength = vignetteStrength;
+                EmberStrength = emberStrength;
                 Enemies = enemies;
             }
 
@@ -199,8 +211,10 @@ namespace WitcherGame
             public Color32 BackgroundTint { get; }
             public Color32 AtmosphereTint { get; }
             public Color32 FogColor { get; }
+            public Color32 EmberColor { get; }
             public float FogStrength { get; }
             public float VignetteStrength { get; }
+            public float EmberStrength { get; }
             public EnemySpawn[] Enemies { get; }
         }
 
