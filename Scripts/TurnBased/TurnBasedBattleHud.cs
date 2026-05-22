@@ -196,7 +196,7 @@ namespace WitcherGame
                         slot.Image.sprite = FirstFrame(enemy.IdleFrames, enemy.Sprite);
                         slot.Image.color = enemy.IsAlive ? Color.white : new Color32(120, 120, 120, 150);
                         slot.Rect.anchoredPosition = slot.HomePosition;
-                        slot.Rect.localScale = Vector3.one;
+                        SetEnemyFacingScale(slot, 1f);
                     }
                 }
             }
@@ -515,7 +515,7 @@ namespace WitcherGame
                 float t = safeFrames.Length <= 1 ? 1f : (float)i / (safeFrames.Length - 1);
                 float pulse = Mathf.Sin(t * Mathf.PI);
                 slot.Rect.anchoredPosition = home + motion * pulse;
-                slot.Rect.localScale = Vector3.one * (1f + (attackMotion ? 0.1f : 0.065f) * pulse);
+                SetEnemyFacingScale(slot, 1f + (attackMotion ? 0.1f : 0.065f) * pulse);
                 slot.Image.color = hurtMotion && i % 2 == 0 ? new Color32(255, 235, 222, 255) : Color.white;
                 yield return new WaitForSeconds(frameDuration);
             }
@@ -526,7 +526,7 @@ namespace WitcherGame
             }
 
             slot.Rect.anchoredPosition = home;
-            slot.Rect.localScale = Vector3.one;
+            SetEnemyFacingScale(slot, 1f);
             slot.Image.color = Color.white;
             slot.TargetReticle?.gameObject.SetActive(false);
             slot.Busy = false;
@@ -566,7 +566,7 @@ namespace WitcherGame
             damageText.text = $"-{damage}";
             damageText.color = new Color32(255, 72, 42, 255);
             rect.anchoredPosition = start;
-            rect.localScale = Vector3.one * 1.28f;
+            rect.localScale = GetCounterFacingScale(1.28f);
             damageText.gameObject.SetActive(true);
 
             const float duration = 0.72f;
@@ -577,7 +577,7 @@ namespace WitcherGame
                 float t = Mathf.Clamp01(timer / duration);
                 float pop = Mathf.Sin(Mathf.Clamp01(t * 1.8f) * Mathf.PI) * 0.18f;
                 rect.anchoredPosition = Vector2.Lerp(start, end, t);
-                rect.localScale = Vector3.one * Mathf.Lerp(1.28f + pop, 0.92f, t);
+                rect.localScale = GetCounterFacingScale(Mathf.Lerp(1.28f + pop, 0.92f, t));
 
                 Color color = damageText.color;
                 color.a = t < 0.45f ? 1f : Mathf.Lerp(1f, 0f, (t - 0.45f) / 0.55f);
@@ -779,6 +779,20 @@ namespace WitcherGame
         private static Sprite FirstFrame(Sprite[] frames, Sprite fallback)
         {
             return frames != null && frames.Length > 0 && frames[0] != null ? frames[0] : fallback;
+        }
+
+        // 中文说明：战斗舞台的敌人固定站在右侧，因此统一朝向左侧的玩家。
+        private static void SetEnemyFacingScale(EnemyVisualSlot slot, float scale)
+        {
+            float safeScale = Mathf.Max(0.01f, scale);
+            slot.Rect.localScale = new Vector3(-safeScale, safeScale, 1f);
+            slot.HealthBack.rectTransform.localScale = GetCounterFacingScale(1f);
+            slot.DamageText.rectTransform.localScale = GetCounterFacingScale(1f);
+        }
+
+        private static Vector3 GetCounterFacingScale(float scale)
+        {
+            return new Vector3(-scale, scale, 1f);
         }
 
         private Vector2 GetPlayerAttackMotion(int enemyIndex)
