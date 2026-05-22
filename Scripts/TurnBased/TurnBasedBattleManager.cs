@@ -397,7 +397,7 @@ namespace WitcherGame
             battleHud.SetMessage($"{enemy.Name} 抢到先机，造成 {damage} 点伤害！");
             yield return battleHud.PlayEnemyAttack(enemyIndex);
             player.TakeTurnBasedDamage(damage, player.transform.position.x + 1f);
-            yield return battleHud.PlayPlayerHurt();
+            yield return battleHud.PlayPlayerHurt(damage);
             battleHud.Refresh(enemies, player, potionCount);
             yield return Wait(0.24f);
         }

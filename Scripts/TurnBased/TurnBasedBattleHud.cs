@@ -34,6 +34,7 @@ namespace WitcherGame
         private Image playerFigure;
         private Vector2 playerFigureHomePosition;
         private bool playerFigureBusy;
+        private Text playerDamageText;
         private Image playerHealthFill;
         private Image playerManaFill;
         private Image flameEffect;
@@ -228,7 +229,7 @@ namespace WitcherGame
             TurnBasedEnemyState enemy = visibleEnemies[enemyIndex];
             if (damage > 0)
             {
-                StartCoroutine(FloatDamageText(slot, damage));
+                StartCoroutine(FloatDamageText(slot.DamageText, damage, true));
             }
 
             yield return PlayEnemyFrames(slot, enemy.HurtFrames, enemy.Sprite, 0.075f, false, true);
@@ -293,8 +294,13 @@ namespace WitcherGame
             yield return PlayPlayerFrames(GetPlayerFrames(GeraltAnimation.Slash), 0.085f, new Vector2(54f, -6f), false);
         }
 
-        public IEnumerator PlayPlayerHurt()
+        public IEnumerator PlayPlayerHurt(int damage = 0)
         {
+            if (damage > 0 && playerDamageText != null)
+            {
+                StartCoroutine(FloatDamageText(playerDamageText, damage, false));
+            }
+
             yield return PlayPlayerFrames(GetPlayerFrames(GeraltAnimation.Hurt), 0.09f, new Vector2(-22f, 0f), true);
         }
 
@@ -370,6 +376,13 @@ namespace WitcherGame
             playerFigureHomePosition = playerFigure.rectTransform.anchoredPosition;
             playerFigure.preserveAspect = true;
             playerFigure.raycastTarget = false;
+            playerDamageText = CreateText("Player Damage Text", playerFigure.transform, string.Empty, 34, TextAnchor.MiddleCenter, new Vector2(0f, 72f), new Vector2(170f, 56f));
+            playerDamageText.rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
+            playerDamageText.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+            playerDamageText.rectTransform.pivot = new Vector2(0.5f, 0.5f);
+            playerDamageText.color = new Color32(255, 82, 74, 255);
+            playerDamageText.gameObject.SetActive(false);
+            AddOutline(playerDamageText, new Color32(0, 0, 0, 255), new Vector2(3f, -3f));
 
             Image playerPanel = CreateImage("Player Battle Plate", root.transform, new Vector2(230f, 96f), new Vector2(18f, -24f), new Color32(7, 10, 13, 204));
             playerPanel.sprite = WitcherSpriteLibrary.GetSolidSprite(new Color32(7, 10, 13, 226));
@@ -552,21 +565,20 @@ namespace WitcherGame
             }
         }
 
-        private IEnumerator FloatDamageText(EnemyVisualSlot slot, int damage)
+        private IEnumerator FloatDamageText(Text damageText, int damage, bool counterEnemyFacing)
         {
-            if (slot == null || slot.DamageText == null || damage <= 0)
+            if (damageText == null || damage <= 0)
             {
                 yield break;
             }
 
-            Text damageText = slot.DamageText;
             RectTransform rect = damageText.rectTransform;
             Vector2 start = new Vector2(0f, 66f);
             Vector2 end = new Vector2(0f, 116f);
             damageText.text = $"-{damage}";
             damageText.color = new Color32(255, 72, 42, 255);
             rect.anchoredPosition = start;
-            rect.localScale = GetCounterFacingScale(1.28f);
+            rect.localScale = GetDamageTextScale(1.28f, counterEnemyFacing);
             damageText.gameObject.SetActive(true);
 
             const float duration = 0.72f;
@@ -577,7 +589,7 @@ namespace WitcherGame
                 float t = Mathf.Clamp01(timer / duration);
                 float pop = Mathf.Sin(Mathf.Clamp01(t * 1.8f) * Mathf.PI) * 0.18f;
                 rect.anchoredPosition = Vector2.Lerp(start, end, t);
-                rect.localScale = GetCounterFacingScale(Mathf.Lerp(1.28f + pop, 0.92f, t));
+                rect.localScale = GetDamageTextScale(Mathf.Lerp(1.28f + pop, 0.92f, t), counterEnemyFacing);
 
                 Color color = damageText.color;
                 color.a = t < 0.45f ? 1f : Mathf.Lerp(1f, 0f, (t - 0.45f) / 0.55f);
@@ -793,6 +805,11 @@ namespace WitcherGame
         private static Vector3 GetCounterFacingScale(float scale)
         {
             return new Vector3(-scale, scale, 1f);
+        }
+
+        private static Vector3 GetDamageTextScale(float scale, bool counterEnemyFacing)
+        {
+            return counterEnemyFacing ? GetCounterFacingScale(scale) : Vector3.one * scale;
         }
 
         private Vector2 GetPlayerAttackMotion(int enemyIndex)
