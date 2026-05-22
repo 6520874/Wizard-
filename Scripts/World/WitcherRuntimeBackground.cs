@@ -4,6 +4,7 @@ using UnityEngine;
 namespace WitcherGame
 {
     [RequireComponent(typeof(SpriteRenderer))]
+    // 中文说明：运行时加载地图背景图片，并负责长图分段拼接和适配。
     public class WitcherRuntimeBackground : MonoBehaviour
     {
         [SerializeField] private string imagePath = "Art/Backgrounds/Witcher_Village_Longroad.png";

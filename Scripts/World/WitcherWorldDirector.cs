@@ -3,6 +3,7 @@ using UnityEngine;
 
 namespace WitcherGame
 {
+    // 中文说明：组织当前地图房间、主角出生点、边界和地图外观刷新。
     public class WitcherWorldDirector : MonoBehaviour
     {
         private const float StartY = -1.65f;

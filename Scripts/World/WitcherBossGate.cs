@@ -4,6 +4,7 @@ namespace WitcherGame
 {
     [RequireComponent(typeof(BoxCollider2D))]
     [RequireComponent(typeof(SpriteRenderer))]
+    // 中文说明：处理地图首领入口或战斗门禁的触发逻辑。
     public class WitcherBossGate : MonoBehaviour
     {
         [SerializeField] private float openFadeDuration = 0.45f;

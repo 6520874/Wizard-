@@ -16,6 +16,7 @@ namespace WitcherGame
     }
 
     [RequireComponent(typeof(SpriteRenderer))]
+    // 中文说明：播放月夜骑士首领的待机、奔跑、攻击、受击和死亡动画。
     public class WildHuntBossAnimator : MonoBehaviour
     {
         [SerializeField] private string frameRoot = "Art/WildHuntBoss/Frames";

@@ -18,6 +18,7 @@ namespace WitcherGame
         public int enemyCount;
     }
 
+    // 中文说明：在地图固定位置生成狼、女妖和月夜骑士战斗遭遇。
     public class WildHuntBossSpawnDirector : MonoBehaviour
     {
         [SerializeField] private bool autoSpawn = true;

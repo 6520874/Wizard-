@@ -3,6 +3,7 @@ using UnityEngine;
 
 namespace WitcherGame
 {
+    // 中文说明：为地图叠加暗色雾气和氛围层，增强场景层次。
     public class WitcherAtmosphereLayer : MonoBehaviour
     {
         private const int TextureWidth = 192;

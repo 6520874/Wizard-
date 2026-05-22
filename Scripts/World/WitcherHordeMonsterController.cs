@@ -12,6 +12,7 @@ namespace WitcherGame
 
     [RequireComponent(typeof(SpriteRenderer))]
     [RequireComponent(typeof(BoxCollider2D))]
+    // 中文说明：控制割草模式怪物的追击、攻击、受击和消亡行为。
     public class WitcherHordeMonsterController : MonoBehaviour
     {
         private const float PixelsPerUnit = 96f;

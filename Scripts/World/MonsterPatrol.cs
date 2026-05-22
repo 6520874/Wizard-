@@ -12,6 +12,7 @@ namespace WitcherGame
 
     [RequireComponent(typeof(BoxCollider2D))]
     [RequireComponent(typeof(SpriteRenderer))]
+    // 中文说明：控制普通地图怪物的巡逻、追击、攻击和死亡表现。
     public class MonsterPatrol : MonoBehaviour
     {
         private static readonly Dictionary<MonsterKind, Sprite> EnemySprites = new Dictionary<MonsterKind, Sprite>();

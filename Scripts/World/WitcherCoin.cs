@@ -4,6 +4,7 @@ namespace WitcherGame
 {
     [RequireComponent(typeof(CircleCollider2D))]
     [RequireComponent(typeof(SpriteRenderer))]
+    // 中文说明：控制地图金币的拾取效果和奖励发放。
     public class WitcherCoin : MonoBehaviour
     {
         [SerializeField] private float floatAmplitude = 0.12f;

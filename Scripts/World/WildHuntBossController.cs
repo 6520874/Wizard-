@@ -6,6 +6,7 @@ namespace WitcherGame
     [RequireComponent(typeof(BoxCollider2D))]
     [RequireComponent(typeof(SpriteRenderer))]
     [RequireComponent(typeof(WildHuntBossAnimator))]
+    // 中文说明：控制月夜骑士在地图上的追击、攻击、生命和掉落逻辑。
     public class WildHuntBossController : MonoBehaviour
     {
         [SerializeField] private float moveSpeed = 1.55f;

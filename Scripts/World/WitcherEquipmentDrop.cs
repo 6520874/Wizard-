@@ -4,6 +4,7 @@ namespace WitcherGame
 {
     [RequireComponent(typeof(CircleCollider2D))]
     [RequireComponent(typeof(SpriteRenderer))]
+    // 中文说明：控制首领掉落装备的拾取和角色强化效果。
     public class WitcherEquipmentDrop : MonoBehaviour
     {
         [SerializeField] private float floatAmplitude = 0.16f;
