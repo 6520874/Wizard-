@@ -45,14 +45,19 @@ namespace WitcherGame
         [SerializeField] private int startingPotionCount = 3;
         [SerializeField, Range(0f, 1f)] private float escapeChance = 0.62f;
 
+        private const float TurnActionThreshold = 100f;
+        private const int PlayerTurnSpeed = 116;
+
         private static TurnBasedBattleManager instance;
 
         private readonly List<TurnBasedEnemyState> enemies = new List<TurnBasedEnemyState>();
+        private readonly List<BattleTurnUnit> turnUnits = new List<BattleTurnUnit>();
         private readonly List<CameraRenderState> pausedRenderCameras = new List<CameraRenderState>();
         private GeraltController player;
         private GeraltAnimator playerAnimator;
         private TurnBasedBattleHud battleHud;
         private BattleEncounterTrigger currentEncounter;
+        private BattleTurnUnit activeTurnUnit;
         private bool battleActive;
         private bool resolvingTurn;
         private bool defending;
@@ -67,6 +72,15 @@ namespace WitcherGame
             public int CullingMask;
             public CameraClearFlags ClearFlags;
             public Color BackgroundColor;
+        }
+
+        // 中文说明：保存一个参战单位的速度进度，让玩家和怪物共用同一套出手顺序。
+        private class BattleTurnUnit
+        {
+            public bool IsPlayer;
+            public int EnemyIndex;
+            public int Speed;
+            public float ActionValue;
         }
 
         public static TurnBasedBattleManager CreateIfMissing(GeraltController target)
@@ -151,13 +165,16 @@ namespace WitcherGame
             player.SetControlEnabled(false);
             currentEncounter.PrepareForBattle();
             battleActive = true;
-            resolvingTurn = false;
+            resolvingTurn = true;
             defending = false;
+            BuildTurnUnits();
 
             battleHud = TurnBasedBattleHud.CreateIfMissing(this);
             battleHud.Show(enemies, player, potionCount);
+            battleHud.SetCommandsEnabled(false);
             PauseWorldRendering();
             battleHud.SetMessage($"遭遇 {currentEncounter.EncounterTitle}！");
+            StartCoroutine(DispatchNextTurn(0.42f));
             return true;
         }
 
@@ -225,19 +242,14 @@ namespace WitcherGame
                 yield break;
             }
 
-            if (playerTurnConsumed)
+            if (!playerTurnConsumed)
             {
-                yield return EnemyPhase();
-            }
-
-            if (CheckBattleEnded())
-            {
+                resolvingTurn = false;
+                battleHud.SetCommandsEnabled(true);
                 yield break;
             }
 
-            resolvingTurn = false;
-            battleHud.SetCommandsEnabled(true);
-            battleHud.SetMessage("选择行动。  1攻击  2火焰  3防御  4物品  5逃跑");
+            yield return DispatchNextTurn(0.18f);
         }
 
         private IEnumerator PlayerAttack()
@@ -250,7 +262,7 @@ namespace WitcherGame
             }
 
             playerAnimator?.PlaySlash();
-            yield return battleHud.PlayPlayerAttack();
+            yield return battleHud.PlayPlayerAttack(targetIndex);
             int damage = Mathf.Max(1, playerAttack + Random.Range(-3, 4) - target.Defense);
             target.Health = Mathf.Max(0, target.Health - damage);
             battleHud.SetMessage($"猎魔人攻击 {target.Name}，造成 {damage} 点伤害！");
@@ -267,7 +279,7 @@ namespace WitcherGame
         private IEnumerator PlayerFlameSign()
         {
             playerAnimator?.PlaySlash();
-            yield return battleHud.PlayPlayerAttack();
+            yield return battleHud.PlayPlayerCast();
             int hitCount = 0;
             int[] damages = new int[enemies.Count];
             for (int i = 0; i < enemies.Count; i++)
@@ -333,25 +345,61 @@ namespace WitcherGame
             }
         }
 
-        private IEnumerator EnemyPhase()
+        private IEnumerator DispatchNextTurn(float delay)
         {
-            for (int i = 0; i < enemies.Count; i++)
+            resolvingTurn = true;
+            battleHud.SetCommandsEnabled(false);
+            if (delay > 0f)
             {
-                TurnBasedEnemyState enemy = enemies[i];
-                if (!enemy.IsAlive || player == null || !player.IsAlive)
-                {
-                    continue;
-                }
-
-                int rawDamage = Mathf.Max(1, enemy.Attack + Random.Range(-2, 3) - playerDefense);
-                int damage = defending ? Mathf.Max(1, Mathf.CeilToInt(rawDamage * 0.45f)) : rawDamage;
-                battleHud.SetMessage($"{enemy.Name} 发起攻击，造成 {damage} 点伤害！");
-                yield return battleHud.PlayEnemyAttack(i);
-                player.TakeTurnBasedDamage(damage, player.transform.position.x + 1f);
-                yield return battleHud.PlayPlayerHurt();
-                battleHud.Refresh(enemies, player, potionCount);
-                yield return Wait(0.28f);
+                yield return Wait(delay);
             }
+
+            if (CheckBattleEnded())
+            {
+                yield break;
+            }
+
+            activeTurnUnit = TakeNextTurnUnit();
+            if (activeTurnUnit == null)
+            {
+                resolvingTurn = false;
+                yield break;
+            }
+
+            if (activeTurnUnit.IsPlayer)
+            {
+                resolvingTurn = false;
+                battleHud.SetCommandsEnabled(true);
+                battleHud.SetMessage("猎魔人准备行动。  1攻击  2火焰  3防御  4物品  5逃跑");
+                yield break;
+            }
+
+            yield return ResolveEnemyTurn(activeTurnUnit);
+            if (CheckBattleEnded())
+            {
+                yield break;
+            }
+
+            yield return DispatchNextTurn(0.18f);
+        }
+
+        private IEnumerator ResolveEnemyTurn(BattleTurnUnit enemyTurn)
+        {
+            int enemyIndex = enemyTurn.EnemyIndex;
+            if (!IsLivingEnemyTurn(enemyTurn) || player == null || !player.IsAlive)
+            {
+                yield break;
+            }
+
+            TurnBasedEnemyState enemy = enemies[enemyIndex];
+            int rawDamage = Mathf.Max(1, enemy.Attack + Random.Range(-2, 3) - playerDefense);
+            int damage = defending ? Mathf.Max(1, Mathf.CeilToInt(rawDamage * 0.45f)) : rawDamage;
+            battleHud.SetMessage($"{enemy.Name} 抢到先机，造成 {damage} 点伤害！");
+            yield return battleHud.PlayEnemyAttack(enemyIndex);
+            player.TakeTurnBasedDamage(damage, player.transform.position.x + 1f);
+            yield return battleHud.PlayPlayerHurt();
+            battleHud.Refresh(enemies, player, potionCount);
+            yield return Wait(0.24f);
         }
 
         private bool CheckBattleEnded()
@@ -405,6 +453,8 @@ namespace WitcherGame
             defending = false;
             currentEncounter = null;
             enemies.Clear();
+            turnUnits.Clear();
+            activeTurnUnit = null;
 
             if (player != null && player.IsAlive)
             {
@@ -483,6 +533,115 @@ namespace WitcherGame
             }
 
             return -1;
+        }
+
+        private void BuildTurnUnits()
+        {
+            turnUnits.Clear();
+            turnUnits.Add(new BattleTurnUnit
+            {
+                IsPlayer = true,
+                EnemyIndex = -1,
+                Speed = PlayerTurnSpeed
+            });
+
+            for (int i = 0; i < enemies.Count; i++)
+            {
+                turnUnits.Add(new BattleTurnUnit
+                {
+                    IsPlayer = false,
+                    EnemyIndex = i,
+                    Speed = GetEnemyTurnSpeed(enemies[i], i)
+                });
+            }
+        }
+
+        // 中文说明：推进速度槽到下一名单位出手，速度更高的单位会更频繁抢到行动机会。
+        private BattleTurnUnit TakeNextTurnUnit()
+        {
+            for (int step = 0; step < 64; step++)
+            {
+                BattleTurnUnit readyUnit = FindReadyTurnUnit();
+                if (readyUnit != null)
+                {
+                    readyUnit.ActionValue -= TurnActionThreshold;
+                    return readyUnit;
+                }
+
+                for (int i = 0; i < turnUnits.Count; i++)
+                {
+                    BattleTurnUnit unit = turnUnits[i];
+                    if (!IsTurnUnitAlive(unit))
+                    {
+                        continue;
+                    }
+
+                    unit.ActionValue += Mathf.Max(1, unit.Speed);
+                }
+            }
+
+            return null;
+        }
+
+        private BattleTurnUnit FindReadyTurnUnit()
+        {
+            BattleTurnUnit readyUnit = null;
+            for (int i = 0; i < turnUnits.Count; i++)
+            {
+                BattleTurnUnit unit = turnUnits[i];
+                if (!IsTurnUnitAlive(unit) || unit.ActionValue < TurnActionThreshold)
+                {
+                    continue;
+                }
+
+                if (readyUnit == null || unit.ActionValue > readyUnit.ActionValue)
+                {
+                    readyUnit = unit;
+                }
+            }
+
+            return readyUnit;
+        }
+
+        private bool IsTurnUnitAlive(BattleTurnUnit unit)
+        {
+            if (unit == null)
+            {
+                return false;
+            }
+
+            return unit.IsPlayer ? player != null && player.IsAlive : IsLivingEnemyTurn(unit);
+        }
+
+        private bool IsLivingEnemyTurn(BattleTurnUnit unit)
+        {
+            return unit != null
+                && !unit.IsPlayer
+                && unit.EnemyIndex >= 0
+                && unit.EnemyIndex < enemies.Count
+                && enemies[unit.EnemyIndex].IsAlive;
+        }
+
+        private static int GetEnemyTurnSpeed(TurnBasedEnemyState enemy, int slotIndex)
+        {
+            int baseSpeed;
+            switch (enemy.VisualKind)
+            {
+                case TurnBasedEnemyVisualKind.CorruptedWolf:
+                    baseSpeed = 108;
+                    break;
+                case TurnBasedEnemyVisualKind.BloodWraith:
+                    baseSpeed = 98;
+                    break;
+                case TurnBasedEnemyVisualKind.BlackMoonKnight:
+                    baseSpeed = 84;
+                    break;
+                default:
+                    baseSpeed = 94;
+                    break;
+            }
+
+            return Mathf.Max(56, baseSpeed - Mathf.Max(0, slotIndex) * 3);
         }
 
         private IEnumerator Wait(float seconds)

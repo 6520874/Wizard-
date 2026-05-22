@@ -280,7 +280,17 @@ namespace WitcherGame
 
         public IEnumerator PlayPlayerAttack()
         {
-            yield return PlayPlayerFrames(GetPlayerFrames(GeraltAnimation.Slash), 0.085f, new Vector2(44f, -6f), false);
+            yield return PlayPlayerCast();
+        }
+
+        public IEnumerator PlayPlayerAttack(int enemyIndex)
+        {
+            yield return PlayPlayerFrames(GetPlayerFrames(GeraltAnimation.Slash), 0.085f, GetPlayerAttackMotion(enemyIndex), false);
+        }
+
+        public IEnumerator PlayPlayerCast()
+        {
+            yield return PlayPlayerFrames(GetPlayerFrames(GeraltAnimation.Slash), 0.085f, new Vector2(54f, -6f), false);
         }
 
         public IEnumerator PlayPlayerHurt()
@@ -492,7 +502,7 @@ namespace WitcherGame
             slot.Busy = true;
             Coroutine targetPulse = hurtMotion ? StartCoroutine(PlayTargetPulse(slot)) : null;
             Vector2 home = slot.HomePosition;
-            Vector2 motion = attackMotion ? new Vector2(-42f, -14f) : new Vector2(24f, 0f);
+            Vector2 motion = attackMotion ? GetEnemyAttackMotion(slot) : new Vector2(24f, 0f);
             Sprite[] safeFrames = frames != null && frames.Length > 0 ? frames : new[] { fallback };
 
             for (int i = 0; i < safeFrames.Length; i++)
@@ -769,6 +779,29 @@ namespace WitcherGame
         private static Sprite FirstFrame(Sprite[] frames, Sprite fallback)
         {
             return frames != null && frames.Length > 0 && frames[0] != null ? frames[0] : fallback;
+        }
+
+        private Vector2 GetPlayerAttackMotion(int enemyIndex)
+        {
+            if (!TryGetSlot(enemyIndex, out EnemyVisualSlot slot))
+            {
+                return new Vector2(92f, -6f);
+            }
+
+            Vector2 destination = slot.HomePosition + new Vector2(-118f, -10f);
+            Vector2 motion = destination - playerFigureHomePosition;
+            motion.x = Mathf.Clamp(motion.x, 92f, 540f);
+            motion.y = Mathf.Clamp(motion.y, -28f, 24f);
+            return motion;
+        }
+
+        private Vector2 GetEnemyAttackMotion(EnemyVisualSlot slot)
+        {
+            Vector2 destination = playerFigureHomePosition + new Vector2(118f, -10f);
+            Vector2 motion = destination - slot.HomePosition;
+            motion.x = Mathf.Clamp(motion.x, -640f, -96f);
+            motion.y = Mathf.Clamp(motion.y, -34f, 18f);
+            return motion;
         }
 
         private Rect GetLivingEnemyVisualRect()
