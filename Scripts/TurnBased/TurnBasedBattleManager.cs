@@ -13,6 +13,7 @@ namespace WitcherGame
         Escape
     }
 
+    // 中文说明：保存敌人进入回合制战斗后的属性和动画资源引用。
     public class TurnBasedEnemyState
     {
         public string Name;
@@ -31,6 +32,7 @@ namespace WitcherGame
         public bool IsAlive => Health > 0;
     }
 
+    // 中文说明：负责回合制战斗流程、玩家行动、敌人回合和战斗结算。
     public class TurnBasedBattleManager : MonoBehaviour
     {
         private const string ManagerName = "Turn Based Battle Manager";

@@ -6,6 +6,7 @@ using UnityEngine.UI;
 
 namespace WitcherGame
 {
+    // 中文说明：管理地图界面的头像、生命魔法条、首领血条和失败面板。
     public class WitcherHud : MonoBehaviour
     {
         private const string HudName = "Witcher HUD";

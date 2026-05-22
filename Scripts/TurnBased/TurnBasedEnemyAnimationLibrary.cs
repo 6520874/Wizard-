@@ -12,6 +12,7 @@ namespace WitcherGame
         BlackMoonKnight
     }
 
+    // 中文说明：按怪物类型加载回合制战斗使用的待机、攻击和受击帧。
     public static class TurnBasedEnemyAnimationLibrary
     {
         private const float MonsterPixelsPerUnit = 96f;

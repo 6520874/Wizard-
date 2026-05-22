@@ -3,6 +3,7 @@ using UnityEngine;
 
 namespace WitcherGame
 {
+    // 中文说明：控制主角释放的直线火焰攻击表现和范围命中。
     public class WitcherFlameLine : MonoBehaviour
     {
         private const int SortingBoost = 38;

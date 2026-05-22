@@ -2,6 +2,7 @@ using UnityEngine;
 
 namespace WitcherGame
 {
+    // 中文说明：负责让主相机跟随玩家，并处理相机边界和受击震动。
     public class WitcherCameraFollow : MonoBehaviour
     {
         [SerializeField] private Transform target;

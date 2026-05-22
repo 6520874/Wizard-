@@ -13,6 +13,7 @@ namespace WitcherGame
         Death
     }
 
+    // 中文说明：集中提供主角和 UI 使用的运行时精灵图读取与占位资源。
     public static class WitcherSpriteLibrary
     {
         private static readonly Dictionary<Color32, Sprite> CachedSprites = new Dictionary<Color32, Sprite>();

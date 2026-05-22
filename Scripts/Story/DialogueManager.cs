@@ -9,6 +9,7 @@ namespace WitcherGame
     /// Plays ordered dialogue lines with speaker names.
     /// Can be reused by later chapters by passing a new DialogueLine array to StartDialogue.
     /// </summary>
+    // 中文说明：管理 NPC 对话队列、对话框显示和对白结束后的回调。
     public class DialogueManager : MonoBehaviour
     {
         [Serializable]

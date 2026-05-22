@@ -4,6 +4,7 @@ using UnityEngine.UI;
 
 namespace WitcherGame
 {
+    // 中文说明：负责游戏主流程的基础初始化和场景内核心状态协调。
     public class WitcherGameManager : MonoBehaviour
     {
         [SerializeField] private Text statusText;

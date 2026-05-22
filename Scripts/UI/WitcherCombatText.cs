@@ -2,6 +2,7 @@ using UnityEngine;
 
 namespace WitcherGame
 {
+    // 中文说明：生成并驱动伤害、治疗和经验等浮动战斗文字。
     public class WitcherCombatText : MonoBehaviour
     {
         private const float Lifetime = 0.72f;

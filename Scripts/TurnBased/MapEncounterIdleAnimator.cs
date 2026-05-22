@@ -3,6 +3,7 @@ using UnityEngine;
 namespace WitcherGame
 {
     [RequireComponent(typeof(SpriteRenderer))]
+    // 中文说明：让地图上的回合制遭遇怪物循环播放待机动画。
     public class MapEncounterIdleAnimator : MonoBehaviour
     {
         [SerializeField] private TurnBasedEnemyVisualKind visualKind = TurnBasedEnemyVisualKind.CorruptedWolf;

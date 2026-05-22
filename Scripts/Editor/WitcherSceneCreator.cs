@@ -4,6 +4,7 @@ using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
+// 中文说明：在编辑器中生成可游玩的猎魔演示场景和基础对象。
 public static class WitcherSceneCreator
 {
     private const string ScenePath = "Assets/Scenes/WitcherHuntDemo.unity";

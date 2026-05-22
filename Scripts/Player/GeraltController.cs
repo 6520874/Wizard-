@@ -6,6 +6,7 @@ namespace WitcherGame
     [RequireComponent(typeof(BoxCollider2D))]
     [RequireComponent(typeof(SpriteRenderer))]
     [RequireComponent(typeof(GeraltAnimator))]
+    // 中文说明：管理主角移动、生命魔力、受击、冲刺和地图控制输入。
     public class GeraltController : MonoBehaviour
     {
         [SerializeField] private float moveSpeed = 5f;

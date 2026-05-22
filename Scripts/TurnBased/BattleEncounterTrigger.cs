@@ -4,6 +4,7 @@ using UnityEngine;
 namespace WitcherGame
 {
     [RequireComponent(typeof(Collider2D))]
+    // 中文说明：把地图上的怪物接触事件转换成一次回合制战斗遭遇。
     public class BattleEncounterTrigger : MonoBehaviour
     {
         [SerializeField] private string encounterTitle = "怪物";

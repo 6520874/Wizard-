@@ -3,6 +3,7 @@ using UnityEngine;
 
 namespace WitcherGame
 {
+    // 中文说明：统一触发战斗打击反馈，例如镜头震动和命中特效提示。
     public class WitcherCombatFeedback : MonoBehaviour
     {
         private static WitcherCombatFeedback instance;

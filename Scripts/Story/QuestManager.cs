@@ -10,9 +10,11 @@ namespace WitcherGame
     /// Tracks the active main quest and renders a compact quest panel.
     /// Attach this to a scene GameObject, or let OpeningStoryManager create it at runtime.
     /// </summary>
+    // 中文说明：管理当前任务、任务目标进度以及任务面板的显示刷新。
     public class QuestManager : MonoBehaviour
     {
         [Serializable]
+        // 中文说明：保存单个任务目标的文字说明和完成状态。
         public class QuestObjective
         {
             public string text;
@@ -25,6 +27,7 @@ namespace WitcherGame
         }
 
         [Serializable]
+        // 中文说明：保存一条任务的标题、描述和目标列表数据。
         public class QuestData
         {
             public string title;

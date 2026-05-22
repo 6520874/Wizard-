@@ -7,6 +7,7 @@ using UnityEngine.UI;
 
 namespace WitcherGame
 {
+    // 中文说明：创建并刷新回合制战斗界面，同时播放战斗 UI 动画和特效。
     public class TurnBasedBattleHud : MonoBehaviour
     {
         private const string HudName = "Turn Based Battle HUD";
@@ -40,6 +41,7 @@ namespace WitcherGame
         private int playerIdleIndex;
         private float playerIdleTimer;
 
+        // 中文说明：保存一个敌人在战斗界面中的图片、血条和动画运行状态。
         private class EnemyVisualSlot
         {
             public Image Image;

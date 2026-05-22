@@ -9,6 +9,7 @@ namespace WitcherGame
     /// Plays the black-screen opening narration, then starts the first village dialogue.
     /// Attach this script to an empty GameObject in the first scene.
     /// </summary>
+    // 中文说明：播放开场旁白剧情，并在结束后进入后续村庄流程。
     public class OpeningStoryManager : MonoBehaviour
     {
         [Header("Opening Narration")]

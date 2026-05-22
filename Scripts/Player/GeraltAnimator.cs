@@ -6,6 +6,7 @@ using UnityEngine;
 namespace WitcherGame
 {
     [RequireComponent(typeof(SpriteRenderer))]
+    // 中文说明：根据玩家动作切换主角的待机、移动、攻击、受击和死亡动画。
     public class GeraltAnimator : MonoBehaviour
     {
         [SerializeField] private string frameRoot = "Art/Geralt/Frames";
