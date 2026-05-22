@@ -106,19 +106,19 @@ namespace WitcherGame
             {
                 backgroundRenderer.color = room.BackgroundTint;
 
-                WitcherAtmosphereLayer atmosphere = background.GetComponent<WitcherAtmosphereLayer>();
-                if (atmosphere == null)
-                {
-                    atmosphere = background.AddComponent<WitcherAtmosphereLayer>();
-                }
-
-                atmosphere.ApplyCursedEmbers(
-                    room.AtmosphereTint,
-                    room.FogColor,
-                    room.EmberColor,
-                    room.FogStrength,
-                    room.VignetteStrength,
-                    room.EmberStrength);
+                // WitcherAtmosphereLayer atmosphere = background.GetComponent<WitcherAtmosphereLayer>();
+                // if (atmosphere == null)
+                // {
+                //     atmosphere = background.AddComponent<WitcherAtmosphereLayer>();
+                // }
+                //
+                // atmosphere.ApplyCursedEmbers(
+                //     room.AtmosphereTint,
+                //     room.FogColor,
+                //     room.EmberColor,
+                //     room.FogStrength,
+                //     room.VignetteStrength,
+                //     room.EmberStrength);
             }
 
             Camera camera = Camera.main;
