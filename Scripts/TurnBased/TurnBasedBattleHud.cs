@@ -148,8 +148,8 @@ namespace WitcherGame
             if (playerText != null && player != null)
             {
                 playerText.text = $"猎魔人  HP {player.CurrentHealth}/{player.MaxHealth}   MP {player.CurrentMana}/{player.MaxMana}";
-                SetFillWidth(playerHealthFill, player.MaxHealth <= 0 ? 0f : (float)player.CurrentHealth / player.MaxHealth, 178f);
-                SetFillWidth(playerManaFill, player.MaxMana <= 0 ? 0f : (float)player.CurrentMana / player.MaxMana, 178f);
+                SetFillWidth(playerHealthFill, player.MaxHealth <= 0 ? 0f : (float)player.CurrentHealth / player.MaxHealth, 206f);
+                SetFillWidth(playerManaFill, player.MaxMana <= 0 ? 0f : (float)player.CurrentMana / player.MaxMana, 206f);
             }
 
             if (potionText != null)
@@ -229,7 +229,7 @@ namespace WitcherGame
             TurnBasedEnemyState enemy = visibleEnemies[enemyIndex];
             if (damage > 0)
             {
-                StartCoroutine(FloatDamageText(slot.DamageText, damage, true));
+                StartCoroutine(FloatDamageText(slot.DamageText, damage, false));
             }
 
             yield return PlayEnemyFrames(slot, enemy.HurtFrames, enemy.Sprite, 0.075f, false, true);
@@ -244,10 +244,10 @@ namespace WitcherGame
 
             Sprite[] frames = LoadFlameFrames();
             Rect targetRect = GetLivingEnemyVisualRect();
-            float startX = -390f;
-            float endX = Mathf.Max(targetRect.xMax + 92f, targetRect.xMin + 260f);
-            float width = Mathf.Clamp(endX - startX, 360f, 890f);
-            float centerX = startX + width * 0.5f;
+            float startX = playerFigureHomePosition.x + 76f;
+            float endX = Mathf.Min(targetRect.xMin - 92f, targetRect.xMax - 260f);
+            float width = Mathf.Clamp(startX - endX, 360f, 720f);
+            float centerX = startX - width * 0.5f;
             float centerY = Mathf.Clamp(targetRect.center.y - 4f, -12f, 122f);
             float height = Mathf.Clamp(targetRect.height * 0.86f, 96f, 180f);
 
@@ -255,7 +255,7 @@ namespace WitcherGame
             flameEffect.color = Color.white;
             flameEffect.rectTransform.anchoredPosition = new Vector2(centerX, centerY);
             flameEffect.rectTransform.sizeDelta = new Vector2(width, height);
-            flameEffect.rectTransform.localScale = Vector3.one;
+            flameEffect.rectTransform.localScale = new Vector3(-1f, 1f, 1f);
 
             if (frames.Length == 0)
             {
@@ -269,7 +269,7 @@ namespace WitcherGame
             {
                 flameEffect.sprite = frames[i];
                 float t = frames.Length <= 1 ? 1f : (float)i / (frames.Length - 1);
-                flameEffect.rectTransform.localScale = new Vector3(Mathf.Lerp(0.35f, 1f, Mathf.Clamp01(t * 1.45f)), 1f + Mathf.Sin(t * Mathf.PI) * 0.13f, 1f);
+                flameEffect.rectTransform.localScale = new Vector3(-Mathf.Lerp(0.35f, 1f, Mathf.Clamp01(t * 1.45f)), 1f + Mathf.Sin(t * Mathf.PI) * 0.13f, 1f);
                 Color color = Color.white;
                 color.a = t > 0.72f ? Mathf.Lerp(1f, 0.18f, (t - 0.72f) / 0.28f) : 1f;
                 flameEffect.color = color;
@@ -291,17 +291,17 @@ namespace WitcherGame
 
         public IEnumerator PlayPlayerCast()
         {
-            yield return PlayPlayerFrames(GetPlayerFrames(GeraltAnimation.Slash), 0.085f, new Vector2(54f, -6f), false);
+            yield return PlayPlayerFrames(GetPlayerFrames(GeraltAnimation.Slash), 0.085f, new Vector2(-54f, -6f), false);
         }
 
         public IEnumerator PlayPlayerHurt(int damage = 0)
         {
             if (damage > 0 && playerDamageText != null)
             {
-                StartCoroutine(FloatDamageText(playerDamageText, damage, false));
+                StartCoroutine(FloatDamageText(playerDamageText, damage, true));
             }
 
-            yield return PlayPlayerFrames(GetPlayerFrames(GeraltAnimation.Hurt), 0.09f, new Vector2(-22f, 0f), true);
+            yield return PlayPlayerFrames(GetPlayerFrames(GeraltAnimation.Hurt), 0.09f, new Vector2(22f, 0f), true);
         }
 
         private void BuildHud()
@@ -343,11 +343,11 @@ namespace WitcherGame
             horizonGlow.sprite = GetFloorMistSprite();
             horizonGlow.raycastTarget = false;
 
-            Image stageWash = CreateCenteredImage("Stage Wash", root.transform, new Vector2(860f, 238f), new Vector2(92f, 42f), new Color32(183, 48, 24, 46));
+            Image stageWash = CreateCenteredImage("Stage Wash", root.transform, new Vector2(720f, 250f), new Vector2(-108f, 42f), new Color32(183, 48, 24, 46));
             stageWash.sprite = GetFloorMistSprite();
             stageWash.raycastTarget = false;
 
-            Image floorPlate = CreateCenteredImage("Battle Floor Plate", root.transform, new Vector2(930f, 118f), new Vector2(22f, -22f), new Color32(10, 15, 18, 192));
+            Image floorPlate = CreateCenteredImage("Battle Floor Plate", root.transform, new Vector2(720f, 124f), new Vector2(-116f, -20f), new Color32(10, 15, 18, 192));
             floorPlate.sprite = GetFloorMistSprite();
             floorPlate.raycastTarget = false;
 
@@ -363,19 +363,20 @@ namespace WitcherGame
             battleTitle.color = new Color32(255, 211, 123, 255);
             AddOutline(battleTitle, Color.black, new Vector2(2f, -2f));
 
-            Image playerGlow = CreateCenteredImage("Battle Player Ground Glow", root.transform, new Vector2(168f, 42f), new Vector2(-382f, 6f), new Color32(226, 70, 36, 82));
+            Image playerGlow = CreateCenteredImage("Battle Player Ground Glow", root.transform, new Vector2(196f, 48f), new Vector2(320f, 0f), new Color32(226, 70, 36, 82));
             playerGlow.sprite = GetGroundGlowSprite();
             playerGlow.raycastTarget = false;
 
-            Image playerShadow = CreateCenteredImage("Battle Player Ground Shadow", root.transform, new Vector2(144f, 32f), new Vector2(-382f, -1f), new Color32(0, 0, 0, 172));
+            Image playerShadow = CreateCenteredImage("Battle Player Ground Shadow", root.transform, new Vector2(168f, 36f), new Vector2(320f, -8f), new Color32(0, 0, 0, 172));
             playerShadow.sprite = GetGroundShadowSprite();
             playerShadow.raycastTarget = false;
 
-            playerFigure = CreateCenteredImage("Battle Player Figure", root.transform, new Vector2(146f, 160f), new Vector2(-382f, 88f), Color.white);
+            playerFigure = CreateCenteredImage("Battle Player Figure", root.transform, new Vector2(176f, 194f), new Vector2(320f, 96f), Color.white);
             playerFigure.sprite = GetPlayerIdleFrame();
             playerFigureHomePosition = playerFigure.rectTransform.anchoredPosition;
             playerFigure.preserveAspect = true;
             playerFigure.raycastTarget = false;
+            SetPlayerFacingScale(1f);
             playerDamageText = CreateText("Player Damage Text", playerFigure.transform, string.Empty, 34, TextAnchor.MiddleCenter, new Vector2(0f, 72f), new Vector2(170f, 56f));
             playerDamageText.rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
             playerDamageText.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
@@ -383,8 +384,9 @@ namespace WitcherGame
             playerDamageText.color = new Color32(255, 82, 74, 255);
             playerDamageText.gameObject.SetActive(false);
             AddOutline(playerDamageText, new Color32(0, 0, 0, 255), new Vector2(3f, -3f));
+            SetPlayerFacingScale(1f);
 
-            Image playerPanel = CreateImage("Player Battle Plate", root.transform, new Vector2(230f, 96f), new Vector2(18f, -24f), new Color32(7, 10, 13, 204));
+            Image playerPanel = CreateImage("Player Battle Plate", root.transform, new Vector2(260f, 92f), new Vector2(670f, -12f), new Color32(7, 10, 13, 204));
             playerPanel.sprite = WitcherSpriteLibrary.GetSolidSprite(new Color32(7, 10, 13, 226));
             AddOutline(playerPanel, new Color32(151, 111, 61, 255), new Vector2(3f, -3f));
 
@@ -392,17 +394,17 @@ namespace WitcherGame
             playerName.color = new Color32(255, 218, 138, 255);
             AddOutline(playerName, Color.black, new Vector2(1f, -1f));
 
-            Image playerHealthBack = CreateImage("Player Battle HP Back", playerPanel.transform, new Vector2(186f, 12f), new Vector2(20f, -50f), new Color32(42, 5, 8, 245));
+            Image playerHealthBack = CreateImage("Player Battle HP Back", playerPanel.transform, new Vector2(214f, 12f), new Vector2(20f, -50f), new Color32(42, 5, 8, 245));
             playerHealthBack.sprite = WitcherSpriteLibrary.GetSolidSprite(new Color32(42, 5, 8, 245));
-            playerHealthFill = CreateImage("Player Battle HP Fill", playerHealthBack.transform, new Vector2(178f, 6f), new Vector2(4f, -3f), new Color32(221, 31, 40, 255));
+            playerHealthFill = CreateImage("Player Battle HP Fill", playerHealthBack.transform, new Vector2(206f, 6f), new Vector2(4f, -3f), new Color32(221, 31, 40, 255));
             playerHealthFill.rectTransform.pivot = new Vector2(0f, 0.5f);
 
-            Image playerManaBack = CreateImage("Player Battle MP Back", playerPanel.transform, new Vector2(186f, 12f), new Vector2(20f, -72f), new Color32(4, 18, 52, 245));
+            Image playerManaBack = CreateImage("Player Battle MP Back", playerPanel.transform, new Vector2(214f, 12f), new Vector2(20f, -72f), new Color32(4, 18, 52, 245));
             playerManaBack.sprite = WitcherSpriteLibrary.GetSolidSprite(new Color32(4, 18, 52, 245));
-            playerManaFill = CreateImage("Player Battle MP Fill", playerManaBack.transform, new Vector2(178f, 6f), new Vector2(4f, -3f), new Color32(36, 138, 255, 255));
+            playerManaFill = CreateImage("Player Battle MP Fill", playerManaBack.transform, new Vector2(206f, 6f), new Vector2(4f, -3f), new Color32(36, 138, 255, 255));
             playerManaFill.rectTransform.pivot = new Vector2(0f, 0.5f);
 
-            playerText = CreateText("Battle Player Stats", playerPanel.transform, "HP 100/100   MP 100/100", 14, TextAnchor.MiddleLeft, new Vector2(18f, -82f), new Vector2(204f, 20f));
+            playerText = CreateText("Battle Player Stats", playerPanel.transform, "HP 100/100   MP 100/100", 14, TextAnchor.MiddleLeft, new Vector2(18f, -82f), new Vector2(228f, 20f));
             playerText.color = new Color32(226, 241, 238, 255);
             AddOutline(playerText, Color.black, new Vector2(1f, -1f));
 
@@ -410,13 +412,13 @@ namespace WitcherGame
             enemyRows.Clear();
             for (int i = 0; i < 4; i++)
             {
-                Vector2 slotPosition = new Vector2(-34f + i * 148f, 82f);
-                Image groundGlow = CreateCenteredImage($"Battle Enemy Ground Glow {i + 1}", root.transform, new Vector2(166f, 42f), slotPosition + new Vector2(0f, -65f), new Color32(226, 72, 34, 72));
+                Vector2 slotPosition = new Vector2(-350f + i * 120f, 82f + (i % 2) * 18f);
+                Image groundGlow = CreateCenteredImage($"Battle Enemy Ground Glow {i + 1}", root.transform, new Vector2(190f, 46f), slotPosition + new Vector2(0f, -69f), new Color32(226, 72, 34, 72));
                 groundGlow.sprite = GetGroundGlowSprite();
                 groundGlow.raycastTarget = false;
                 groundGlow.gameObject.SetActive(false);
 
-                Image groundShadow = CreateCenteredImage($"Battle Enemy Ground Shadow {i + 1}", root.transform, new Vector2(128f, 30f), slotPosition + new Vector2(0f, -70f), new Color32(0, 0, 0, 164));
+                Image groundShadow = CreateCenteredImage($"Battle Enemy Ground Shadow {i + 1}", root.transform, new Vector2(150f, 34f), slotPosition + new Vector2(0f, -75f), new Color32(0, 0, 0, 164));
                 groundShadow.sprite = GetGroundShadowSprite();
                 groundShadow.raycastTarget = false;
                 groundShadow.gameObject.SetActive(false);
@@ -426,7 +428,7 @@ namespace WitcherGame
                 targetReticle.raycastTarget = false;
                 targetReticle.gameObject.SetActive(false);
 
-                Image enemyImage = CreateCenteredImage($"Battle Enemy Sprite {i + 1}", root.transform, new Vector2(156f, 156f), slotPosition, Color.white);
+                Image enemyImage = CreateCenteredImage($"Battle Enemy Sprite {i + 1}", root.transform, new Vector2(182f, 182f), slotPosition, Color.white);
                 enemyImage.preserveAspect = true;
                 enemyImage.raycastTarget = false;
                 enemyImage.gameObject.SetActive(false);
@@ -479,12 +481,12 @@ namespace WitcherGame
                 });
             }
 
-            flameEffect = CreateCenteredImage("Flame Sign Battle Effect", root.transform, new Vector2(760f, 142f), new Vector2(60f, 72f), Color.white);
+            flameEffect = CreateCenteredImage("Flame Sign Battle Effect", root.transform, new Vector2(640f, 142f), new Vector2(-74f, 72f), Color.white);
             flameEffect.preserveAspect = true;
             flameEffect.raycastTarget = false;
             flameEffect.gameObject.SetActive(false);
 
-            Image commandPanel = CreateImage("Command Panel", root.transform, new Vector2(860f, 196f), new Vector2(50f, -316f), new Color32(10, 13, 18, 216));
+            Image commandPanel = CreateImage("Command Panel", root.transform, new Vector2(238f, 414f), new Vector2(694f, -108f), new Color32(10, 13, 18, 216));
             commandPanel.sprite = WitcherSpriteLibrary.GetSolidSprite(new Color32(10, 13, 18, 244));
             AddOutline(commandPanel, new Color32(151, 111, 61, 255), new Vector2(3f, -3f));
 
@@ -492,20 +494,20 @@ namespace WitcherGame
             commandTitle.color = new Color32(255, 214, 132, 255);
             AddOutline(commandTitle, Color.black, new Vector2(1f, -1f));
 
-            potionText = CreateText("Battle Potion Count", commandPanel.transform, "药剂 x3", 16, TextAnchor.MiddleRight, new Vector2(650f, -14f), new Vector2(180f, 28f));
+            potionText = CreateText("Battle Potion Count", commandPanel.transform, "药剂 x3", 16, TextAnchor.MiddleRight, new Vector2(34f, -366f), new Vector2(176f, 28f));
             potionText.color = new Color32(183, 219, 255, 255);
             AddOutline(potionText, Color.black, new Vector2(1f, -1f));
 
-            messageText = CreateText("Battle Message", commandPanel.transform, "选择行动。", 20, TextAnchor.MiddleLeft, new Vector2(138f, -14f), new Vector2(480f, 28f));
+            messageText = CreateText("Battle Message", commandPanel.transform, "选择行动。", 16, TextAnchor.UpperLeft, new Vector2(24f, -42f), new Vector2(190f, 48f));
             messageText.color = new Color32(255, 246, 214, 255);
             AddOutline(messageText, Color.black, new Vector2(1f, -1f));
 
             commandButtons.Clear();
-            AddCommandButton(commandPanel.transform, "1 攻击", TurnBattleAction.Attack, new Vector2(94f, -54f));
-            AddCommandButton(commandPanel.transform, "2 火焰", TurnBattleAction.FlameSign, new Vector2(228f, -54f));
-            AddCommandButton(commandPanel.transform, "3 防御", TurnBattleAction.Defend, new Vector2(362f, -54f));
-            AddCommandButton(commandPanel.transform, "4 物品", TurnBattleAction.Item, new Vector2(496f, -54f));
-            AddCommandButton(commandPanel.transform, "5 逃跑", TurnBattleAction.Escape, new Vector2(630f, -54f));
+            AddCommandButton(commandPanel.transform, "1 攻击", TurnBattleAction.Attack, new Vector2(20f, -96f));
+            AddCommandButton(commandPanel.transform, "2 火焰", TurnBattleAction.FlameSign, new Vector2(122f, -96f));
+            AddCommandButton(commandPanel.transform, "3 防御", TurnBattleAction.Defend, new Vector2(20f, -224f));
+            AddCommandButton(commandPanel.transform, "4 物品", TurnBattleAction.Item, new Vector2(122f, -224f));
+            AddCommandButton(commandPanel.transform, "5 逃跑", TurnBattleAction.Escape, new Vector2(71f, -322f));
 
             root.SetActive(false);
         }
@@ -793,13 +795,13 @@ namespace WitcherGame
             return frames != null && frames.Length > 0 && frames[0] != null ? frames[0] : fallback;
         }
 
-        // 中文说明：战斗舞台的敌人固定站在右侧，因此统一朝向左侧的玩家。
+        // 中文说明：战斗舞台的敌人固定站在左侧，因此统一朝向右侧的玩家。
         private static void SetEnemyFacingScale(EnemyVisualSlot slot, float scale)
         {
             float safeScale = Mathf.Max(0.01f, scale);
-            slot.Rect.localScale = new Vector3(-safeScale, safeScale, 1f);
-            slot.HealthBack.rectTransform.localScale = GetCounterFacingScale(1f);
-            slot.DamageText.rectTransform.localScale = GetCounterFacingScale(1f);
+            slot.Rect.localScale = new Vector3(safeScale, safeScale, 1f);
+            slot.HealthBack.rectTransform.localScale = Vector3.one;
+            slot.DamageText.rectTransform.localScale = Vector3.one;
         }
 
         private static Vector3 GetCounterFacingScale(float scale)
@@ -812,25 +814,36 @@ namespace WitcherGame
             return counterEnemyFacing ? GetCounterFacingScale(scale) : Vector3.one * scale;
         }
 
+        // 中文说明：玩家固定站在右侧，战斗立绘需要翻向左侧敌人。
+        private void SetPlayerFacingScale(float scale)
+        {
+            float safeScale = Mathf.Max(0.01f, scale);
+            playerFigure.rectTransform.localScale = new Vector3(-safeScale, safeScale, 1f);
+            if (playerDamageText != null && !playerDamageText.gameObject.activeSelf)
+            {
+                playerDamageText.rectTransform.localScale = GetCounterFacingScale(1f);
+            }
+        }
+
         private Vector2 GetPlayerAttackMotion(int enemyIndex)
         {
             if (!TryGetSlot(enemyIndex, out EnemyVisualSlot slot))
             {
-                return new Vector2(92f, -6f);
+                return new Vector2(-92f, -6f);
             }
 
-            Vector2 destination = slot.HomePosition + new Vector2(-118f, -10f);
+            Vector2 destination = slot.HomePosition + new Vector2(118f, -10f);
             Vector2 motion = destination - playerFigureHomePosition;
-            motion.x = Mathf.Clamp(motion.x, 92f, 540f);
+            motion.x = Mathf.Clamp(motion.x, -540f, -92f);
             motion.y = Mathf.Clamp(motion.y, -28f, 24f);
             return motion;
         }
 
         private Vector2 GetEnemyAttackMotion(EnemyVisualSlot slot)
         {
-            Vector2 destination = playerFigureHomePosition + new Vector2(118f, -10f);
+            Vector2 destination = playerFigureHomePosition + new Vector2(-118f, -10f);
             Vector2 motion = destination - slot.HomePosition;
-            motion.x = Mathf.Clamp(motion.x, -640f, -96f);
+            motion.x = Mathf.Clamp(motion.x, 96f, 640f);
             motion.y = Mathf.Clamp(motion.y, -34f, 18f);
             return motion;
         }
@@ -944,13 +957,13 @@ namespace WitcherGame
                 float t = safeFrames.Length <= 1 ? 1f : (float)i / (safeFrames.Length - 1);
                 float pulse = Mathf.Sin(t * Mathf.PI);
                 rect.anchoredPosition = home + motion * pulse;
-                rect.localScale = Vector3.one * (1f + 0.045f * pulse);
+                SetPlayerFacingScale(1f + 0.045f * pulse);
                 playerFigure.color = flash && i % 2 == 0 ? new Color32(255, 228, 214, 255) : Color.white;
                 yield return new WaitForSeconds(frameDuration);
             }
 
             rect.anchoredPosition = home;
-            rect.localScale = Vector3.one;
+            SetPlayerFacingScale(1f);
             playerFigure.color = Color.white;
             playerFigure.sprite = GetPlayerIdleFrame();
             playerIdleIndex = 0;
@@ -1091,7 +1104,7 @@ namespace WitcherGame
 
         private void AddCommandButton(Transform parent, string label, TurnBattleAction action, Vector2 position)
         {
-            Vector2 buttonSize = new Vector2(100f, 134f);
+            Vector2 buttonSize = new Vector2(92f, 122f);
             GameObject buttonObject = CreateUiObject(label + " Button", parent, buttonSize, position, new Vector2(0f, 1f));
             Image image = buttonObject.AddComponent<Image>();
             image.sprite = GetCommandButtonSprite(action);
