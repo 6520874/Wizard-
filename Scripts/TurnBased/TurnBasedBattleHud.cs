@@ -363,15 +363,15 @@ namespace WitcherGame
             battleTitle.color = new Color32(255, 211, 123, 255);
             AddOutline(battleTitle, Color.black, new Vector2(2f, -2f));
 
-            Image playerGlow = CreateCenteredImage("Battle Player Ground Glow", root.transform, new Vector2(196f, 48f), new Vector2(320f, 0f), new Color32(226, 70, 36, 82));
+            Image playerGlow = CreateCenteredImage("Battle Player Ground Glow", root.transform, new Vector2(196f, 48f), new Vector2(210f, 0f), new Color32(226, 70, 36, 82));
             playerGlow.sprite = GetGroundGlowSprite();
             playerGlow.raycastTarget = false;
 
-            Image playerShadow = CreateCenteredImage("Battle Player Ground Shadow", root.transform, new Vector2(168f, 36f), new Vector2(320f, -8f), new Color32(0, 0, 0, 172));
+            Image playerShadow = CreateCenteredImage("Battle Player Ground Shadow", root.transform, new Vector2(168f, 36f), new Vector2(210f, -8f), new Color32(0, 0, 0, 172));
             playerShadow.sprite = GetGroundShadowSprite();
             playerShadow.raycastTarget = false;
 
-            playerFigure = CreateCenteredImage("Battle Player Figure", root.transform, new Vector2(176f, 194f), new Vector2(320f, 96f), Color.white);
+            playerFigure = CreateCenteredImage("Battle Player Figure", root.transform, new Vector2(176f, 194f), new Vector2(210f, 96f), Color.white);
             playerFigure.sprite = GetPlayerIdleFrame();
             playerFigureHomePosition = playerFigure.rectTransform.anchoredPosition;
             playerFigure.preserveAspect = true;
@@ -486,7 +486,7 @@ namespace WitcherGame
             flameEffect.raycastTarget = false;
             flameEffect.gameObject.SetActive(false);
 
-            Image commandPanel = CreateImage("Command Panel", root.transform, new Vector2(238f, 414f), new Vector2(694f, -108f), new Color32(10, 13, 18, 216));
+            Image commandPanel = CreateImage("Command Panel", root.transform, new Vector2(238f, 236f), new Vector2(694f, -286f), new Color32(10, 13, 18, 216));
             commandPanel.sprite = WitcherSpriteLibrary.GetSolidSprite(new Color32(10, 13, 18, 244));
             AddOutline(commandPanel, new Color32(151, 111, 61, 255), new Vector2(3f, -3f));
 
@@ -494,20 +494,20 @@ namespace WitcherGame
             commandTitle.color = new Color32(255, 214, 132, 255);
             AddOutline(commandTitle, Color.black, new Vector2(1f, -1f));
 
-            potionText = CreateText("Battle Potion Count", commandPanel.transform, "药剂 x3", 16, TextAnchor.MiddleRight, new Vector2(34f, -366f), new Vector2(176f, 28f));
+            potionText = CreateText("Battle Potion Count", commandPanel.transform, "药剂 x3", 15, TextAnchor.MiddleRight, new Vector2(34f, -206f), new Vector2(176f, 24f));
             potionText.color = new Color32(183, 219, 255, 255);
             AddOutline(potionText, Color.black, new Vector2(1f, -1f));
 
-            messageText = CreateText("Battle Message", commandPanel.transform, "选择行动。", 16, TextAnchor.UpperLeft, new Vector2(24f, -42f), new Vector2(190f, 48f));
+            messageText = CreateText("Battle Message", commandPanel.transform, "选择行动。", 14, TextAnchor.UpperLeft, new Vector2(24f, -40f), new Vector2(190f, 34f));
             messageText.color = new Color32(255, 246, 214, 255);
             AddOutline(messageText, Color.black, new Vector2(1f, -1f));
 
             commandButtons.Clear();
-            AddCommandButton(commandPanel.transform, "1 攻击", TurnBattleAction.Attack, new Vector2(20f, -96f));
-            AddCommandButton(commandPanel.transform, "2 火焰", TurnBattleAction.FlameSign, new Vector2(122f, -96f));
-            AddCommandButton(commandPanel.transform, "3 防御", TurnBattleAction.Defend, new Vector2(20f, -224f));
-            AddCommandButton(commandPanel.transform, "4 物品", TurnBattleAction.Item, new Vector2(122f, -224f));
-            AddCommandButton(commandPanel.transform, "5 逃跑", TurnBattleAction.Escape, new Vector2(71f, -322f));
+            AddCommandButton(commandPanel.transform, "1 攻击", TurnBattleAction.Attack, new Vector2(12f, -78f));
+            AddCommandButton(commandPanel.transform, "2 火焰", TurnBattleAction.FlameSign, new Vector2(84f, -78f));
+            AddCommandButton(commandPanel.transform, "3 防御", TurnBattleAction.Defend, new Vector2(156f, -78f));
+            AddCommandButton(commandPanel.transform, "4 物品", TurnBattleAction.Item, new Vector2(48f, -154f));
+            AddCommandButton(commandPanel.transform, "5 逃跑", TurnBattleAction.Escape, new Vector2(120f, -154f));
 
             root.SetActive(false);
         }
@@ -1104,7 +1104,7 @@ namespace WitcherGame
 
         private void AddCommandButton(Transform parent, string label, TurnBattleAction action, Vector2 position)
         {
-            Vector2 buttonSize = new Vector2(92f, 122f);
+            Vector2 buttonSize = new Vector2(66f, 88f);
             GameObject buttonObject = CreateUiObject(label + " Button", parent, buttonSize, position, new Vector2(0f, 1f));
             Image image = buttonObject.AddComponent<Image>();
             image.sprite = GetCommandButtonSprite(action);
