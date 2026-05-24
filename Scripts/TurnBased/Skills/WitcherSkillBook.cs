@@ -18,6 +18,29 @@ namespace WitcherGame
             }
         }
 
+        public static SkillDefinition GetPlayerSkill(BattleSkillId skillId)
+        {
+            switch (skillId)
+            {
+                case BattleSkillId.ExecuteSlash:
+                    return CreateExecuteSlash();
+                case BattleSkillId.FlameSign:
+                    return CreateFlameSign();
+                case BattleSkillId.ThunderSign:
+                    return CreateThunderSign();
+                case BattleSkillId.HunterFocus:
+                    return CreateHunterFocus();
+                case BattleSkillId.Fireball:
+                    return CreateFireball();
+                case BattleSkillId.ArcaneBurst:
+                    return CreateArcaneBurst();
+                case BattleSkillId.Potion:
+                    return CreatePotion();
+                default:
+                    return CreateBasicAttack();
+            }
+        }
+
         public static SkillDefinition CreateBasicAttack()
         {
             return new SkillDefinition(
@@ -93,6 +116,18 @@ namespace WitcherGame
                 BattleSkillAnimationKind.Flame,
                 "火球砸向怪物！",
                 new DamageSkillEffect(34, 0f, 0.35f, 1, BattleDamageType.Fire));
+        }
+
+        public static SkillDefinition CreateThunderSign()
+        {
+            return new SkillDefinition(
+                BattleSkillId.ThunderSign,
+                "雷霆法印",
+                20,
+                BattleSkillTargetKind.FirstLivingEnemy,
+                BattleSkillAnimationKind.Cast,
+                "雷霆法印劈向首个敌人！",
+                new DamageSkillEffect(30, 0f, 0.25f, 2, BattleDamageType.Lightning));
         }
 
         public static SkillDefinition CreateArcaneBurst()

@@ -9,6 +9,7 @@ namespace WitcherGame
         Potion,
         ExecuteSlash,
         Fireball,
+        ThunderSign,
         ArcaneBurst,
         HunterFocus
     }
@@ -35,6 +36,7 @@ namespace WitcherGame
     {
         Physical,
         Fire,
+        Lightning,
         Arcane,
         Pure
     }

@@ -15,6 +15,7 @@ namespace WitcherGame
         private readonly List<Text> enemyRows = new List<Text>();
         private readonly List<EnemyVisualSlot> enemySlots = new List<EnemyVisualSlot>();
         private readonly List<Button> commandButtons = new List<Button>();
+        private readonly List<Button> skillButtons = new List<Button>();
         private readonly List<Image> timelineGems = new List<Image>();
         private readonly List<Text> timelineGemLabels = new List<Text>();
         private static Sprite[] cachedFlameFrames;
@@ -30,6 +31,7 @@ namespace WitcherGame
         private TurnBasedBattleManager manager;
         private GeraltAnimator playerAnimator;
         private GameObject root;
+        private GameObject skillPanel;
         private Text messageText;
         private Text playerText;
         private Text potionText;
@@ -47,6 +49,8 @@ namespace WitcherGame
         private IReadOnlyList<TurnBasedEnemyState> visibleEnemies;
         private int playerIdleIndex;
         private float playerIdleTimer;
+
+        public bool SkillMenuOpen => skillPanel != null && skillPanel.activeSelf;
 
         // 中文说明：保存一个敌人在战斗界面中的图片、血条和动画运行状态。
         private class EnemyVisualSlot
@@ -145,6 +149,36 @@ namespace WitcherGame
             for (int i = 0; i < commandButtons.Count; i++)
             {
                 commandButtons[i].interactable = enabled;
+            }
+
+            SetSkillButtonsEnabled(enabled);
+        }
+
+        public void ShowSkillMenu()
+        {
+            if (skillPanel == null)
+            {
+                return;
+            }
+
+            skillPanel.SetActive(true);
+            SetSkillButtonsEnabled(true);
+            SetMessage("选择猎魔技能。  1连击  2火焰  3闪电  4专注");
+        }
+
+        public void HideSkillMenu()
+        {
+            if (skillPanel != null)
+            {
+                skillPanel.SetActive(false);
+            }
+        }
+
+        private void SetSkillButtonsEnabled(bool enabled)
+        {
+            for (int i = 0; i < skillButtons.Count; i++)
+            {
+                skillButtons[i].interactable = enabled;
             }
         }
 
@@ -526,10 +560,11 @@ namespace WitcherGame
 
             commandButtons.Clear();
             AddCommandButton(commandPanel.transform, "1 攻击", TurnBattleAction.Attack, new Vector2(22f, -82f));
-            AddCommandButton(commandPanel.transform, "2 火焰", TurnBattleAction.FlameSign, new Vector2(22f, -114f));
+            AddCommandButton(commandPanel.transform, "2 技能", TurnBattleAction.FlameSign, new Vector2(22f, -114f));
             AddCommandButton(commandPanel.transform, "3 防御", TurnBattleAction.Defend, new Vector2(22f, -146f));
             AddCommandButton(commandPanel.transform, "4 物品", TurnBattleAction.Item, new Vector2(22f, -178f));
             AddCommandButton(commandPanel.transform, "5 逃跑", TurnBattleAction.Escape, new Vector2(22f, -210f));
+            BuildSkillPanel(commandPanel.transform);
 
             root.SetActive(false);
         }
@@ -1409,6 +1444,61 @@ namespace WitcherGame
             commandButtons.Add(button);
         }
 
+        private void BuildSkillPanel(Transform parent)
+        {
+            skillButtons.Clear();
+            Image panelImage = CreateImage("Battle Skill Panel", parent, new Vector2(298f, 154f), new Vector2(16f, -76f), new Color32(4, 7, 12, 232));
+            panelImage.sprite = WitcherSpriteLibrary.GetSolidSprite(new Color32(4, 7, 12, 238));
+            AddOutline(panelImage, new Color32(86, 136, 182, 255), new Vector2(2f, -2f));
+            skillPanel = panelImage.gameObject;
+
+            Text title = CreateText("Battle Skill Panel Title", skillPanel.transform, "猎魔技能", 17, TextAnchor.MiddleLeft, new Vector2(12f, -8f), new Vector2(112f, 24f));
+            title.color = new Color32(255, 218, 138, 255);
+            AddOutline(title, Color.black, new Vector2(1f, -1f));
+
+            Text hint = CreateText("Battle Skill Panel Hint", skillPanel.transform, "Esc 返回", 13, TextAnchor.MiddleRight, new Vector2(202f, -10f), new Vector2(78f, 20f));
+            hint.color = new Color32(180, 202, 224, 255);
+            AddOutline(hint, Color.black, new Vector2(1f, -1f));
+
+            AddSkillButton(skillPanel.transform, "1 连续斩杀", "三连银剑压制", "MP 12", BattleSkillId.ExecuteSlash, new Vector2(12f, -38f));
+            AddSkillButton(skillPanel.transform, "2 火焰法印", "群体火焰横扫", "MP 18", BattleSkillId.FlameSign, new Vector2(12f, -66f));
+            AddSkillButton(skillPanel.transform, "3 雷霆法印", "双段闪电单体", "MP 20", BattleSkillId.ThunderSign, new Vector2(12f, -94f));
+            AddSkillButton(skillPanel.transform, "4 猎魔专注", "三回合攻击提升", "MP 10", BattleSkillId.HunterFocus, new Vector2(12f, -122f));
+            skillPanel.SetActive(false);
+        }
+
+        private void AddSkillButton(Transform parent, string title, string description, string cost, BattleSkillId skillId, Vector2 position)
+        {
+            GameObject buttonObject = CreateUiObject(title + " Skill Button", parent, new Vector2(274f, 24f), position, new Vector2(0f, 1f));
+            Image image = buttonObject.AddComponent<Image>();
+            image.sprite = WitcherSpriteLibrary.GetSolidSprite(new Color32(12, 18, 28, 220));
+            image.color = new Color32(12, 18, 28, 220);
+            AddOutline(image, new Color32(59, 88, 125, 220), new Vector2(1f, -1f));
+
+            Text titleText = CreateText(title + " Title", buttonObject.transform, title, 14, TextAnchor.MiddleLeft, new Vector2(8f, -2f), new Vector2(92f, 20f));
+            titleText.color = skillId == BattleSkillId.FlameSign ? new Color32(255, 178, 92, 255) : new Color32(230, 238, 246, 255);
+            AddOutline(titleText, Color.black, new Vector2(1f, -1f));
+
+            Text descriptionText = CreateText(title + " Desc", buttonObject.transform, description, 12, TextAnchor.MiddleLeft, new Vector2(104f, -2f), new Vector2(112f, 20f));
+            descriptionText.color = new Color32(183, 205, 222, 255);
+            AddOutline(descriptionText, Color.black, new Vector2(1f, -1f));
+
+            Text costText = CreateText(title + " Cost", buttonObject.transform, cost, 12, TextAnchor.MiddleRight, new Vector2(218f, -2f), new Vector2(48f, 20f));
+            costText.color = new Color32(141, 197, 255, 255);
+            AddOutline(costText, Color.black, new Vector2(1f, -1f));
+
+            Button button = buttonObject.AddComponent<Button>();
+            button.targetGraphic = image;
+            button.onClick.AddListener(() => manager.SelectSkill(skillId));
+            ColorBlock colors = button.colors;
+            colors.normalColor = Color.white;
+            colors.highlightedColor = new Color32(116, 145, 255, 255);
+            colors.pressedColor = new Color32(255, 178, 86, 255);
+            colors.disabledColor = new Color32(78, 78, 78, 118);
+            button.colors = colors;
+            skillButtons.Add(button);
+        }
+
         private static string GetCommandDisplayName(TurnBattleAction action)
         {
             switch (action)
@@ -1416,7 +1506,7 @@ namespace WitcherGame
                 case TurnBattleAction.Attack:
                     return "猎银斩";
                 case TurnBattleAction.FlameSign:
-                    return "火焰法印";
+                    return "猎魔技能";
                 case TurnBattleAction.Defend:
                     return "防御架势";
                 case TurnBattleAction.Item:
@@ -1433,7 +1523,7 @@ namespace WitcherGame
             switch (action)
             {
                 case TurnBattleAction.FlameSign:
-                    return "MP 18";
+                    return "展开";
                 case TurnBattleAction.Item:
                     return "药剂";
                 case TurnBattleAction.Escape:

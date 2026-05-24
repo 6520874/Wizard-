@@ -134,6 +134,32 @@ namespace WitcherGame
                 return;
             }
 
+            if (battleHud != null && battleHud.SkillMenuOpen)
+            {
+                if (Input.GetKeyDown(KeyCode.Alpha1))
+                {
+                    SelectSkill(BattleSkillId.ExecuteSlash);
+                }
+                else if (Input.GetKeyDown(KeyCode.Alpha2))
+                {
+                    SelectSkill(BattleSkillId.FlameSign);
+                }
+                else if (Input.GetKeyDown(KeyCode.Alpha3))
+                {
+                    SelectSkill(BattleSkillId.ThunderSign);
+                }
+                else if (Input.GetKeyDown(KeyCode.Alpha4))
+                {
+                    SelectSkill(BattleSkillId.HunterFocus);
+                }
+                else if (Input.GetKeyDown(KeyCode.Escape) || Input.GetKeyDown(KeyCode.Backspace))
+                {
+                    battleHud.HideSkillMenu();
+                }
+
+                return;
+            }
+
             if (Input.GetKeyDown(KeyCode.Alpha1))
             {
                 SelectAction(TurnBattleAction.Attack);
@@ -202,7 +228,35 @@ namespace WitcherGame
                 return;
             }
 
+            if (action == TurnBattleAction.FlameSign)
+            {
+                battleHud.ShowSkillMenu();
+                return;
+            }
+
             StartCoroutine(ResolvePlayerAction(action));
+        }
+
+        public void SelectSkill(BattleSkillId skillId)
+        {
+            if (!battleActive || resolvingTurn)
+            {
+                return;
+            }
+
+            SkillDefinition skill = WitcherSkillBook.GetPlayerSkill(skillId);
+            if (skill == null)
+            {
+                return;
+            }
+
+            if (player != null && player.CurrentMana < skill.ManaCost)
+            {
+                battleHud.SetMessage($"魔力不足，无法释放{skill.DisplayName}。");
+                return;
+            }
+
+            StartCoroutine(ResolveSelectedSkill(skill));
         }
 
         private void SetPlayer(GeraltController target)
@@ -221,19 +275,6 @@ namespace WitcherGame
             {
                 case TurnBattleAction.Attack:
                     yield return PlayerUseSkill(WitcherSkillBook.GetPlayerSkill(action));
-                    break;
-                case TurnBattleAction.FlameSign:
-                    SkillDefinition flameSkill = WitcherSkillBook.GetPlayerSkill(action);
-                    if (player != null && player.CurrentMana >= flameSkill.ManaCost)
-                    {
-                        yield return PlayerUseSkill(flameSkill);
-                    }
-                    else
-                    {
-                        playerTurnConsumed = false;
-                        battleHud.SetMessage("魔力不足，无法释放火焰法印。");
-                        yield return Wait(0.55f);
-                    }
                     break;
                 case TurnBattleAction.Defend:
                     yield return PlayerUseSkill(WitcherSkillBook.GetPlayerSkill(action));
@@ -269,6 +310,23 @@ namespace WitcherGame
             {
                 resolvingTurn = false;
                 battleHud.SetCommandsEnabled(true);
+                yield break;
+            }
+
+            turnNumber++;
+            yield return DispatchNextTurn(0.18f);
+        }
+
+        private IEnumerator ResolveSelectedSkill(SkillDefinition skill)
+        {
+            resolvingTurn = true;
+            battleHud.SetCommandsEnabled(false);
+            battleHud.HideSkillMenu();
+
+            yield return PlayerUseSkill(skill);
+            battleHud.Refresh(enemies, player, potionCount);
+            if (CheckBattleEnded())
+            {
                 yield break;
             }
 
@@ -385,7 +443,7 @@ namespace WitcherGame
             {
                 resolvingTurn = false;
                 battleHud.SetCommandsEnabled(true);
-                battleHud.SetMessage("猎魔人准备行动。  1攻击  2火焰  3防御  4物品  5逃跑");
+                battleHud.SetMessage("猎魔人准备行动。  1攻击  2技能  3防御  4物品  5逃跑");
                 yield break;
             }
 
