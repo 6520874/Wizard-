@@ -552,7 +552,7 @@ namespace WitcherGame
             activeGem.rectTransform.localEulerAngles = new Vector3(0f, 0f, 45f);
             AddOutline(activeGem, new Color32(118, 212, 255, 255), new Vector2(2f, -2f));
 
-            currentActorPortrait = CreateImage("Battle Current Actor Portrait", activeGem.transform, new Vector2(34f, 34f), new Vector2(5f, -5f), Color.white);
+            currentActorPortrait = CreateImage("Battle Current Actor Portrait", activeGem.transform, new Vector2(48f, 48f), new Vector2(5f, -5f), Color.white);
             currentActorPortrait.rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
             currentActorPortrait.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
             currentActorPortrait.rectTransform.pivot = new Vector2(0.5f, 0.5f);
