@@ -11,36 +11,12 @@ namespace WitcherGame
         [SerializeField] private Text scoreText;
         [SerializeField] private GeraltController player;
 
-        private int totalCoins;
-        private int collectedCoins;
         private bool gameEnded;
 
         private void Start()
         {
-            totalCoins = FindObjectsOfType<WitcherCoin>().Length;
             UpdateScoreText();
-            SetStatusText("Collect all coins");
-        }
-
-        public void RegisterCoin()
-        {
-            if (gameEnded)
-            {
-                return;
-            }
-
-            collectedCoins++;
-            UpdateScoreText();
-
-            if (collectedCoins >= totalCoins)
-            {
-                gameEnded = true;
-                SetStatusText("You win! Press R to restart");
-                if (player != null)
-                {
-                    player.SetControlEnabled(false);
-                }
-            }
+            SetStatusText("探索地图，接触怪物进入回合制战斗");
         }
 
         public void RegisterPlayerDefeat(string reason)
@@ -82,7 +58,7 @@ namespace WitcherGame
         {
             if (scoreText != null)
             {
-                scoreText.text = $"Coins: {collectedCoins}/{totalCoins}";
+                scoreText.text = string.Empty;
             }
         }
 
