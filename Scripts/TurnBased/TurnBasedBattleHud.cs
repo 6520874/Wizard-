@@ -15,6 +15,8 @@ namespace WitcherGame
         private readonly List<Text> enemyRows = new List<Text>();
         private readonly List<EnemyVisualSlot> enemySlots = new List<EnemyVisualSlot>();
         private readonly List<Button> commandButtons = new List<Button>();
+        private readonly List<Image> timelineGems = new List<Image>();
+        private readonly List<Text> timelineGemLabels = new List<Text>();
         private static Sprite[] cachedFlameFrames;
         private static Sprite cachedBattleBackdrop;
         private static Sprite cachedFloorMist;
@@ -31,6 +33,8 @@ namespace WitcherGame
         private Text messageText;
         private Text playerText;
         private Text potionText;
+        private Text currentTurnText;
+        private Text nextTurnText;
         private Image playerFigure;
         private Vector2 playerFigureHomePosition;
         private bool playerFigureBusy;
@@ -146,6 +150,7 @@ namespace WitcherGame
         public void Refresh(IReadOnlyList<TurnBasedEnemyState> enemies, GeraltController player, int potionCount)
         {
             visibleEnemies = enemies;
+            RefreshTurnTimeline();
             if (playerText != null && player != null)
             {
                 playerText.text = $"HP {player.CurrentHealth}/{player.MaxHealth}    MP {player.CurrentMana}/{player.MaxMana}";
@@ -530,13 +535,16 @@ namespace WitcherGame
 
         private void BuildTurnTimeline(Transform parent)
         {
+            timelineGems.Clear();
+            timelineGemLabels.Clear();
+
             Image currentPlate = CreateImage("Battle Current Turn Plate", parent, new Vector2(132f, 40f), new Vector2(22f, -24f), new Color32(5, 8, 12, 204));
             currentPlate.sprite = WitcherSpriteLibrary.GetSolidSprite(new Color32(5, 8, 12, 228));
             AddOutline(currentPlate, new Color32(124, 149, 178, 255), new Vector2(2f, -2f));
 
-            Text currentText = CreateText("Battle Current Turn Text", currentPlate.transform, "回合 1", 18, TextAnchor.MiddleRight, new Vector2(48f, -8f), new Vector2(70f, 24f));
-            currentText.color = new Color32(228, 236, 245, 255);
-            AddOutline(currentText, Color.black, new Vector2(1f, -1f));
+            currentTurnText = CreateText("Battle Current Turn Text", currentPlate.transform, "第1手", 18, TextAnchor.MiddleRight, new Vector2(48f, -8f), new Vector2(70f, 24f));
+            currentTurnText.color = new Color32(228, 236, 245, 255);
+            AddOutline(currentTurnText, Color.black, new Vector2(1f, -1f));
 
             Image activeGem = CreateImage("Battle Current Actor Gem", currentPlate.transform, new Vector2(44f, 44f), new Vector2(0f, 2f), new Color32(20, 107, 208, 224));
             activeGem.sprite = WitcherSpriteLibrary.GetSolidSprite(new Color32(20, 107, 208, 224));
@@ -551,9 +559,9 @@ namespace WitcherGame
             nextPlate.sprite = WitcherSpriteLibrary.GetSolidSprite(new Color32(5, 8, 12, 188));
             AddOutline(nextPlate, new Color32(80, 88, 105, 210), new Vector2(1f, -1f));
 
-            Text nextText = CreateText("Battle Next Turn Text", nextPlate.transform, "下一回合", 15, TextAnchor.MiddleCenter, Vector2.zero, new Vector2(112f, 28f));
-            nextText.color = new Color32(210, 215, 220, 255);
-            AddOutline(nextText, Color.black, new Vector2(1f, -1f));
+            nextTurnText = CreateText("Battle Next Turn Text", nextPlate.transform, "等待出手", 15, TextAnchor.MiddleCenter, Vector2.zero, new Vector2(112f, 28f));
+            nextTurnText.color = new Color32(210, 215, 220, 255);
+            AddOutline(nextTurnText, Color.black, new Vector2(1f, -1f));
 
             for (int i = 0; i < 5; i++)
             {
@@ -561,7 +569,85 @@ namespace WitcherGame
                 gem.sprite = WitcherSpriteLibrary.GetSolidSprite(GetTimelineGemColor(i));
                 gem.rectTransform.localEulerAngles = new Vector3(0f, 0f, 45f);
                 AddOutline(gem, new Color32(26, 33, 43, 255), new Vector2(1f, -1f));
+                timelineGems.Add(gem);
+
+                Text label = CreateText($"Battle Timeline Label {i + 1}", gem.transform, string.Empty, 12, TextAnchor.MiddleCenter, Vector2.zero, new Vector2(34f, 24f));
+                label.rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
+                label.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+                label.rectTransform.pivot = new Vector2(0.5f, 0.5f);
+                label.rectTransform.localEulerAngles = new Vector3(0f, 0f, -45f);
+                label.color = Color.white;
+                AddOutline(label, Color.black, new Vector2(1f, -1f));
+                timelineGemLabels.Add(label);
             }
+        }
+
+        private void RefreshTurnTimeline()
+        {
+            if (manager == null)
+            {
+                return;
+            }
+
+            List<TurnBattleTimelineEntry> preview = manager.GetTimelinePreview(timelineGems.Count);
+            if (currentTurnText != null)
+            {
+                currentTurnText.text = $"第{manager.TurnNumber}手";
+            }
+
+            if (nextTurnText != null)
+            {
+                nextTurnText.text = preview.Count > 0 ? $"当前 {preview[0].Name}" : "等待出手";
+            }
+
+            for (int i = 0; i < timelineGems.Count; i++)
+            {
+                bool hasEntry = i < preview.Count;
+                Image gem = timelineGems[i];
+                Text label = i < timelineGemLabels.Count ? timelineGemLabels[i] : null;
+                if (!hasEntry)
+                {
+                    gem.color = new Color32(54, 59, 68, 130);
+                    if (label != null)
+                    {
+                        label.text = "-";
+                    }
+                    continue;
+                }
+
+                TurnBattleTimelineEntry entry = preview[i];
+                gem.color = GetTimelineEntryColor(entry, i == 0);
+                if (label != null)
+                {
+                    label.text = GetTimelineEntryLabel(entry);
+                    label.color = i == 0 ? new Color32(255, 232, 152, 255) : new Color32(230, 238, 245, 255);
+                }
+            }
+        }
+
+        private static Color32 GetTimelineEntryColor(TurnBattleTimelineEntry entry, bool current)
+        {
+            if (entry.IsPlayer)
+            {
+                return current ? new Color32(38, 148, 255, 255) : new Color32(28, 96, 188, 225);
+            }
+
+            return current ? new Color32(198, 45, 64, 255) : new Color32(104, 33, 52, 225);
+        }
+
+        private static string GetTimelineEntryLabel(TurnBattleTimelineEntry entry)
+        {
+            if (entry.IsPlayer)
+            {
+                return "猎";
+            }
+
+            if (!string.IsNullOrEmpty(entry.Name))
+            {
+                return entry.Name.Substring(0, 1);
+            }
+
+            return "怪";
         }
 
         private static Color32 GetTimelineGemColor(int index)

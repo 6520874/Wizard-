@@ -13,6 +13,15 @@ namespace WitcherGame
         Escape
     }
 
+    // 中文说明：给战斗 HUD 使用的行动顺序显示数据，不参与真正的战斗结算。
+    public struct TurnBattleTimelineEntry
+    {
+        public string Name;
+        public bool IsPlayer;
+        public int EnemyIndex;
+        public float Readiness;
+    }
+
     // 中文说明：保存敌人进入回合制战斗后的属性和动画资源引用。
     public class TurnBasedEnemyState
     {
@@ -61,8 +70,10 @@ namespace WitcherGame
         private bool resolvingTurn;
         private bool worldRenderingPaused;
         private int potionCount;
+        private int turnNumber;
 
         public bool BattleActive => battleActive;
+        public int TurnNumber => Mathf.Max(1, turnNumber);
 
         private struct CameraRenderState
         {
@@ -77,6 +88,13 @@ namespace WitcherGame
         {
             public bool IsPlayer;
             public int EnemyIndex;
+            public int Speed;
+            public float ActionValue;
+        }
+
+        private struct TimelineSimulationUnit
+        {
+            public BattleTurnUnit Source;
             public int Speed;
             public float ActionValue;
         }
@@ -165,6 +183,7 @@ namespace WitcherGame
             battleActive = true;
             resolvingTurn = true;
             playerStatuses.Clear();
+            turnNumber = 1;
             BuildTurnUnits();
 
             battleHud = TurnBasedBattleHud.CreateIfMissing(this);
@@ -253,6 +272,7 @@ namespace WitcherGame
                 yield break;
             }
 
+            turnNumber++;
             yield return DispatchNextTurn(0.18f);
         }
 
@@ -359,6 +379,8 @@ namespace WitcherGame
                 yield break;
             }
 
+            battleHud.Refresh(enemies, player, potionCount);
+
             if (activeTurnUnit.IsPlayer)
             {
                 resolvingTurn = false;
@@ -394,6 +416,7 @@ namespace WitcherGame
             ConsumePlayerStatusTurns();
             battleHud.Refresh(enemies, player, potionCount);
             yield return Wait(0.24f);
+            turnNumber++;
         }
 
         private bool CheckBattleEnded()
@@ -668,6 +691,113 @@ namespace WitcherGame
                     playerStatuses.RemoveAt(i);
                 }
             }
+        }
+
+        public List<TurnBattleTimelineEntry> GetTimelinePreview(int count)
+        {
+            List<TurnBattleTimelineEntry> preview = new List<TurnBattleTimelineEntry>();
+            if (!battleActive || count <= 0)
+            {
+                return preview;
+            }
+
+            if (IsTurnUnitAlive(activeTurnUnit))
+            {
+                preview.Add(CreateTimelineEntry(activeTurnUnit, 1f));
+            }
+
+            List<TimelineSimulationUnit> simulation = CreateTimelineSimulation();
+            int safety = 0;
+            while (preview.Count < count && simulation.Count > 0 && safety < 256)
+            {
+                safety++;
+                int readyIndex = FindReadySimulationUnit(simulation);
+                if (readyIndex >= 0)
+                {
+                    TimelineSimulationUnit ready = simulation[readyIndex];
+                    ready.ActionValue -= TurnActionThreshold;
+                    simulation[readyIndex] = ready;
+                    preview.Add(CreateTimelineEntry(ready.Source, 1f));
+                    continue;
+                }
+
+                for (int i = 0; i < simulation.Count; i++)
+                {
+                    TimelineSimulationUnit unit = simulation[i];
+                    unit.ActionValue += Mathf.Max(1, unit.Speed);
+                    simulation[i] = unit;
+                }
+            }
+
+            return preview;
+        }
+
+        private List<TimelineSimulationUnit> CreateTimelineSimulation()
+        {
+            List<TimelineSimulationUnit> simulation = new List<TimelineSimulationUnit>();
+            for (int i = 0; i < turnUnits.Count; i++)
+            {
+                BattleTurnUnit unit = turnUnits[i];
+                if (!IsTurnUnitAlive(unit))
+                {
+                    continue;
+                }
+
+                simulation.Add(new TimelineSimulationUnit
+                {
+                    Source = unit,
+                    Speed = unit.Speed,
+                    ActionValue = unit.ActionValue
+                });
+            }
+
+            return simulation;
+        }
+
+        private int FindReadySimulationUnit(List<TimelineSimulationUnit> simulation)
+        {
+            int readyIndex = -1;
+            for (int i = 0; i < simulation.Count; i++)
+            {
+                TimelineSimulationUnit unit = simulation[i];
+                if (unit.ActionValue < TurnActionThreshold)
+                {
+                    continue;
+                }
+
+                if (readyIndex < 0 || unit.ActionValue > simulation[readyIndex].ActionValue)
+                {
+                    readyIndex = i;
+                }
+            }
+
+            return readyIndex;
+        }
+
+        private TurnBattleTimelineEntry CreateTimelineEntry(BattleTurnUnit unit, float readiness)
+        {
+            return new TurnBattleTimelineEntry
+            {
+                Name = GetTurnUnitName(unit),
+                IsPlayer = unit != null && unit.IsPlayer,
+                EnemyIndex = unit == null ? -1 : unit.EnemyIndex,
+                Readiness = Mathf.Clamp01(readiness)
+            };
+        }
+
+        private string GetTurnUnitName(BattleTurnUnit unit)
+        {
+            if (unit == null)
+            {
+                return string.Empty;
+            }
+
+            if (unit.IsPlayer)
+            {
+                return "猎魔人";
+            }
+
+            return unit.EnemyIndex >= 0 && unit.EnemyIndex < enemies.Count ? enemies[unit.EnemyIndex].Name : "怪物";
         }
 
         private void BuildTurnUnits()
