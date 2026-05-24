@@ -362,16 +362,21 @@ namespace WitcherGame
                 case BattleSkillAnimationKind.Slash:
                     playerAnimator?.PlaySlash();
                     yield return battleHud.PlayPlayerAttack(GetFirstTargetEnemyIndex(result));
+                    if (skill.Id == BattleSkillId.ExecuteSlash)
+                    {
+                        yield return battleHud.PlaySkillEffect(skill.Id, GetFirstTargetEnemyIndex(result));
+                    }
                     break;
                 case BattleSkillAnimationKind.Flame:
                     playerAnimator?.PlaySlash();
                     yield return battleHud.PlayPlayerCast();
                     WitcherCombatFeedback.HeavyEnemyHit(player.transform.position + Vector3.right * 1.8f);
-                    yield return battleHud.PlayFlameSignEffect();
+                    yield return battleHud.PlaySkillEffect(skill.Id, GetFirstTargetEnemyIndex(result));
                     break;
                 case BattleSkillAnimationKind.Cast:
                     playerAnimator?.PlaySlash();
                     yield return battleHud.PlayPlayerCast();
+                    yield return battleHud.PlaySkillEffect(skill.Id, GetFirstTargetEnemyIndex(result));
                     break;
                 case BattleSkillAnimationKind.Defend:
                 case BattleSkillAnimationKind.Item:

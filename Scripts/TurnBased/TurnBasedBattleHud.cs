@@ -18,12 +18,12 @@ namespace WitcherGame
         private readonly List<Button> skillButtons = new List<Button>();
         private readonly List<Image> timelineGems = new List<Image>();
         private readonly List<Text> timelineGemLabels = new List<Text>();
-        private static Sprite[] cachedFlameFrames;
         private static Sprite cachedBattleBackdrop;
         private static Sprite cachedFloorMist;
         private static Sprite cachedGroundShadow;
         private static Sprite cachedGroundGlow;
         private static Sprite[] cachedCommandButtonSprites;
+        private static readonly Dictionary<BattleSkillId, Sprite[]> cachedSkillEffectFrames = new Dictionary<BattleSkillId, Sprite[]>();
         private static Sprite[] cachedGeraltIdleFrames;
         private static Sprite[] cachedGeraltSlashFrames;
         private static Sprite[] cachedGeraltHurtFrames;
@@ -46,6 +46,7 @@ namespace WitcherGame
         private Image playerManaFill;
         private Image flameEffect;
         private Image flameImpactEffect;
+        private Color32 skillImpactColor = new Color32(255, 118, 32, 210);
         private IReadOnlyList<TurnBasedEnemyState> visibleEnemies;
         private int playerIdleIndex;
         private float playerIdleTimer;
@@ -278,29 +279,33 @@ namespace WitcherGame
 
         public IEnumerator PlayFlameSignEffect()
         {
+            yield return PlaySkillEffect(BattleSkillId.FlameSign, -1);
+        }
+
+        public IEnumerator PlaySkillEffect(BattleSkillId skillId, int targetEnemyIndex)
+        {
             if (flameEffect == null)
             {
                 yield break;
             }
 
-            Sprite[] frames = LoadFlameFrames();
-            TryGetFirstLivingEnemyImpactPoint(out Vector2 impactPoint, out Rect targetRect);
-            Vector2 castPoint = playerFigureHomePosition + new Vector2(-58f, 28f);
-            float width = Mathf.Clamp(castPoint.x - impactPoint.x + 34f, 260f, 720f);
-            float centerX = impactPoint.x + width * 0.5f;
-            float centerY = Mathf.Clamp(Mathf.Lerp(castPoint.y, impactPoint.y, 0.58f), -12f, 132f);
-            float height = Mathf.Clamp(targetRect.height * 0.62f, 96f, 156f);
+            Sprite[] frames = LoadSkillEffectFrames(skillId);
+            Rect targetRect = GetSkillTargetRect(skillId, targetEnemyIndex);
+            Vector2 effectPosition = GetSkillEffectPosition(skillId, targetRect);
+            Vector2 effectSize = GetSkillEffectSize(skillId, targetRect);
+            Vector3 effectScale = GetSkillEffectScale(skillId);
+            skillImpactColor = GetSkillImpactColor(skillId);
 
             flameEffect.gameObject.SetActive(true);
             flameEffect.color = Color.white;
-            flameEffect.rectTransform.anchoredPosition = new Vector2(centerX, centerY);
-            flameEffect.rectTransform.sizeDelta = new Vector2(width, height);
-            flameEffect.rectTransform.localScale = new Vector3(-1f, 1f, 1f);
-            PrepareFlameImpact(impactPoint, targetRect);
+            flameEffect.rectTransform.anchoredPosition = effectPosition;
+            flameEffect.rectTransform.sizeDelta = effectSize;
+            flameEffect.rectTransform.localScale = effectScale;
+            PrepareFlameImpact(effectPosition, targetRect);
 
             if (frames.Length == 0)
             {
-                flameEffect.sprite = WitcherSpriteLibrary.GetSolidSprite(new Color32(255, 86, 20, 230));
+                flameEffect.sprite = GetSkillFallbackSprite(skillId);
                 UpdateFlameImpact(1f, true);
                 yield return new WaitForSeconds(0.28f);
                 flameEffect.gameObject.SetActive(false);
@@ -312,7 +317,8 @@ namespace WitcherGame
             {
                 flameEffect.sprite = frames[i];
                 float t = frames.Length <= 1 ? 1f : (float)i / (frames.Length - 1);
-                flameEffect.rectTransform.localScale = new Vector3(-1f, 1f + Mathf.Sin(t * Mathf.PI) * 0.13f, 1f);
+                float pulseScale = 1f + Mathf.Sin(t * Mathf.PI) * 0.13f;
+                flameEffect.rectTransform.localScale = new Vector3(effectScale.x, effectScale.y * pulseScale, effectScale.z);
                 Color color = Color.white;
                 color.a = t > 0.72f ? Mathf.Lerp(1f, 0.18f, (t - 0.72f) / 0.28f) : 1f;
                 flameEffect.color = color;
@@ -1154,6 +1160,104 @@ namespace WitcherGame
             return false;
         }
 
+        private Rect GetSkillTargetRect(BattleSkillId skillId, int targetEnemyIndex)
+        {
+            if (skillId == BattleSkillId.HunterFocus)
+            {
+                Vector2 playerCenter = playerFigureHomePosition + new Vector2(0f, -8f);
+                return Rect.MinMaxRect(playerCenter.x - 86f, playerCenter.y - 94f, playerCenter.x + 86f, playerCenter.y + 94f);
+            }
+
+            if (targetEnemyIndex >= 0 && TryGetSlot(targetEnemyIndex, out EnemyVisualSlot slot) && slot.Image.gameObject.activeSelf)
+            {
+                Vector2 center = slot.Rect.anchoredPosition;
+                Vector2 size = slot.Rect.sizeDelta;
+                return Rect.MinMaxRect(center.x - size.x * 0.5f, center.y - size.y * 0.5f, center.x + size.x * 0.5f, center.y + size.y * 0.5f);
+            }
+
+            return skillId == BattleSkillId.FlameSign ? GetLivingEnemyVisualRect() : GetFirstLivingEnemyRect();
+        }
+
+        private Rect GetFirstLivingEnemyRect()
+        {
+            TryGetFirstLivingEnemyImpactPoint(out _, out Rect targetRect);
+            return targetRect;
+        }
+
+        private static Vector2 GetSkillEffectPosition(BattleSkillId skillId, Rect targetRect)
+        {
+            switch (skillId)
+            {
+                case BattleSkillId.FlameSign:
+                    return new Vector2(targetRect.center.x + 12f, targetRect.center.y - 12f);
+                case BattleSkillId.ExecuteSlash:
+                    return new Vector2(targetRect.center.x + 8f, targetRect.center.y - 4f);
+                case BattleSkillId.ThunderSign:
+                    return new Vector2(targetRect.center.x, targetRect.center.y - 8f);
+                case BattleSkillId.HunterFocus:
+                    return new Vector2(targetRect.center.x, targetRect.center.y + 10f);
+                default:
+                    return targetRect.center;
+            }
+        }
+
+        private static Vector2 GetSkillEffectSize(BattleSkillId skillId, Rect targetRect)
+        {
+            switch (skillId)
+            {
+                case BattleSkillId.FlameSign:
+                    return new Vector2(Mathf.Clamp(targetRect.width + 320f, 360f, 620f), 220f);
+                case BattleSkillId.ExecuteSlash:
+                    return new Vector2(240f, 190f);
+                case BattleSkillId.ThunderSign:
+                    return new Vector2(230f, 230f);
+                case BattleSkillId.HunterFocus:
+                    return new Vector2(250f, 250f);
+                default:
+                    return new Vector2(220f, 180f);
+            }
+        }
+
+        private static Vector3 GetSkillEffectScale(BattleSkillId skillId)
+        {
+            switch (skillId)
+            {
+                case BattleSkillId.FlameSign:
+                case BattleSkillId.ExecuteSlash:
+                    return new Vector3(-1f, 1f, 1f);
+                default:
+                    return Vector3.one;
+            }
+        }
+
+        private static Sprite GetSkillFallbackSprite(BattleSkillId skillId)
+        {
+            switch (skillId)
+            {
+                case BattleSkillId.ThunderSign:
+                    return WitcherSpriteLibrary.GetSolidSprite(new Color32(66, 145, 255, 230));
+                case BattleSkillId.HunterFocus:
+                    return WitcherSpriteLibrary.GetSolidSprite(new Color32(255, 220, 88, 210));
+                default:
+                    return WitcherSpriteLibrary.GetSolidSprite(new Color32(255, 86, 20, 230));
+            }
+        }
+
+        private static Color32 GetSkillImpactColor(BattleSkillId skillId)
+        {
+            switch (skillId)
+            {
+                case BattleSkillId.ThunderSign:
+                    return new Color32(84, 154, 255, 220);
+                case BattleSkillId.HunterFocus:
+                    return new Color32(255, 213, 84, 214);
+                case BattleSkillId.ExecuteSlash:
+                    return new Color32(136, 205, 255, 204);
+                default:
+                    return new Color32(255, 118, 32, 210);
+            }
+        }
+
         private void PrepareFlameImpact(Vector2 impactPoint, Rect targetRect)
         {
             if (flameImpactEffect == null)
@@ -1165,7 +1269,7 @@ namespace WitcherGame
             flameImpactEffect.rectTransform.anchoredPosition = impactPoint;
             flameImpactEffect.rectTransform.sizeDelta = new Vector2(impactSize, impactSize);
             flameImpactEffect.rectTransform.localScale = Vector3.one * 0.65f;
-            flameImpactEffect.color = new Color32(255, 118, 32, 0);
+            flameImpactEffect.color = new Color32(skillImpactColor.r, skillImpactColor.g, skillImpactColor.b, 0);
             flameImpactEffect.gameObject.SetActive(false);
         }
 
@@ -1186,7 +1290,7 @@ namespace WitcherGame
             float localTime = Mathf.Clamp01((normalizedTime - 0.35f) / 0.55f);
             float pulse = Mathf.Sin(localTime * Mathf.PI);
             flameImpactEffect.rectTransform.localScale = Vector3.one * Mathf.Lerp(0.8f, 1.32f, pulse);
-            flameImpactEffect.color = new Color32(255, 118, 32, (byte)Mathf.RoundToInt(Mathf.Lerp(210f, 18f, localTime)));
+            flameImpactEffect.color = new Color32(skillImpactColor.r, skillImpactColor.g, skillImpactColor.b, (byte)Mathf.RoundToInt(Mathf.Lerp(skillImpactColor.a, 18f, localTime)));
         }
 
         private void HideFlameImpact()
@@ -1197,46 +1301,95 @@ namespace WitcherGame
             }
         }
 
-        private static Sprite[] LoadFlameFrames()
+        private static Sprite[] LoadSkillEffectFrames(BattleSkillId skillId)
         {
-            if (cachedFlameFrames != null)
+            if (cachedSkillEffectFrames.TryGetValue(skillId, out Sprite[] cachedFrames))
             {
-                return cachedFlameFrames;
+                return cachedFrames;
             }
 
-            string absolutePath = Path.Combine(Application.dataPath, "Art/Effects/HunterFlameBeamSheet.png");
+            Sprite[] frames = LoadEffectSpriteSheet(GetSkillEffectSheetName(skillId), 4, 2, skillId.ToString());
+            cachedSkillEffectFrames[skillId] = frames;
+            return frames;
+        }
+
+        private static string GetSkillEffectSheetName(BattleSkillId skillId)
+        {
+            switch (skillId)
+            {
+                case BattleSkillId.ExecuteSlash:
+                    return "ExecuteSlashSheet.png";
+                case BattleSkillId.FlameSign:
+                    return "FlameSignSheet.png";
+                case BattleSkillId.ThunderSign:
+                    return "ThunderSignSheet.png";
+                case BattleSkillId.HunterFocus:
+                    return "HunterFocusSheet.png";
+                default:
+                    return "HunterFlameBeamSheet.png";
+            }
+        }
+
+        private static Sprite[] LoadEffectSpriteSheet(string fileName, int columns, int rows, string spriteNamePrefix)
+        {
+            string absolutePath = Path.Combine(Application.dataPath, "Art/Effects", fileName);
             if (!File.Exists(absolutePath))
             {
-                cachedFlameFrames = System.Array.Empty<Sprite>();
-                return cachedFlameFrames;
+                return System.Array.Empty<Sprite>();
             }
 
             Texture2D texture = new Texture2D(2, 2, TextureFormat.RGBA32, false);
             if (!texture.LoadImage(File.ReadAllBytes(absolutePath)))
             {
-                cachedFlameFrames = System.Array.Empty<Sprite>();
-                return cachedFlameFrames;
+                return System.Array.Empty<Sprite>();
             }
 
             texture.filterMode = FilterMode.Bilinear;
             texture.wrapMode = TextureWrapMode.Clamp;
-            const int columns = 4;
-            const int rows = 4;
+            MakeEffectBackgroundTransparent(texture);
             int frameWidth = texture.width / columns;
             int frameHeight = texture.height / rows;
-            cachedFlameFrames = new Sprite[columns * rows];
+            Sprite[] frames = new Sprite[columns * rows];
             for (int row = 0; row < rows; row++)
             {
                 for (int column = 0; column < columns; column++)
                 {
                     int index = row * columns + column;
                     Rect rect = new Rect(column * frameWidth, texture.height - (row + 1) * frameHeight, frameWidth, frameHeight);
-                    cachedFlameFrames[index] = Sprite.Create(texture, rect, new Vector2(0.5f, 0.5f), 256f);
-                    cachedFlameFrames[index].name = $"TurnBattleFlame_{index:00}";
+                    frames[index] = Sprite.Create(texture, rect, new Vector2(0.5f, 0.5f), 256f);
+                    frames[index].name = $"TurnBattle{spriteNamePrefix}_{index:00}";
                 }
             }
 
-            return cachedFlameFrames;
+            return frames;
+        }
+
+        private static void MakeEffectBackgroundTransparent(Texture2D texture)
+        {
+            Color[] pixels = texture.GetPixels();
+            for (int i = 0; i < pixels.Length; i++)
+            {
+                Color color = pixels[i];
+                float max = Mathf.Max(color.r, Mathf.Max(color.g, color.b));
+                float min = Mathf.Min(color.r, Mathf.Min(color.g, color.b));
+                float saturation = max <= 0.001f ? 0f : (max - min) / max;
+                float brightness = max;
+                bool whiteBackground = brightness > 0.92f && saturation < 0.18f;
+                bool checkerBackground = brightness > 0.62f && saturation < 0.08f;
+                if (whiteBackground || checkerBackground)
+                {
+                    color.a = 0f;
+                }
+                else
+                {
+                    color.a *= Mathf.Clamp01(saturation * 4.2f + (1f - brightness) * 1.8f);
+                }
+
+                pixels[i] = color;
+            }
+
+            texture.SetPixels(pixels);
+            texture.Apply();
         }
 
         private IEnumerator PlayPlayerFrames(Sprite[] frames, float frameDuration, Vector2 motion, bool flash)
