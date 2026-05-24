@@ -81,13 +81,13 @@ namespace WitcherGame
                 switch (point.kind)
                 {
                     case WitcherFixedEncounterKind.BloodWraith:
-                        SpawnEncounter(position, WitcherHordeMonsterKind.BloodWraith, Mathf.Max(1, point.enemyCount));
+                        SpawnEncounter(position, TurnBasedEnemyVisualKind.BloodWraith, Mathf.Max(1, point.enemyCount));
                         break;
                     case WitcherFixedEncounterKind.BlackMoonKnight:
                         SpawnKnightEncounter(position);
                         break;
                     default:
-                        SpawnEncounter(position, WitcherHordeMonsterKind.CorruptedWolf, Mathf.Max(1, point.enemyCount));
+                        SpawnEncounter(position, TurnBasedEnemyVisualKind.CorruptedWolf, Mathf.Max(1, point.enemyCount));
                         break;
                 }
             }
@@ -105,9 +105,9 @@ namespace WitcherGame
             };
         }
 
-        private void SpawnEncounter(Vector2 position, WitcherHordeMonsterKind kind, int encounterCount)
+        private void SpawnEncounter(Vector2 position, TurnBasedEnemyVisualKind kind, int encounterCount)
         {
-            string enemyName = kind == WitcherHordeMonsterKind.BloodWraith ? "Blood Wraith Encounter" : "Corrupted Wolf Encounter";
+            string enemyName = kind == TurnBasedEnemyVisualKind.BloodWraith ? "Blood Wraith Encounter" : "Corrupted Wolf Encounter";
             GameObject enemyObject = CreateEncounterObject(enemyName, position);
             BattleEncounterTrigger trigger = enemyObject.AddComponent<BattleEncounterTrigger>();
             trigger.ConfigureMonster(kind, enemyObject.GetComponent<SpriteRenderer>().sprite, Mathf.Max(1, encounterCount), 0);

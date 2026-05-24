@@ -428,17 +428,12 @@ namespace WitcherGame
 
         private void UpdateBossBar()
         {
-            WildHuntBossController boss = FindObjectOfType<WildHuntBossController>();
-            bool shouldShow = boss != null && boss.HasSpawned && boss.CurrentHealth > 0;
-            bossStatusRoot.SetActive(shouldShow);
-            if (!shouldShow)
+            if (bossStatusRoot == null)
             {
                 return;
             }
 
-            float health01 = boss.MaxHealth <= 0 ? 0f : Mathf.Clamp01((float)boss.CurrentHealth / boss.MaxHealth);
-            SetFill(bossHealthFill, health01, 386f);
-            bossHealthText.text = $"{boss.CurrentHealth}/{boss.MaxHealth}";
+            bossStatusRoot.SetActive(false);
         }
 
         private static void SetFill(Image image, float normalizedValue, float maxWidth)

@@ -33,14 +33,14 @@ namespace WitcherGame
             EnsureKinematicBody();
         }
 
-        public void ConfigureMonster(WitcherHordeMonsterKind kind, Sprite sprite, int count, int waveBonus)
+        public void ConfigureMonster(TurnBasedEnemyVisualKind kind, Sprite sprite, int count, int waveBonus)
         {
             battleSprite = sprite;
-            visualKind = kind == WitcherHordeMonsterKind.BloodWraith ? TurnBasedEnemyVisualKind.BloodWraith : TurnBasedEnemyVisualKind.CorruptedWolf;
+            visualKind = kind == TurnBasedEnemyVisualKind.BloodWraith ? TurnBasedEnemyVisualKind.BloodWraith : TurnBasedEnemyVisualKind.CorruptedWolf;
             EnsureMapIdleAnimator();
             enemyCount = Mathf.Clamp(count, 1, 3);
             int bonus = Mathf.Max(0, waveBonus);
-            if (kind == WitcherHordeMonsterKind.BloodWraith)
+            if (kind == TurnBasedEnemyVisualKind.BloodWraith)
             {
                 encounterTitle = enemyCount > 1 ? "吸血女妖群" : "吸血女妖";
                 enemyName = "吸血女妖";
@@ -102,7 +102,6 @@ namespace WitcherGame
         public void PrepareForBattle()
         {
             consumed = true;
-            SetWorldLogicEnabled(false);
             if (encounterCollider != null)
             {
                 encounterCollider.enabled = false;
@@ -134,7 +133,6 @@ namespace WitcherGame
         private void Start()
         {
             player = FindObjectOfType<GeraltController>();
-            SetWorldLogicEnabled(false);
         }
 
         private void Update()
@@ -223,31 +221,12 @@ namespace WitcherGame
             idleAnimator.Configure(visualKind);
         }
 
-        private void SetWorldLogicEnabled(bool enabled)
+        private void OnDisable()
         {
-            WitcherHordeMonsterController hordeMonster = GetComponent<WitcherHordeMonsterController>();
-            if (hordeMonster != null)
-            {
-                hordeMonster.enabled = enabled;
-            }
-
-            WildHuntBossController boss = GetComponent<WildHuntBossController>();
-            if (boss != null)
-            {
-                boss.enabled = enabled;
-            }
-
-            MonsterPatrol patrol = GetComponent<MonsterPatrol>();
-            if (patrol != null)
-            {
-                patrol.enabled = enabled;
-            }
-
             Rigidbody2D body = GetComponent<Rigidbody2D>();
             if (body != null)
             {
                 body.velocity = Vector2.zero;
-                body.bodyType = RigidbodyType2D.Kinematic;
             }
         }
     }

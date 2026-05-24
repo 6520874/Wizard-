@@ -21,7 +21,6 @@ namespace WitcherGame
         [SerializeField] private int maxHealth = 120;
         [SerializeField] private int maxMana = 100;
         [SerializeField] private float manaRegenPerSecond = 11f;
-        [SerializeField] private int bossHitDamage = 5;
         [SerializeField] private float dashSpeed = 12f;
         [SerializeField] private float dashDuration = 0.16f;
         [SerializeField] private float dashCooldown = 0.55f;
@@ -161,16 +160,6 @@ namespace WitcherGame
         public void SetControlEnabled(bool isEnabled)
         {
             controlsEnabled = isEnabled;
-        }
-
-        public void TakeBossHit(float attackerX)
-        {
-            TakeDamage(bossHitDamage, attackerX);
-        }
-
-        public void TakeEnemyHit(int damage, float attackerX)
-        {
-            TakeDamage(damage, attackerX);
         }
 
         public void RestoreHealth(int amount)

@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using UnityEngine;
 
 namespace WitcherGame
@@ -12,7 +11,6 @@ namespace WitcherGame
         private const float MinStageY = -2.55f;
         private const float MaxStageY = 5f;
 
-        private readonly List<GameObject> spawnedEnemies = new List<GameObject>();
         private GeraltController player;
         private WitcherHud hud;
         private int roomIndex;
@@ -90,7 +88,6 @@ namespace WitcherGame
 
             ApplyRoomLook(room);
             EnsureCameraFollow();
-            RespawnEnemies(room);
 
             hud = hud == null ? FindObjectOfType<WitcherHud>() : hud;
             if (hud != null)
@@ -128,43 +125,6 @@ namespace WitcherGame
             }
         }
 
-        private void RespawnEnemies(RoomDefinition room)
-        {
-            for (int i = spawnedEnemies.Count - 1; i >= 0; i--)
-            {
-                if (spawnedEnemies[i] != null)
-                {
-                    Destroy(spawnedEnemies[i]);
-                }
-            }
-
-            spawnedEnemies.Clear();
-
-            for (int i = 0; i < room.Enemies.Length; i++)
-            {
-                EnemySpawn spawn = room.Enemies[i];
-                GameObject enemyObject = new GameObject($"{spawn.Kind} Enemy");
-                enemyObject.transform.position = new Vector3(spawn.X, spawn.Y, 0f);
-
-                SpriteRenderer renderer = enemyObject.AddComponent<SpriteRenderer>();
-                renderer.sortingOrder = 2;
-
-                enemyObject.AddComponent<BoxCollider2D>();
-                MonsterPatrol enemy = enemyObject.AddComponent<MonsterPatrol>();
-                Vector2 patrol = spawn.Kind == MonsterKind.Drowner ? new Vector2(1.5f, 0.38f) : new Vector2(2.4f, 0.28f);
-                if (spawn.ChaseDistance > 0f)
-                {
-                    enemy.Configure(spawn.Kind, patrol, spawn.ChaseDistance);
-                }
-                else
-                {
-                    enemy.Configure(spawn.Kind, patrol);
-                }
-
-                spawnedEnemies.Add(enemyObject);
-            }
-        }
-
         private void EnsureCameraFollow()
         {
             Camera camera = Camera.main;
@@ -194,8 +154,7 @@ namespace WitcherGame
                 Color32 emberColor,
                 float fogStrength,
                 float vignetteStrength,
-                float emberStrength,
-                params EnemySpawn[] enemies)
+                float emberStrength)
             {
                 Name = name;
                 BackgroundTint = backgroundTint;
@@ -205,7 +164,6 @@ namespace WitcherGame
                 FogStrength = fogStrength;
                 VignetteStrength = vignetteStrength;
                 EmberStrength = emberStrength;
-                Enemies = enemies;
             }
 
             public string Name { get; }
@@ -216,23 +174,6 @@ namespace WitcherGame
             public float FogStrength { get; }
             public float VignetteStrength { get; }
             public float EmberStrength { get; }
-            public EnemySpawn[] Enemies { get; }
-        }
-
-        private readonly struct EnemySpawn
-        {
-            public EnemySpawn(MonsterKind kind, float x, float y, float chaseDistance = 0f)
-            {
-                Kind = kind;
-                X = x;
-                Y = y;
-                ChaseDistance = chaseDistance;
-            }
-
-            public MonsterKind Kind { get; }
-            public float X { get; }
-            public float Y { get; }
-            public float ChaseDistance { get; }
         }
     }
 }

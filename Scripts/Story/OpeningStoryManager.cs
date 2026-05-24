@@ -14,7 +14,7 @@ namespace WitcherGame
     {
         [Header("Opening Narration")]
         [SerializeField] private bool playOnStart = true;
-        [Tooltip("勾选后跳过黑屏旁白和村长对话，直接进入可操作状态。适合调试割草战斗。")]
+        [Tooltip("勾选后跳过黑屏旁白和村长对话，直接进入可操作状态。适合调试地图和回合制战斗。")]
         [SerializeField] private bool skipIntroNarrationAndDialogue;
         [Tooltip("跳过引导时是否仍然创建第一主线任务。")]
         [SerializeField] private bool startFirstQuestWhenIntroSkipped = true;
