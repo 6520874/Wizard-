@@ -375,21 +375,21 @@ namespace WitcherGame
 
             BuildTurnTimeline(root.transform);
 
-            Image playerGlow = CreateCenteredImage("Battle Player Ground Glow", root.transform, new Vector2(214f, 52f), new Vector2(292f, -12f), new Color32(42, 143, 255, 88));
+            Image playerGlow = CreateCenteredImage("Battle Player Ground Glow", root.transform, new Vector2(190f, 46f), new Vector2(292f, -36f), new Color32(42, 143, 255, 88));
             playerGlow.sprite = GetGroundGlowSprite();
             playerGlow.raycastTarget = false;
 
-            Image playerShadow = CreateCenteredImage("Battle Player Ground Shadow", root.transform, new Vector2(184f, 38f), new Vector2(292f, -20f), new Color32(0, 0, 0, 180));
+            Image playerShadow = CreateCenteredImage("Battle Player Ground Shadow", root.transform, new Vector2(160f, 34f), new Vector2(292f, -44f), new Color32(0, 0, 0, 180));
             playerShadow.sprite = GetGroundShadowSprite();
             playerShadow.raycastTarget = false;
 
-            playerFigure = CreateCenteredImage("Battle Player Figure", root.transform, new Vector2(194f, 220f), new Vector2(292f, 88f), Color.white);
+            playerFigure = CreateCenteredImage("Battle Player Figure", root.transform, new Vector2(166f, 190f), new Vector2(292f, 52f), Color.white);
             playerFigure.sprite = GetPlayerIdleFrame();
             playerFigureHomePosition = playerFigure.rectTransform.anchoredPosition;
             playerFigure.preserveAspect = true;
             playerFigure.raycastTarget = false;
             SetPlayerFacingScale(1f);
-            playerDamageText = CreateText("Player Damage Text", playerFigure.transform, string.Empty, 34, TextAnchor.MiddleCenter, new Vector2(0f, 72f), new Vector2(170f, 56f));
+            playerDamageText = CreateText("Player Damage Text", playerFigure.transform, string.Empty, 32, TextAnchor.MiddleCenter, new Vector2(0f, 60f), new Vector2(160f, 52f));
             playerDamageText.rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
             playerDamageText.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
             playerDamageText.rectTransform.pivot = new Vector2(0.5f, 0.5f);
