@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 namespace WitcherGame
 {
@@ -27,6 +28,9 @@ namespace WitcherGame
         [SerializeField] private int dashManaCost = 18;
         [SerializeField] private int healManaCost = 35;
         [SerializeField] private int healAmount = 22;
+        [Header("Point And Click Movement")]
+        [SerializeField] private bool clickToMoveEnabled = true;
+        [SerializeField] private float clickMoveStopDistance = 0.08f;
 
         private Rigidbody2D body;
         private SpriteRenderer spriteRenderer;
@@ -40,6 +44,8 @@ namespace WitcherGame
         private float invulnerableTimer;
         private float lastFacingDirection = 1f;
         private bool defeatHandled;
+        private bool hasClickMoveDestination;
+        private Vector2 clickMoveDestination;
 
         public int CurrentHealth => currentHealth;
         public int MaxHealth => maxHealth;
@@ -77,6 +83,7 @@ namespace WitcherGame
             if (!IsAlive)
             {
                 body.velocity = Vector2.zero;
+                hasClickMoveDestination = false;
                 ClampToStage();
                 return;
             }
@@ -84,6 +91,7 @@ namespace WitcherGame
             if (!controlsEnabled)
             {
                 body.velocity = Vector2.zero;
+                hasClickMoveDestination = false;
                 geraltAnimator.ForceIdle();
                 ClampToStage();
                 return;
@@ -93,6 +101,7 @@ namespace WitcherGame
             {
                 hurtLockTimer -= Time.deltaTime;
                 body.velocity = Vector2.zero;
+                hasClickMoveDestination = false;
                 ClampToStage();
                 return;
             }
@@ -100,26 +109,37 @@ namespace WitcherGame
             if (dashTimer > 0f)
             {
                 dashTimer -= Time.deltaTime;
+                hasClickMoveDestination = false;
                 body.velocity = new Vector2(lastFacingDirection * dashSpeed, 0f);
                 geraltAnimator.PlayLocomotion(true);
                 ClampToStage();
                 return;
             }
 
+            HandlePointAndClickInput();
+
             Vector2 moveInput = new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical"));
-            Vector2 movement = moveInput.sqrMagnitude > 1f ? moveInput.normalized : moveInput;
+            bool hasManualInput = moveInput.sqrMagnitude > 0.01f;
+            if (hasManualInput)
+            {
+                hasClickMoveDestination = false;
+            }
+
+            Vector2 movement = hasManualInput
+                ? (moveInput.sqrMagnitude > 1f ? moveInput.normalized : moveInput)
+                : GetClickMoveInput();
             body.velocity = new Vector2(movement.x * moveSpeed, movement.y * verticalMoveSpeed);
             ClampToStage();
 
-            if (Mathf.Abs(moveInput.x) > 0.01f)
+            if (Mathf.Abs(movement.x) > 0.01f)
             {
-                lastFacingDirection = Mathf.Sign(moveInput.x);
-                spriteRenderer.flipX = moveInput.x < 0f;
+                lastFacingDirection = Mathf.Sign(movement.x);
+                spriteRenderer.flipX = movement.x < 0f;
             }
 
             if (Input.GetKeyDown(KeyCode.LeftShift) || Input.GetKeyDown(KeyCode.RightShift))
             {
-                TryDash(moveInput.x);
+                TryDash(movement.x);
             }
             else if (Input.GetKeyDown(KeyCode.E))
             {
@@ -235,7 +255,79 @@ namespace WitcherGame
         {
             transform.position = new Vector3(position.x, position.y, transform.position.z);
             body.velocity = Vector2.zero;
+            hasClickMoveDestination = false;
             ClampToStage();
+        }
+
+        private void HandlePointAndClickInput()
+        {
+            if (!clickToMoveEnabled)
+            {
+                return;
+            }
+
+            if (Input.touchCount > 0)
+            {
+                for (int i = 0; i < Input.touchCount; i++)
+                {
+                    Touch touch = Input.GetTouch(i);
+                    if (touch.phase == TouchPhase.Began && !IsPointerOverUi(touch.fingerId))
+                    {
+                        SetClickMoveDestination(touch.position);
+                        return;
+                    }
+                }
+            }
+
+            if (Input.GetMouseButtonDown(0) && !IsPointerOverUi())
+            {
+                SetClickMoveDestination(Input.mousePosition);
+            }
+        }
+
+        private Vector2 GetClickMoveInput()
+        {
+            if (!hasClickMoveDestination)
+            {
+                return Vector2.zero;
+            }
+
+            Vector2 currentPosition = transform.position;
+            Vector2 toDestination = clickMoveDestination - currentPosition;
+            if (toDestination.magnitude <= clickMoveStopDistance)
+            {
+                hasClickMoveDestination = false;
+                return Vector2.zero;
+            }
+
+            return toDestination.normalized;
+        }
+
+        private void SetClickMoveDestination(Vector2 screenPosition)
+        {
+            Camera camera = Camera.main;
+            if (camera == null)
+            {
+                return;
+            }
+
+            Vector3 worldPosition = camera.ScreenToWorldPoint(new Vector3(screenPosition.x, screenPosition.y, -camera.transform.position.z));
+            clickMoveDestination = new Vector2(
+                Mathf.Clamp(worldPosition.x, minStageX, maxStageX),
+                Mathf.Clamp(worldPosition.y, minStageY, maxStageY));
+            hasClickMoveDestination = Vector2.Distance(transform.position, clickMoveDestination) > clickMoveStopDistance;
+        }
+
+        private static bool IsPointerOverUi(int pointerId = -1)
+        {
+            if (EventSystem.current == null)
+            {
+                return false;
+            }
+
+            return pointerId >= 0
+                ? EventSystem.current.IsPointerOverGameObject(pointerId)
+                : EventSystem.current.IsPointerOverGameObject();
         }
 
         private void TryDash(float moveInput)
