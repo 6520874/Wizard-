@@ -35,6 +35,7 @@ namespace WitcherGame
         private Text potionText;
         private Text currentTurnText;
         private Text nextTurnText;
+        private Image currentActorPortrait;
         private Image playerFigure;
         private Vector2 playerFigureHomePosition;
         private bool playerFigureBusy;
@@ -551,6 +552,15 @@ namespace WitcherGame
             activeGem.rectTransform.localEulerAngles = new Vector3(0f, 0f, 45f);
             AddOutline(activeGem, new Color32(118, 212, 255, 255), new Vector2(2f, -2f));
 
+            currentActorPortrait = CreateImage("Battle Current Actor Portrait", activeGem.transform, new Vector2(34f, 34f), new Vector2(5f, -5f), Color.white);
+            currentActorPortrait.rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
+            currentActorPortrait.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+            currentActorPortrait.rectTransform.pivot = new Vector2(0.5f, 0.5f);
+            currentActorPortrait.rectTransform.anchoredPosition = Vector2.zero;
+            currentActorPortrait.rectTransform.localEulerAngles = new Vector3(0f, 0f, -45f);
+            currentActorPortrait.preserveAspect = true;
+            currentActorPortrait.raycastTarget = false;
+
             Image rail = CreateImage("Battle Turn Timeline Rail", parent, new Vector2(548f, 2f), new Vector2(164f, -44f), new Color32(157, 164, 172, 88));
             rail.sprite = WitcherSpriteLibrary.GetSolidSprite(new Color32(157, 164, 172, 120));
             rail.raycastTarget = false;
@@ -598,6 +608,12 @@ namespace WitcherGame
             if (nextTurnText != null)
             {
                 nextTurnText.text = preview.Count > 0 ? $"当前 {preview[0].Name}" : "等待出手";
+            }
+
+            if (currentActorPortrait != null)
+            {
+                currentActorPortrait.sprite = preview.Count > 0 ? GetTimelinePortraitSprite(preview[0]) : null;
+                currentActorPortrait.color = currentActorPortrait.sprite == null ? new Color32(255, 255, 255, 0) : Color.white;
             }
 
             for (int i = 0; i < timelineGems.Count; i++)
@@ -648,6 +664,22 @@ namespace WitcherGame
             }
 
             return "怪";
+        }
+
+        private Sprite GetTimelinePortraitSprite(TurnBattleTimelineEntry entry)
+        {
+            if (entry.IsPlayer)
+            {
+                return GetPlayerIdleFrame();
+            }
+
+            if (visibleEnemies == null || entry.EnemyIndex < 0 || entry.EnemyIndex >= visibleEnemies.Count)
+            {
+                return null;
+            }
+
+            TurnBasedEnemyState enemy = visibleEnemies[entry.EnemyIndex];
+            return FirstFrame(enemy.IdleFrames, enemy.Sprite);
         }
 
         private static Color32 GetTimelineGemColor(int index)
