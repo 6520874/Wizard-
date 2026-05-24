@@ -38,6 +38,7 @@ namespace WitcherGame
         private Image playerHealthFill;
         private Image playerManaFill;
         private Image flameEffect;
+        private Image flameImpactEffect;
         private IReadOnlyList<TurnBasedEnemyState> visibleEnemies;
         private int playerIdleIndex;
         private float playerIdleTimer;
@@ -243,25 +244,27 @@ namespace WitcherGame
             }
 
             Sprite[] frames = LoadFlameFrames();
-            Rect targetRect = GetLivingEnemyVisualRect();
-            float startX = playerFigureHomePosition.x + 76f;
-            float endX = Mathf.Min(targetRect.xMin - 92f, targetRect.xMax - 260f);
-            float width = Mathf.Clamp(startX - endX, 360f, 720f);
-            float centerX = startX - width * 0.5f;
-            float centerY = Mathf.Clamp(targetRect.center.y - 4f, -12f, 122f);
-            float height = Mathf.Clamp(targetRect.height * 0.86f, 96f, 180f);
+            TryGetFirstLivingEnemyImpactPoint(out Vector2 impactPoint, out Rect targetRect);
+            Vector2 castPoint = playerFigureHomePosition + new Vector2(-58f, 28f);
+            float width = Mathf.Clamp(castPoint.x - impactPoint.x + 34f, 260f, 720f);
+            float centerX = impactPoint.x + width * 0.5f;
+            float centerY = Mathf.Clamp(Mathf.Lerp(castPoint.y, impactPoint.y, 0.58f), -12f, 132f);
+            float height = Mathf.Clamp(targetRect.height * 0.62f, 96f, 156f);
 
             flameEffect.gameObject.SetActive(true);
             flameEffect.color = Color.white;
             flameEffect.rectTransform.anchoredPosition = new Vector2(centerX, centerY);
             flameEffect.rectTransform.sizeDelta = new Vector2(width, height);
             flameEffect.rectTransform.localScale = new Vector3(-1f, 1f, 1f);
+            PrepareFlameImpact(impactPoint, targetRect);
 
             if (frames.Length == 0)
             {
                 flameEffect.sprite = WitcherSpriteLibrary.GetSolidSprite(new Color32(255, 86, 20, 230));
+                UpdateFlameImpact(1f, true);
                 yield return new WaitForSeconds(0.28f);
                 flameEffect.gameObject.SetActive(false);
+                HideFlameImpact();
                 yield break;
             }
 
@@ -269,14 +272,16 @@ namespace WitcherGame
             {
                 flameEffect.sprite = frames[i];
                 float t = frames.Length <= 1 ? 1f : (float)i / (frames.Length - 1);
-                flameEffect.rectTransform.localScale = new Vector3(-Mathf.Lerp(0.35f, 1f, Mathf.Clamp01(t * 1.45f)), 1f + Mathf.Sin(t * Mathf.PI) * 0.13f, 1f);
+                flameEffect.rectTransform.localScale = new Vector3(-1f, 1f + Mathf.Sin(t * Mathf.PI) * 0.13f, 1f);
                 Color color = Color.white;
                 color.a = t > 0.72f ? Mathf.Lerp(1f, 0.18f, (t - 0.72f) / 0.28f) : 1f;
                 flameEffect.color = color;
+                UpdateFlameImpact(t, t >= 0.35f);
                 yield return new WaitForSeconds(0.045f);
             }
 
             flameEffect.gameObject.SetActive(false);
+            HideFlameImpact();
         }
 
         public IEnumerator PlayPlayerAttack()
@@ -485,6 +490,11 @@ namespace WitcherGame
             flameEffect.preserveAspect = true;
             flameEffect.raycastTarget = false;
             flameEffect.gameObject.SetActive(false);
+
+            flameImpactEffect = CreateCenteredImage("Flame Sign Impact", root.transform, new Vector2(128f, 128f), Vector2.zero, new Color32(255, 118, 32, 0));
+            flameImpactEffect.sprite = GetGroundGlowSprite();
+            flameImpactEffect.raycastTarget = false;
+            flameImpactEffect.gameObject.SetActive(false);
 
             Image commandPanel = CreateImage("Command Panel", root.transform, new Vector2(238f, 236f), new Vector2(694f, -286f), new Color32(10, 13, 18, 216));
             commandPanel.sprite = WitcherSpriteLibrary.GetSolidSprite(new Color32(10, 13, 18, 244));
@@ -891,6 +901,76 @@ namespace WitcherGame
             }
 
             return found ? Rect.MinMaxRect(minX, minY, maxX, maxY) : Rect.MinMaxRect(-250f, 2f, 250f, 142f);
+        }
+
+        private bool TryGetFirstLivingEnemyImpactPoint(out Vector2 impactPoint, out Rect targetRect)
+        {
+            for (int i = 0; i < enemySlots.Count; i++)
+            {
+                if (visibleEnemies == null || i >= visibleEnemies.Count || !visibleEnemies[i].IsAlive)
+                {
+                    continue;
+                }
+
+                EnemyVisualSlot slot = enemySlots[i];
+                if (!slot.Image.gameObject.activeSelf)
+                {
+                    continue;
+                }
+
+                Vector2 center = slot.Rect.anchoredPosition;
+                Vector2 size = slot.Rect.sizeDelta;
+                targetRect = Rect.MinMaxRect(center.x - size.x * 0.5f, center.y - size.y * 0.5f, center.x + size.x * 0.5f, center.y + size.y * 0.5f);
+                impactPoint = new Vector2(targetRect.xMax - size.x * 0.28f, center.y + size.y * 0.04f);
+                return true;
+            }
+
+            targetRect = GetLivingEnemyVisualRect();
+            impactPoint = new Vector2(targetRect.xMax - targetRect.width * 0.28f, targetRect.center.y);
+            return false;
+        }
+
+        private void PrepareFlameImpact(Vector2 impactPoint, Rect targetRect)
+        {
+            if (flameImpactEffect == null)
+            {
+                return;
+            }
+
+            float impactSize = Mathf.Clamp(targetRect.height * 0.86f, 92f, 158f);
+            flameImpactEffect.rectTransform.anchoredPosition = impactPoint;
+            flameImpactEffect.rectTransform.sizeDelta = new Vector2(impactSize, impactSize);
+            flameImpactEffect.rectTransform.localScale = Vector3.one * 0.65f;
+            flameImpactEffect.color = new Color32(255, 118, 32, 0);
+            flameImpactEffect.gameObject.SetActive(false);
+        }
+
+        private void UpdateFlameImpact(float normalizedTime, bool visible)
+        {
+            if (flameImpactEffect == null)
+            {
+                return;
+            }
+
+            if (!visible)
+            {
+                flameImpactEffect.gameObject.SetActive(false);
+                return;
+            }
+
+            flameImpactEffect.gameObject.SetActive(true);
+            float localTime = Mathf.Clamp01((normalizedTime - 0.35f) / 0.55f);
+            float pulse = Mathf.Sin(localTime * Mathf.PI);
+            flameImpactEffect.rectTransform.localScale = Vector3.one * Mathf.Lerp(0.8f, 1.32f, pulse);
+            flameImpactEffect.color = new Color32(255, 118, 32, (byte)Mathf.RoundToInt(Mathf.Lerp(210f, 18f, localTime)));
+        }
+
+        private void HideFlameImpact()
+        {
+            if (flameImpactEffect != null)
+            {
+                flameImpactEffect.gameObject.SetActive(false);
+            }
         }
 
         private static Sprite[] LoadFlameFrames()

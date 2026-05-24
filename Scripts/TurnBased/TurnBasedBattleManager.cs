@@ -291,7 +291,6 @@ namespace WitcherGame
                 }
 
                 int damage = Mathf.Max(1, flameBaseDamage + Random.Range(-4, 5) - enemy.Defense / 2);
-                enemy.Health = Mathf.Max(0, enemy.Health - damage);
                 damages[i] = damage;
                 hitCount++;
             }
@@ -303,6 +302,7 @@ namespace WitcherGame
             {
                 if (damages[i] > 0)
                 {
+                    enemies[i].Health = Mathf.Max(0, enemies[i].Health - damages[i]);
                     yield return battleHud.PlayEnemyHurt(i, 0.08f, damages[i]);
                 }
             }
