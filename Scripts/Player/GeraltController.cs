@@ -109,7 +109,7 @@ namespace WitcherGame
             {
                 dashTimer -= Time.deltaTime;
                 hasClickMoveDestination = false;
-                body.velocity = new Vector2(lastFacingDirection * dashSpeed, 0f);
+                body.velocity = ResolveMapVelocity(new Vector2(lastFacingDirection * dashSpeed, 0f));
                 geraltAnimator.PlayLocomotion(true);
                 ClampToStage();
                 return;
@@ -127,13 +127,14 @@ namespace WitcherGame
             Vector2 movement = hasManualInput
                 ? (moveInput.sqrMagnitude > 1f ? moveInput.normalized : moveInput)
                 : GetClickMoveInput();
-            body.velocity = new Vector2(movement.x * moveSpeed, movement.y * verticalMoveSpeed);
+            Vector2 requestedVelocity = new Vector2(movement.x * moveSpeed, movement.y * verticalMoveSpeed);
+            Vector2 resolvedVelocity = ResolveMapVelocity(requestedVelocity);
+            body.velocity = resolvedVelocity;
             ClampToStage();
 
             if (Mathf.Abs(movement.x) > 0.01f)
             {
-                lastFacingDirection = Mathf.Sign(movement.x);
-                spriteRenderer.flipX = movement.x < 0f;
+                SetFacingDirection(Mathf.Sign(movement.x));
             }
 
             if (Input.GetKeyDown(KeyCode.LeftShift) || Input.GetKeyDown(KeyCode.RightShift))
@@ -146,7 +147,7 @@ namespace WitcherGame
             }
             else
             {
-                geraltAnimator.PlayLocomotion(movement.sqrMagnitude > 0.01f);
+                geraltAnimator.PlayLocomotion(resolvedVelocity.sqrMagnitude > 0.01f);
             }
 
             UpdateDepthSorting();
@@ -301,10 +302,24 @@ namespace WitcherGame
             }
 
             Vector3 worldPosition = camera.ScreenToWorldPoint(new Vector3(screenPosition.x, screenPosition.y, -camera.transform.position.z));
-            clickMoveDestination = new Vector2(
+            Vector2 requestedDestination = new Vector2(
                 Mathf.Clamp(worldPosition.x, minStageX, maxStageX),
                 Mathf.Clamp(worldPosition.y, minStageY, maxStageY));
+
+            WitcherVillageWalkableMap walkableMap = WitcherVillageWalkableMap.Current;
+            if (walkableMap != null && !walkableMap.TryGetNearestWalkablePoint(requestedDestination, out requestedDestination))
+            {
+                hasClickMoveDestination = false;
+                return;
+            }
+
+            clickMoveDestination = requestedDestination;
             hasClickMoveDestination = Vector2.Distance(transform.position, clickMoveDestination) > clickMoveStopDistance;
+            float facingDelta = clickMoveDestination.x - transform.position.x;
+            if (Mathf.Abs(facingDelta) > 0.03f)
+            {
+                SetFacingDirection(Mathf.Sign(facingDelta));
+            }
         }
 
         private static bool IsPointerOverUi(int pointerId = -1)
@@ -419,7 +434,36 @@ namespace WitcherGame
             position.x = Mathf.Clamp(position.x, minStageX, maxStageX);
             position.y = Mathf.Clamp(position.y, minStageY, maxStageY);
 
+            WitcherVillageWalkableMap walkableMap = WitcherVillageWalkableMap.Current;
+            if (walkableMap != null && !walkableMap.IsWalkable(position))
+            {
+                if (walkableMap.TryGetNearestWalkablePoint(position, out Vector2 correctedPosition))
+                {
+                    position.x = Mathf.Clamp(correctedPosition.x, minStageX, maxStageX);
+                    position.y = Mathf.Clamp(correctedPosition.y, minStageY, maxStageY);
+                }
+            }
+
             transform.position = position;
+        }
+
+        private Vector2 ResolveMapVelocity(Vector2 requestedVelocity)
+        {
+            WitcherVillageWalkableMap walkableMap = WitcherVillageWalkableMap.Current;
+            return walkableMap == null
+                ? requestedVelocity
+                : walkableMap.ResolveVelocity(transform.position, requestedVelocity, Time.deltaTime);
+        }
+
+        private void SetFacingDirection(float direction)
+        {
+            if (Mathf.Abs(direction) <= 0.01f)
+            {
+                return;
+            }
+
+            lastFacingDirection = Mathf.Sign(direction);
+            spriteRenderer.flipX = lastFacingDirection < 0f;
         }
 
         private void UpdateDepthSorting()

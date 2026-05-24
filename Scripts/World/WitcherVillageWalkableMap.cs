@@ -1,0 +1,204 @@
+using UnityEngine;
+
+namespace WitcherGame
+{
+    // 中文说明：定义村庄地图的禁行区域，并为玩家移动提供可走判定和碰撞修正。
+    public class WitcherVillageWalkableMap : MonoBehaviour
+    {
+        [SerializeField] private bool mapCollisionEnabled = true;
+        [SerializeField] private bool createPhysicsBlockers = true;
+        [SerializeField] private bool showDebugBlockers;
+        [SerializeField] private float characterRadius = 0.26f;
+        [SerializeField]
+        private Rect[] blockedZones =
+        {
+            new Rect(-12.5f, 1.3f, 3.5f, 4.2f),
+            new Rect(-8.8f, 0.65f, 3.05f, 6.15f),
+            new Rect(-11.9f, -6.6f, 5.35f, 4.15f),
+            new Rect(-7.8f, -5.75f, 3.3f, 3.7f),
+            new Rect(-3.1f, 1.2f, 6.25f, 5.55f),
+            new Rect(4.65f, 1.05f, 4.6f, 4.55f),
+            new Rect(9.45f, 0.35f, 3.25f, 3.5f),
+            new Rect(4.9f, -6.55f, 5.85f, 4.25f),
+            new Rect(0.2f, -5.85f, 3.55f, 1.8f),
+            new Rect(-13.2f, 5.9f, 26.4f, 1.9f),
+            new Rect(-13.2f, -7.75f, 26.4f, 1.15f)
+        };
+
+        private const string BlockerRootName = "Village Collision Blockers";
+
+        public static WitcherVillageWalkableMap Current { get; private set; }
+        private GameObject blockerRoot;
+
+        private void Awake()
+        {
+            if (createPhysicsBlockers)
+            {
+                RebuildPhysicsBlockers();
+            }
+        }
+
+        private void OnEnable()
+        {
+            Current = this;
+            if (blockerRoot != null)
+            {
+                blockerRoot.SetActive(true);
+            }
+        }
+
+        private void OnDisable()
+        {
+            if (Current == this)
+            {
+                Current = null;
+            }
+
+            if (blockerRoot != null)
+            {
+                blockerRoot.SetActive(false);
+            }
+        }
+
+        private void OnDestroy()
+        {
+            if (Current == this)
+            {
+                Current = null;
+            }
+
+            if (blockerRoot != null)
+            {
+                Destroy(blockerRoot);
+            }
+        }
+
+        public Vector2 ResolveVelocity(Vector2 currentPosition, Vector2 requestedVelocity, float deltaTime)
+        {
+            if (!mapCollisionEnabled || requestedVelocity.sqrMagnitude <= 0.0001f || deltaTime <= 0f)
+            {
+                return requestedVelocity;
+            }
+
+            Vector2 desiredPosition = currentPosition + requestedVelocity * deltaTime;
+            if (IsWalkable(desiredPosition))
+            {
+                return requestedVelocity;
+            }
+
+            Vector2 xOnlyPosition = currentPosition + new Vector2(requestedVelocity.x * deltaTime, 0f);
+            Vector2 yOnlyPosition = currentPosition + new Vector2(0f, requestedVelocity.y * deltaTime);
+            bool canMoveX = Mathf.Abs(requestedVelocity.x) > 0.001f && IsWalkable(xOnlyPosition);
+            bool canMoveY = Mathf.Abs(requestedVelocity.y) > 0.001f && IsWalkable(yOnlyPosition);
+
+            if (canMoveX && canMoveY)
+            {
+                return Mathf.Abs(requestedVelocity.x) > Mathf.Abs(requestedVelocity.y)
+                    ? new Vector2(requestedVelocity.x, 0f)
+                    : new Vector2(0f, requestedVelocity.y);
+            }
+
+            if (canMoveX)
+            {
+                return new Vector2(requestedVelocity.x, 0f);
+            }
+
+            if (canMoveY)
+            {
+                return new Vector2(0f, requestedVelocity.y);
+            }
+
+            return Vector2.zero;
+        }
+
+        public bool TryGetNearestWalkablePoint(Vector2 requestedPoint, out Vector2 walkablePoint)
+        {
+            walkablePoint = requestedPoint;
+            if (!mapCollisionEnabled || IsWalkable(requestedPoint))
+            {
+                return true;
+            }
+
+            const int angleSteps = 20;
+            const float radiusStep = 0.2f;
+            const float maxRadius = 2.8f;
+            for (float radius = radiusStep; radius <= maxRadius; radius += radiusStep)
+            {
+                for (int i = 0; i < angleSteps; i++)
+                {
+                    float angle = i * Mathf.PI * 2f / angleSteps;
+                    Vector2 candidate = requestedPoint + new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * radius;
+                    if (IsWalkable(candidate))
+                    {
+                        walkablePoint = candidate;
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        public bool IsWalkable(Vector2 point)
+        {
+            if (!mapCollisionEnabled)
+            {
+                return true;
+            }
+
+            float radius = Mathf.Max(0f, characterRadius);
+            return IsPointWalkable(point)
+                && IsPointWalkable(point + new Vector2(radius, 0f))
+                && IsPointWalkable(point + new Vector2(-radius, 0f))
+                && IsPointWalkable(point + new Vector2(0f, radius))
+                && IsPointWalkable(point + new Vector2(0f, -radius));
+        }
+
+        private bool IsPointWalkable(Vector2 point)
+        {
+            for (int i = 0; i < blockedZones.Length; i++)
+            {
+                if (blockedZones[i].Contains(point))
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        private void RebuildPhysicsBlockers()
+        {
+            GameObject oldRoot = GameObject.Find(BlockerRootName);
+            if (oldRoot != null)
+            {
+                Destroy(oldRoot);
+            }
+
+            blockerRoot = new GameObject(BlockerRootName);
+
+            for (int i = 0; i < blockedZones.Length; i++)
+            {
+                Rect zone = blockedZones[i];
+                GameObject blocker = new GameObject($"Village Blocker {i + 1:00}");
+                blocker.transform.SetParent(blockerRoot.transform, false);
+                blocker.transform.position = new Vector3(zone.center.x, zone.center.y, 0f);
+
+                BoxCollider2D collider = blocker.AddComponent<BoxCollider2D>();
+                collider.isTrigger = false;
+                collider.size = zone.size;
+
+                if (showDebugBlockers)
+                {
+                    GameObject visual = new GameObject("Debug Visual");
+                    visual.transform.SetParent(blocker.transform, false);
+                    SpriteRenderer renderer = visual.AddComponent<SpriteRenderer>();
+                    renderer.sprite = WitcherSpriteLibrary.GetSolidSprite(new Color32(255, 64, 64, 64));
+                    renderer.color = new Color32(255, 64, 64, 64);
+                    renderer.sortingOrder = 300;
+                    visual.transform.localScale = new Vector3(zone.width, zone.height, 1f);
+                }
+            }
+        }
+    }
+}

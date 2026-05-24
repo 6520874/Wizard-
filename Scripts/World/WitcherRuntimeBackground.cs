@@ -8,6 +8,7 @@ namespace WitcherGame
     public class WitcherRuntimeBackground : MonoBehaviour
     {
         [SerializeField] private string imagePath = "Art/Backgrounds/Witcher_Village_Longroad.png";
+        [SerializeField] private string preferredImagePath = "Art/Backgrounds/Witcher_Isometric_Village.png";
         [SerializeField]
         private string[] segmentImagePaths = System.Array.Empty<string>();
         [SerializeField] private float pixelsPerUnit = 64f;
@@ -15,18 +16,24 @@ namespace WitcherGame
         [SerializeField] private bool fitToCamera = false;
         [SerializeField] private float worldWidth = 64f;
         [SerializeField] private Vector2 worldCenter = new Vector2(24f, -0.35f);
+        [SerializeField] private float preferredWorldWidth = 26f;
+        [SerializeField] private Vector2 preferredWorldCenter = Vector2.zero;
         [SerializeField] private float segmentWorldWidth = 64f;
         [SerializeField] private float segmentOverlap = 1.2f;
         [SerializeField] private float seamFogWidth = 2.1f;
         [SerializeField] private bool showSeamFog;
 
         private SpriteRenderer spriteRenderer;
+        private bool isUsingPreferredMap;
+
+        public bool IsUsingPreferredMap => isUsingPreferredMap;
 
         private void Awake()
         {
             spriteRenderer = GetComponent<SpriteRenderer>();
             spriteRenderer.sortingOrder = sortingOrder;
-            if (HasSegments)
+            isUsingPreferredMap = HasAssetFile(preferredImagePath);
+            if (!isUsingPreferredMap && HasSegments)
             {
                 spriteRenderer.enabled = false;
                 BuildSegmentedBackground();
@@ -34,7 +41,7 @@ namespace WitcherGame
             }
 
             ClearSegmentChildren();
-            LoadSprite(spriteRenderer, imagePath);
+            LoadSprite(spriteRenderer, isUsingPreferredMap ? preferredImagePath : imagePath);
         }
 
         private void Start()
@@ -55,17 +62,25 @@ namespace WitcherGame
                 return;
             }
 
-            if (spriteRenderer.sprite == null || worldWidth <= 0f)
+            float activeWorldWidth = isUsingPreferredMap ? preferredWorldWidth : worldWidth;
+            Vector2 activeWorldCenter = isUsingPreferredMap ? preferredWorldCenter : worldCenter;
+            if (spriteRenderer.sprite == null || activeWorldWidth <= 0f)
             {
                 return;
             }
 
-            float scale = worldWidth / spriteRenderer.sprite.bounds.size.x;
+            float scale = activeWorldWidth / spriteRenderer.sprite.bounds.size.x;
             transform.localScale = new Vector3(scale, scale, 1f);
-            transform.position = new Vector3(worldCenter.x, worldCenter.y, 8f);
+            transform.position = new Vector3(activeWorldCenter.x, activeWorldCenter.y, 8f);
         }
 
         private bool HasSegments => segmentImagePaths != null && segmentImagePaths.Length > 0;
+
+        private static bool HasAssetFile(string assetRelativePath)
+        {
+            return !string.IsNullOrWhiteSpace(assetRelativePath)
+                && File.Exists(Path.Combine(Application.dataPath, assetRelativePath));
+        }
 
         private void BuildSegmentedBackground()
         {

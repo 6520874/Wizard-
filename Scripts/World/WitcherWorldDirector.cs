@@ -10,6 +10,12 @@ namespace WitcherGame
         private const float MaxStageX = 55.6f;
         private const float MinStageY = -2.55f;
         private const float MaxStageY = 5f;
+        private const float VillageStartX = -0.35f;
+        private const float VillageStartY = -1.15f;
+        private const float VillageMinStageX = -12.35f;
+        private const float VillageMaxStageX = 12.35f;
+        private const float VillageMinStageY = -6.35f;
+        private const float VillageMaxStageY = 5.85f;
 
         private GeraltController player;
         private WitcherHud hud;
@@ -74,20 +80,21 @@ namespace WitcherGame
             int previousRoom = roomIndex;
             roomIndex = (requestedRoomIndex + rooms.Length) % rooms.Length;
             RoomDefinition room = rooms[roomIndex];
+            StageBounds stageBounds = GetActiveStageBounds();
 
-            player.ConfigureStage(MinStageX, MaxStageX, MinStageY, MaxStageY);
+            player.ConfigureStage(stageBounds.MinX, stageBounds.MaxX, stageBounds.MinY, stageBounds.MaxY);
             if (preserveDirection)
             {
-                float spawnX = requestedRoomIndex > previousRoom ? MinStageX + 0.45f : MaxStageX - 0.45f;
-                player.WarpTo(new Vector2(spawnX, StartY));
+                float spawnX = requestedRoomIndex > previousRoom ? stageBounds.MinX + 0.45f : stageBounds.MaxX - 0.45f;
+                player.WarpTo(new Vector2(spawnX, stageBounds.StartY));
             }
             else
             {
-                player.WarpTo(new Vector2(MinStageX + 1.15f, StartY));
+                player.WarpTo(new Vector2(stageBounds.StartX, stageBounds.StartY));
             }
 
             ApplyRoomLook(room);
-            EnsureCameraFollow();
+            EnsureCameraFollow(stageBounds);
 
             hud = hud == null ? FindObjectOfType<WitcherHud>() : hud;
             if (hud != null)
@@ -102,6 +109,8 @@ namespace WitcherGame
             if (background != null && background.TryGetComponent(out SpriteRenderer backgroundRenderer))
             {
                 backgroundRenderer.color = room.BackgroundTint;
+                WitcherRuntimeBackground runtimeBackground = background.GetComponent<WitcherRuntimeBackground>();
+                EnsureVillageWalkableMap(background, runtimeBackground != null && runtimeBackground.IsUsingPreferredMap);
 
                 // WitcherAtmosphereLayer atmosphere = background.GetComponent<WitcherAtmosphereLayer>();
                 // if (atmosphere == null)
@@ -125,7 +134,44 @@ namespace WitcherGame
             }
         }
 
-        private void EnsureCameraFollow()
+        private void EnsureVillageWalkableMap(GameObject background, bool isEnabled)
+        {
+            WitcherVillageWalkableMap walkableMap = background.GetComponent<WitcherVillageWalkableMap>();
+            if (walkableMap == null && isEnabled)
+            {
+                walkableMap = background.AddComponent<WitcherVillageWalkableMap>();
+            }
+
+            if (walkableMap != null)
+            {
+                walkableMap.enabled = isEnabled;
+            }
+        }
+
+        private StageBounds GetActiveStageBounds()
+        {
+            WitcherRuntimeBackground runtimeBackground = FindObjectOfType<WitcherRuntimeBackground>();
+            if (runtimeBackground != null && runtimeBackground.IsUsingPreferredMap)
+            {
+                return new StageBounds(
+                    VillageStartX,
+                    VillageStartY,
+                    VillageMinStageX,
+                    VillageMaxStageX,
+                    VillageMinStageY,
+                    VillageMaxStageY);
+            }
+
+            return new StageBounds(
+                MinStageX + 1.15f,
+                StartY,
+                MinStageX,
+                MaxStageX,
+                MinStageY,
+                MaxStageY);
+        }
+
+        private void EnsureCameraFollow(StageBounds stageBounds)
         {
             Camera camera = Camera.main;
             if (camera == null || player == null)
@@ -133,7 +179,7 @@ namespace WitcherGame
                 return;
             }
 
-            camera.orthographicSize = 3.8f;
+            camera.orthographicSize = stageBounds.MaxX - stageBounds.MinX > 30f ? 3.8f : 4.6f;
             WitcherCameraFollow follow = camera.GetComponent<WitcherCameraFollow>();
             if (follow == null)
             {
@@ -141,7 +187,27 @@ namespace WitcherGame
             }
 
             follow.SetTarget(player.transform);
-            follow.ConfigureBounds(MinStageX, MaxStageX, MinStageY + 1.25f, MaxStageY);
+            follow.ConfigureBounds(stageBounds.MinX, stageBounds.MaxX, stageBounds.MinY + 1.1f, stageBounds.MaxY);
+        }
+
+        private readonly struct StageBounds
+        {
+            public StageBounds(float startX, float startY, float minX, float maxX, float minY, float maxY)
+            {
+                StartX = startX;
+                StartY = startY;
+                MinX = minX;
+                MaxX = maxX;
+                MinY = minY;
+                MaxY = maxY;
+            }
+
+            public float StartX { get; }
+            public float StartY { get; }
+            public float MinX { get; }
+            public float MaxX { get; }
+            public float MinY { get; }
+            public float MaxY { get; }
         }
 
         private readonly struct RoomDefinition
