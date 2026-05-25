@@ -76,6 +76,14 @@ namespace WitcherGame
             ConfigureTriggerBounds(new Vector2(0f, 0.95f), new Vector2(2.35f, 1.95f), 1.65f, 1.35f);
         }
 
+        public void ApplyMapScale(float visualScale)
+        {
+            float safeScale = Mathf.Clamp(visualScale, 0.15f, 1.5f);
+            transform.localScale = Vector3.one * safeScale;
+            triggerHalfWidth *= safeScale;
+            triggerHalfHeight *= safeScale;
+        }
+
         public List<TurnBasedEnemyState> CreateBattleEnemies()
         {
             List<TurnBasedEnemyState> result = new List<TurnBasedEnemyState>();

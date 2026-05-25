@@ -27,6 +27,8 @@ namespace WitcherGame
         [SerializeField] private float maxStageX = 55.6f;
         [SerializeField] private float minStageY = -2.35f;
         [SerializeField] private float maxStageY = 3.8f;
+        [SerializeField] private float villageMonsterScale = 0.36f;
+        [SerializeField] private float villageBossScale = 0.32f;
         [SerializeField] private WitcherFixedEncounterPoint[] fixedEncounterPoints =
         {
             new WitcherFixedEncounterPoint { kind = WitcherFixedEncounterKind.BlackMoonKnight, position = new Vector2(5.8f, -1.55f), enemyCount = 1 },
@@ -67,27 +69,35 @@ namespace WitcherGame
 
         private void SpawnFixedEncounterSet()
         {
-            WitcherFixedEncounterPoint[] points = fixedEncounterPoints == null || fixedEncounterPoints.Length == 0
-                ? GetDefaultFixedEncounters()
-                : fixedEncounterPoints;
+            bool usingVillageMap = IsUsingVillageMap();
+            WitcherFixedEncounterPoint[] points = usingVillageMap
+                ? GetVillageFixedEncounters()
+                : fixedEncounterPoints == null || fixedEncounterPoints.Length == 0
+                    ? GetDefaultFixedEncounters()
+                    : fixedEncounterPoints;
+
+            float activeMinX = usingVillageMap ? -12.1f : minStageX;
+            float activeMaxX = usingVillageMap ? 12.1f : maxStageX;
+            float activeMinY = usingVillageMap ? -5.95f : minStageY;
+            float activeMaxY = usingVillageMap ? 4.9f : maxStageY;
 
             for (int i = 0; i < points.Length; i++)
             {
                 WitcherFixedEncounterPoint point = points[i];
                 Vector2 position = new Vector2(
-                    Mathf.Clamp(point.position.x, minStageX, maxStageX),
-                    Mathf.Clamp(point.position.y, minStageY, maxStageY));
+                    Mathf.Clamp(point.position.x, activeMinX, activeMaxX),
+                    Mathf.Clamp(point.position.y, activeMinY, activeMaxY));
 
                 switch (point.kind)
                 {
                     case WitcherFixedEncounterKind.BloodWraith:
-                        SpawnEncounter(position, TurnBasedEnemyVisualKind.BloodWraith, Mathf.Max(1, point.enemyCount));
+                        SpawnEncounter(position, TurnBasedEnemyVisualKind.BloodWraith, Mathf.Max(1, point.enemyCount), usingVillageMap);
                         break;
                     case WitcherFixedEncounterKind.BlackMoonKnight:
-                        SpawnKnightEncounter(position);
+                        SpawnKnightEncounter(position, usingVillageMap);
                         break;
                     default:
-                        SpawnEncounter(position, TurnBasedEnemyVisualKind.CorruptedWolf, Mathf.Max(1, point.enemyCount));
+                        SpawnEncounter(position, TurnBasedEnemyVisualKind.CorruptedWolf, Mathf.Max(1, point.enemyCount), usingVillageMap);
                         break;
                 }
             }
@@ -105,20 +115,48 @@ namespace WitcherGame
             };
         }
 
-        private void SpawnEncounter(Vector2 position, TurnBasedEnemyVisualKind kind, int encounterCount)
+        private static WitcherFixedEncounterPoint[] GetVillageFixedEncounters()
+        {
+            return new[]
+            {
+                new WitcherFixedEncounterPoint { kind = WitcherFixedEncounterKind.CorruptedWolf, position = new Vector2(-7.15f, -1.8f), enemyCount = 2 },
+                new WitcherFixedEncounterPoint { kind = WitcherFixedEncounterKind.BloodWraith, position = new Vector2(-3.75f, -4.35f), enemyCount = 1 },
+                new WitcherFixedEncounterPoint { kind = WitcherFixedEncounterKind.BlackMoonKnight, position = new Vector2(0.25f, 0.65f), enemyCount = 1 },
+                new WitcherFixedEncounterPoint { kind = WitcherFixedEncounterKind.CorruptedWolf, position = new Vector2(5.25f, -2.05f), enemyCount = 3 },
+                new WitcherFixedEncounterPoint { kind = WitcherFixedEncounterKind.BloodWraith, position = new Vector2(9.05f, -0.2f), enemyCount = 1 }
+            };
+        }
+
+        private static bool IsUsingVillageMap()
+        {
+            WitcherRuntimeBackground background = FindObjectOfType<WitcherRuntimeBackground>();
+            return background != null && background.IsUsingPreferredMap;
+        }
+
+        private void SpawnEncounter(Vector2 position, TurnBasedEnemyVisualKind kind, int encounterCount, bool useVillageScale)
         {
             string enemyName = kind == TurnBasedEnemyVisualKind.BloodWraith ? "Blood Wraith Encounter" : "Corrupted Wolf Encounter";
             GameObject enemyObject = CreateEncounterObject(enemyName, position);
             BattleEncounterTrigger trigger = enemyObject.AddComponent<BattleEncounterTrigger>();
             trigger.ConfigureMonster(kind, enemyObject.GetComponent<SpriteRenderer>().sprite, Mathf.Max(1, encounterCount), 0);
+            if (useVillageScale)
+            {
+                trigger.ApplyMapScale(villageMonsterScale);
+            }
+
             activeEncounters.Add(enemyObject);
         }
 
-        private void SpawnKnightEncounter(Vector2 position)
+        private void SpawnKnightEncounter(Vector2 position, bool useVillageScale)
         {
             GameObject knightObject = CreateEncounterObject("Moonlit Knight Encounter", position);
             BattleEncounterTrigger trigger = knightObject.AddComponent<BattleEncounterTrigger>();
             trigger.ConfigureBoss(knightObject.GetComponent<SpriteRenderer>().sprite, 0);
+            if (useVillageScale)
+            {
+                trigger.ApplyMapScale(villageBossScale);
+            }
+
             activeEncounters.Add(knightObject);
         }
 
