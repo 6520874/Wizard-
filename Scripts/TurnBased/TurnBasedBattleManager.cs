@@ -54,6 +54,13 @@ namespace WitcherGame
 
         private const float TurnActionThreshold = 100f;
         private const int PlayerTurnSpeed = 116;
+        private static readonly TurnBattleAction[] PlayerCommandOrder =
+        {
+            TurnBattleAction.Attack,
+            TurnBattleAction.FlameSign,
+            TurnBattleAction.Item,
+            TurnBattleAction.Defend
+        };
 
         private static TurnBasedBattleManager instance;
 
@@ -69,8 +76,11 @@ namespace WitcherGame
         private bool battleActive;
         private bool resolvingTurn;
         private bool worldRenderingPaused;
+        private bool nextTurnIsPlayer;
+        private bool battleEndSequenceStarted;
         private int potionCount;
         private int turnNumber;
+        private int selectedCommandIndex;
 
         public bool BattleActive => battleActive;
         public int TurnNumber => Mathf.Max(1, turnNumber);
@@ -160,7 +170,19 @@ namespace WitcherGame
                 return;
             }
 
-            if (Input.GetKeyDown(KeyCode.Alpha1))
+            if (Input.GetKeyDown(KeyCode.LeftArrow) || Input.GetKeyDown(KeyCode.UpArrow))
+            {
+                MoveSelectedCommand(-1);
+            }
+            else if (Input.GetKeyDown(KeyCode.RightArrow) || Input.GetKeyDown(KeyCode.DownArrow))
+            {
+                MoveSelectedCommand(1);
+            }
+            else if (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.Space))
+            {
+                SelectAction(PlayerCommandOrder[selectedCommandIndex]);
+            }
+            else if (Input.GetKeyDown(KeyCode.Alpha1))
             {
                 SelectAction(TurnBattleAction.Attack);
             }
@@ -170,15 +192,11 @@ namespace WitcherGame
             }
             else if (Input.GetKeyDown(KeyCode.Alpha3))
             {
-                SelectAction(TurnBattleAction.Defend);
+                SelectAction(TurnBattleAction.Item);
             }
             else if (Input.GetKeyDown(KeyCode.Alpha4))
             {
-                SelectAction(TurnBattleAction.Item);
-            }
-            else if (Input.GetKeyDown(KeyCode.Alpha5))
-            {
-                SelectAction(TurnBattleAction.Escape);
+                SelectAction(TurnBattleAction.Defend);
             }
         }
 
@@ -208,12 +226,16 @@ namespace WitcherGame
             currentEncounter.PrepareForBattle();
             battleActive = true;
             resolvingTurn = true;
+            nextTurnIsPlayer = true;
+            battleEndSequenceStarted = false;
+            selectedCommandIndex = 0;
             playerStatuses.Clear();
             turnNumber = 1;
             BuildTurnUnits();
 
             battleHud = TurnBasedBattleHud.CreateIfMissing(this);
             battleHud.Show(enemies, player, potionCount);
+            battleHud.SetSelectedCommand(selectedCommandIndex);
             battleHud.SetCommandsEnabled(false);
             PauseWorldRendering();
             battleHud.SetMessage($"遭遇 {currentEncounter.EncounterTitle}！");
@@ -257,6 +279,17 @@ namespace WitcherGame
             }
 
             StartCoroutine(ResolveSelectedSkill(skill));
+        }
+
+        private void MoveSelectedCommand(int delta)
+        {
+            if (PlayerCommandOrder.Length == 0)
+            {
+                return;
+            }
+
+            selectedCommandIndex = (selectedCommandIndex + delta + PlayerCommandOrder.Length) % PlayerCommandOrder.Length;
+            battleHud?.SetSelectedCommand(selectedCommandIndex);
         }
 
         private void SetPlayer(GeraltController target)
@@ -310,10 +343,11 @@ namespace WitcherGame
             {
                 resolvingTurn = false;
                 battleHud.SetCommandsEnabled(true);
+                battleHud.SetSelectedCommand(selectedCommandIndex);
                 yield break;
             }
 
-            turnNumber++;
+            nextTurnIsPlayer = false;
             yield return DispatchNextTurn(0.18f);
         }
 
@@ -330,7 +364,7 @@ namespace WitcherGame
                 yield break;
             }
 
-            turnNumber++;
+            nextTurnIsPlayer = false;
             yield return DispatchNextTurn(0.18f);
         }
 
@@ -435,7 +469,7 @@ namespace WitcherGame
                 yield break;
             }
 
-            activeTurnUnit = TakeNextTurnUnit();
+            activeTurnUnit = nextTurnIsPlayer ? GetPlayerTurnUnit() : GetFirstLivingEnemyTurnUnit();
             if (activeTurnUnit == null)
             {
                 resolvingTurn = false;
@@ -447,8 +481,10 @@ namespace WitcherGame
             if (activeTurnUnit.IsPlayer)
             {
                 resolvingTurn = false;
+                selectedCommandIndex = 0;
                 battleHud.SetCommandsEnabled(true);
-                battleHud.SetMessage("猎魔人准备行动。  1攻击  2技能  3防御  4物品  5逃跑");
+                battleHud.SetSelectedCommand(selectedCommandIndex);
+                battleHud.SetMessage("玩家回合：选择攻击、技能、道具或防御。");
                 yield break;
             }
 
@@ -458,6 +494,8 @@ namespace WitcherGame
                 yield break;
             }
 
+            nextTurnIsPlayer = true;
+            turnNumber++;
             yield return DispatchNextTurn(0.18f);
         }
 
@@ -472,22 +510,24 @@ namespace WitcherGame
             TurnBasedEnemyState enemy = enemies[enemyIndex];
             int rawDamage = Mathf.Max(1, enemy.Attack + Random.Range(-2, 3) - playerDefense);
             int damage = CalculatePlayerIncomingDamage(rawDamage);
-            battleHud.SetMessage($"{enemy.Name} 抢到先机，造成 {damage} 点伤害！");
+            battleHud.SetMessage($"敌人回合：{enemy.Name} 发起攻击，造成 {damage} 点伤害！");
             yield return battleHud.PlayEnemyAttack(enemyIndex);
             player.TakeTurnBasedDamage(damage, player.transform.position.x + 1f);
             yield return battleHud.PlayPlayerHurt(damage);
             ConsumePlayerStatusTurns();
             battleHud.Refresh(enemies, player, potionCount);
             yield return Wait(0.24f);
-            turnNumber++;
         }
 
         private bool CheckBattleEnded()
         {
             if (player == null || !player.IsAlive)
             {
-                battleHud.SetMessage("你失败了……");
-                resolvingTurn = true;
+                if (!battleEndSequenceStarted)
+                {
+                    StartCoroutine(LoseBattle());
+                }
+
                 return true;
             }
 
@@ -496,12 +536,17 @@ namespace WitcherGame
                 return false;
             }
 
-            StartCoroutine(WinBattle());
+            if (!battleEndSequenceStarted)
+            {
+                StartCoroutine(WinBattle());
+            }
+
             return true;
         }
 
         private IEnumerator WinBattle()
         {
+            battleEndSequenceStarted = true;
             resolvingTurn = true;
             int reward = 0;
             foreach (TurnBasedEnemyState enemy in enemies)
@@ -509,10 +554,20 @@ namespace WitcherGame
                 reward += Mathf.Max(1, enemy.ExperienceReward);
             }
 
-            battleHud.SetMessage($"胜利！获得 {reward} 点猎魔经验。");
+            battleHud.SetMessage($"战斗胜利！获得 {reward} 点猎魔经验。");
             WitcherCombatText.Spawn($"+{reward} XP", player.transform.position + Vector3.up * 1.2f, new Color32(255, 219, 91, 255));
             yield return Wait(0.9f);
             EndBattle(true, true);
+        }
+
+        private IEnumerator LoseBattle()
+        {
+            battleEndSequenceStarted = true;
+            resolvingTurn = true;
+            battleHud.SetCommandsEnabled(false);
+            battleHud.SetMessage("战斗失败……");
+            yield return Wait(1.1f);
+            EndBattle(false, false);
         }
 
         private void EndBattle(bool won, bool consumeEncounter)
@@ -530,6 +585,8 @@ namespace WitcherGame
             ResumeWorldRendering();
             battleActive = false;
             resolvingTurn = false;
+            nextTurnIsPlayer = true;
+            battleEndSequenceStarted = false;
             playerStatuses.Clear();
             currentEncounter = null;
             enemies.Clear();
@@ -764,35 +821,55 @@ namespace WitcherGame
                 return preview;
             }
 
-            if (IsTurnUnitAlive(activeTurnUnit))
-            {
-                preview.Add(CreateTimelineEntry(activeTurnUnit, 1f));
-            }
+            BattleTurnUnit playerTurn = GetPlayerTurnUnit();
+            BattleTurnUnit enemyTurn = GetFirstLivingEnemyTurnUnit();
+            bool wantsPlayer = activeTurnUnit == null ? nextTurnIsPlayer : activeTurnUnit.IsPlayer;
 
-            List<TimelineSimulationUnit> simulation = CreateTimelineSimulation();
-            int safety = 0;
-            while (preview.Count < count && simulation.Count > 0 && safety < 256)
+            for (int i = 0; i < count; i++)
             {
-                safety++;
-                int readyIndex = FindReadySimulationUnit(simulation);
-                if (readyIndex >= 0)
+                BattleTurnUnit unit = wantsPlayer ? playerTurn : enemyTurn;
+                if (!IsTurnUnitAlive(unit))
                 {
-                    TimelineSimulationUnit ready = simulation[readyIndex];
-                    ready.ActionValue -= TurnActionThreshold;
-                    simulation[readyIndex] = ready;
-                    preview.Add(CreateTimelineEntry(ready.Source, 1f));
-                    continue;
+                    unit = IsTurnUnitAlive(playerTurn) ? playerTurn : enemyTurn;
                 }
 
-                for (int i = 0; i < simulation.Count; i++)
+                if (!IsTurnUnitAlive(unit))
                 {
-                    TimelineSimulationUnit unit = simulation[i];
-                    unit.ActionValue += Mathf.Max(1, unit.Speed);
-                    simulation[i] = unit;
+                    break;
                 }
+
+                preview.Add(CreateTimelineEntry(unit, i == 0 ? 1f : 0.68f));
+                wantsPlayer = !unit.IsPlayer;
             }
 
             return preview;
+        }
+
+        private BattleTurnUnit GetPlayerTurnUnit()
+        {
+            for (int i = 0; i < turnUnits.Count; i++)
+            {
+                if (turnUnits[i].IsPlayer)
+                {
+                    return turnUnits[i];
+                }
+            }
+
+            return null;
+        }
+
+        private BattleTurnUnit GetFirstLivingEnemyTurnUnit()
+        {
+            for (int i = 0; i < turnUnits.Count; i++)
+            {
+                BattleTurnUnit unit = turnUnits[i];
+                if (IsLivingEnemyTurn(unit))
+                {
+                    return unit;
+                }
+            }
+
+            return null;
         }
 
         private List<TimelineSimulationUnit> CreateTimelineSimulation()
