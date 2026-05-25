@@ -430,15 +430,15 @@ namespace WitcherGame
 
             BuildTurnTimeline(root.transform);
 
-            Image playerGlow = CreateCenteredImage("Battle Player Ground Glow", root.transform, new Vector2(190f, 46f), new Vector2(-304f, -36f), new Color32(42, 143, 255, 88));
+            Image playerGlow = CreateCenteredImage("Battle Player Ground Glow", root.transform, new Vector2(190f, 46f), new Vector2(-304f, -108f), new Color32(42, 143, 255, 88));
             playerGlow.sprite = GetGroundGlowSprite();
             playerGlow.raycastTarget = false;
 
-            Image playerShadow = CreateCenteredImage("Battle Player Ground Shadow", root.transform, new Vector2(160f, 34f), new Vector2(-304f, -44f), new Color32(0, 0, 0, 180));
+            Image playerShadow = CreateCenteredImage("Battle Player Ground Shadow", root.transform, new Vector2(160f, 34f), new Vector2(-304f, -116f), new Color32(0, 0, 0, 180));
             playerShadow.sprite = GetGroundShadowSprite();
             playerShadow.raycastTarget = false;
 
-            playerFigure = CreateCenteredImage("Battle Player Figure", root.transform, new Vector2(148f, 174f), new Vector2(-304f, 42f), Color.white);
+            playerFigure = CreateCenteredImage("Battle Player Figure", root.transform, new Vector2(148f, 174f), new Vector2(-304f, -30f), Color.white);
             playerFigure.sprite = GetPlayerIdleFrame();
             playerFigureHomePosition = playerFigure.rectTransform.anchoredPosition;
             playerFigure.preserveAspect = true;
