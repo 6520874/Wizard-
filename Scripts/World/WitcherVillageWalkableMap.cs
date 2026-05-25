@@ -6,6 +6,7 @@ namespace WitcherGame
     public class WitcherVillageWalkableMap : MonoBehaviour
     {
         [SerializeField] private bool mapCollisionEnabled = true;
+        [SerializeField] private bool restrictToRoadMask = true;
         [SerializeField] private bool createPhysicsBlockers = true;
         [SerializeField] private bool showDebugBlockers;
         [SerializeField] private float characterRadius = 0.26f;
@@ -26,6 +27,77 @@ namespace WitcherGame
         };
 
         private const string BlockerRootName = "Village Collision Blockers";
+        private static readonly Vector2[][] RoadMasks =
+        {
+            new[]
+            {
+                new Vector2(-3.9f, -6.45f),
+                new Vector2(3.8f, -6.45f),
+                new Vector2(4.65f, -3.15f),
+                new Vector2(4.15f, -0.95f),
+                new Vector2(2.55f, 2.95f),
+                new Vector2(1.45f, 5.65f),
+                new Vector2(-1.35f, 5.65f),
+                new Vector2(-2.75f, 2.75f),
+                new Vector2(-4.35f, -0.65f),
+                new Vector2(-4.75f, -3.4f)
+            },
+            new[]
+            {
+                new Vector2(-12.2f, -0.75f),
+                new Vector2(-9.25f, -1.65f),
+                new Vector2(-6.55f, -2.85f),
+                new Vector2(-3.8f, -2.35f),
+                new Vector2(-3.35f, -0.6f),
+                new Vector2(-5.95f, 0.3f),
+                new Vector2(-8.65f, 0.75f),
+                new Vector2(-12.2f, 0.95f)
+            },
+            new[]
+            {
+                new Vector2(-7.35f, -4.9f),
+                new Vector2(-3.35f, -4.95f),
+                new Vector2(-2.75f, -3.35f),
+                new Vector2(-5.85f, -2.7f),
+                new Vector2(-8.25f, -2.15f),
+                new Vector2(-9.85f, -3.35f)
+            },
+            new[]
+            {
+                new Vector2(2.9f, -2.9f),
+                new Vector2(7.15f, -2.85f),
+                new Vector2(9.65f, -1.1f),
+                new Vector2(10.25f, 0.55f),
+                new Vector2(7.85f, 1.1f),
+                new Vector2(4.15f, 0.1f),
+                new Vector2(3.35f, -0.95f)
+            },
+            new[]
+            {
+                new Vector2(8.65f, -0.85f),
+                new Vector2(12.2f, -1.25f),
+                new Vector2(12.2f, 1.1f),
+                new Vector2(10.1f, 1.05f),
+                new Vector2(8.25f, 0.55f)
+            },
+            new[]
+            {
+                new Vector2(5.75f, 1.55f),
+                new Vector2(11.65f, 1.25f),
+                new Vector2(12.2f, 3.65f),
+                new Vector2(9.1f, 4.4f),
+                new Vector2(6.65f, 3.35f)
+            },
+            new[]
+            {
+                new Vector2(-12.2f, 2.05f),
+                new Vector2(-8.95f, 1.05f),
+                new Vector2(-6.9f, 1.25f),
+                new Vector2(-6.45f, 2.65f),
+                new Vector2(-8.8f, 3.55f),
+                new Vector2(-12.2f, 4.1f)
+            }
+        };
 
         public static WitcherVillageWalkableMap Current { get; private set; }
         private GameObject blockerRoot;
@@ -156,6 +228,11 @@ namespace WitcherGame
 
         private bool IsPointWalkable(Vector2 point)
         {
+            if (restrictToRoadMask && !IsInsideAnyRoadMask(point))
+            {
+                return false;
+            }
+
             for (int i = 0; i < blockedZones.Length; i++)
             {
                 if (blockedZones[i].Contains(point))
@@ -165,6 +242,38 @@ namespace WitcherGame
             }
 
             return true;
+        }
+
+        private static bool IsInsideAnyRoadMask(Vector2 point)
+        {
+            for (int i = 0; i < RoadMasks.Length; i++)
+            {
+                if (IsInsidePolygon(point, RoadMasks[i]))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private static bool IsInsidePolygon(Vector2 point, Vector2[] polygon)
+        {
+            bool inside = false;
+            for (int i = 0, j = polygon.Length - 1; i < polygon.Length; j = i++)
+            {
+                bool crossesY = polygon[i].y > point.y != polygon[j].y > point.y;
+                if (crossesY)
+                {
+                    float xAtY = (polygon[j].x - polygon[i].x) * (point.y - polygon[i].y) / (polygon[j].y - polygon[i].y) + polygon[i].x;
+                    if (point.x < xAtY)
+                    {
+                        inside = !inside;
+                    }
+                }
+            }
+
+            return inside;
         }
 
         private void RebuildPhysicsBlockers()
