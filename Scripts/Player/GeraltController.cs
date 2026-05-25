@@ -71,6 +71,7 @@ namespace WitcherGame
             WitcherHud.CreateIfMissing(this);
             WitcherWorldDirector.CreateIfMissing(this);
             TurnBasedBattleManager.CreateIfMissing(this);
+            PlayerInventory.CreateIfMissing(this);
         }
 
         private void Update()
@@ -141,7 +142,7 @@ namespace WitcherGame
             {
                 TryDash(movement.x);
             }
-            else if (Input.GetKeyDown(KeyCode.E))
+            else if (Input.GetKeyDown(KeyCode.E) && !WitcherEquipmentShopTrigger.ShouldBlockPlayerHealInput)
             {
                 TryHeal();
             }
