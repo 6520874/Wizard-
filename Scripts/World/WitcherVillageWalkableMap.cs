@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace WitcherGame
@@ -8,8 +9,10 @@ namespace WitcherGame
         [SerializeField] private bool mapCollisionEnabled = true;
         [SerializeField] private bool restrictToRoadMask = true;
         [SerializeField] private bool createPhysicsBlockers = true;
+        [SerializeField] private bool usePhysicsQueries = true;
         [SerializeField] private bool showDebugBlockers;
         [SerializeField] private float characterRadius = 0.26f;
+        [SerializeField] private float castSkin = 0.03f;
         [SerializeField]
         private Rect[] blockedZones =
         {
@@ -101,6 +104,9 @@ namespace WitcherGame
 
         public static WitcherVillageWalkableMap Current { get; private set; }
         private GameObject blockerRoot;
+        private readonly HashSet<Collider2D> blockerColliders = new HashSet<Collider2D>();
+        private readonly Collider2D[] overlapResults = new Collider2D[32];
+        private readonly RaycastHit2D[] castResults = new RaycastHit2D[32];
 
         private void Awake()
         {
@@ -152,16 +158,15 @@ namespace WitcherGame
                 return requestedVelocity;
             }
 
-            Vector2 desiredPosition = currentPosition + requestedVelocity * deltaTime;
-            if (IsWalkable(desiredPosition))
+            if (CanMoveTo(currentPosition, requestedVelocity, deltaTime))
             {
                 return requestedVelocity;
             }
 
-            Vector2 xOnlyPosition = currentPosition + new Vector2(requestedVelocity.x * deltaTime, 0f);
-            Vector2 yOnlyPosition = currentPosition + new Vector2(0f, requestedVelocity.y * deltaTime);
-            bool canMoveX = Mathf.Abs(requestedVelocity.x) > 0.001f && IsWalkable(xOnlyPosition);
-            bool canMoveY = Mathf.Abs(requestedVelocity.y) > 0.001f && IsWalkable(yOnlyPosition);
+            Vector2 xOnlyVelocity = new Vector2(requestedVelocity.x, 0f);
+            Vector2 yOnlyVelocity = new Vector2(0f, requestedVelocity.y);
+            bool canMoveX = Mathf.Abs(requestedVelocity.x) > 0.001f && CanMoveTo(currentPosition, xOnlyVelocity, deltaTime);
+            bool canMoveY = Mathf.Abs(requestedVelocity.y) > 0.001f && CanMoveTo(currentPosition, yOnlyVelocity, deltaTime);
 
             if (canMoveX && canMoveY)
             {
@@ -181,6 +186,17 @@ namespace WitcherGame
             }
 
             return Vector2.zero;
+        }
+
+        private bool CanMoveTo(Vector2 currentPosition, Vector2 requestedVelocity, float deltaTime)
+        {
+            Vector2 desiredPosition = currentPosition + requestedVelocity * deltaTime;
+            if (!IsWalkable(desiredPosition))
+            {
+                return false;
+            }
+
+            return !usePhysicsQueries || !HitsPhysicsBlocker(currentPosition, requestedVelocity, deltaTime);
         }
 
         public bool TryGetNearestWalkablePoint(Vector2 requestedPoint, out Vector2 walkablePoint)
@@ -218,21 +234,26 @@ namespace WitcherGame
                 return true;
             }
 
-            float radius = Mathf.Max(0f, characterRadius);
-            return IsPointWalkable(point)
-                && IsPointWalkable(point + new Vector2(radius, 0f))
-                && IsPointWalkable(point + new Vector2(-radius, 0f))
-                && IsPointWalkable(point + new Vector2(0f, radius))
-                && IsPointWalkable(point + new Vector2(0f, -radius));
-        }
-
-        private bool IsPointWalkable(Vector2 point)
-        {
             if (restrictToRoadMask && !IsInsideAnyRoadMask(point))
             {
                 return false;
             }
 
+            if (usePhysicsQueries && blockerColliders.Count > 0)
+            {
+                return !OverlapsPhysicsBlocker(point);
+            }
+
+            float radius = Mathf.Max(0f, characterRadius);
+            return IsPointClearOfFallbackRects(point)
+                && IsPointClearOfFallbackRects(point + new Vector2(radius, 0f))
+                && IsPointClearOfFallbackRects(point + new Vector2(-radius, 0f))
+                && IsPointClearOfFallbackRects(point + new Vector2(0f, radius))
+                && IsPointClearOfFallbackRects(point + new Vector2(0f, -radius));
+        }
+
+        private bool IsPointClearOfFallbackRects(Vector2 point)
+        {
             for (int i = 0; i < blockedZones.Length; i++)
             {
                 if (blockedZones[i].Contains(point))
@@ -242,6 +263,48 @@ namespace WitcherGame
             }
 
             return true;
+        }
+
+        private bool OverlapsPhysicsBlocker(Vector2 point)
+        {
+            float radius = Mathf.Max(0.01f, characterRadius);
+            int hitCount = Physics2D.OverlapCircleNonAlloc(point, radius, overlapResults);
+            for (int i = 0; i < hitCount; i++)
+            {
+                if (IsBlockerCollider(overlapResults[i]))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private bool HitsPhysicsBlocker(Vector2 currentPosition, Vector2 requestedVelocity, float deltaTime)
+        {
+            float distance = requestedVelocity.magnitude * deltaTime;
+            if (distance <= 0.0001f)
+            {
+                return false;
+            }
+
+            Vector2 direction = requestedVelocity.normalized;
+            float radius = Mathf.Max(0.01f, characterRadius - castSkin);
+            int hitCount = Physics2D.CircleCastNonAlloc(currentPosition, radius, direction, castResults, distance + castSkin);
+            for (int i = 0; i < hitCount; i++)
+            {
+                if (IsBlockerCollider(castResults[i].collider))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private bool IsBlockerCollider(Collider2D collider)
+        {
+            return collider != null && blockerColliders.Contains(collider);
         }
 
         private static bool IsInsideAnyRoadMask(Vector2 point)
@@ -278,6 +341,7 @@ namespace WitcherGame
 
         private void RebuildPhysicsBlockers()
         {
+            blockerColliders.Clear();
             GameObject oldRoot = GameObject.Find(BlockerRootName);
             if (oldRoot != null)
             {
@@ -296,6 +360,7 @@ namespace WitcherGame
                 BoxCollider2D collider = blocker.AddComponent<BoxCollider2D>();
                 collider.isTrigger = false;
                 collider.size = zone.size;
+                blockerColliders.Add(collider);
 
                 if (showDebugBlockers)
                 {
@@ -308,6 +373,8 @@ namespace WitcherGame
                     visual.transform.localScale = new Vector3(zone.width, zone.height, 1f);
                 }
             }
+
+            Physics2D.SyncTransforms();
         }
     }
 }
