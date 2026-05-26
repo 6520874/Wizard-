@@ -87,6 +87,10 @@ namespace WitcherGame
                 Vector2 position = new Vector2(
                     Mathf.Clamp(point.position.x, activeMinX, activeMaxX),
                     Mathf.Clamp(point.position.y, activeMinY, activeMaxY));
+                if (usingVillageMap)
+                {
+                    position = SnapToVillageRoad(position);
+                }
 
                 switch (point.kind)
                 {
@@ -119,12 +123,20 @@ namespace WitcherGame
         {
             return new[]
             {
-                new WitcherFixedEncounterPoint { kind = WitcherFixedEncounterKind.CorruptedWolf, position = new Vector2(-7.15f, -1.8f), enemyCount = 2 },
-                new WitcherFixedEncounterPoint { kind = WitcherFixedEncounterKind.BloodWraith, position = new Vector2(-3.75f, -4.35f), enemyCount = 1 },
-                new WitcherFixedEncounterPoint { kind = WitcherFixedEncounterKind.BlackMoonKnight, position = new Vector2(0.25f, 0.65f), enemyCount = 1 },
-                new WitcherFixedEncounterPoint { kind = WitcherFixedEncounterKind.CorruptedWolf, position = new Vector2(5.25f, -2.05f), enemyCount = 3 },
-                new WitcherFixedEncounterPoint { kind = WitcherFixedEncounterKind.BloodWraith, position = new Vector2(9.05f, -0.2f), enemyCount = 1 }
+                new WitcherFixedEncounterPoint { kind = WitcherFixedEncounterKind.CorruptedWolf, position = new Vector2(-10.75f, 0.15f), enemyCount = 2 },
+                new WitcherFixedEncounterPoint { kind = WitcherFixedEncounterKind.BloodWraith, position = new Vector2(-3.55f, -3.55f), enemyCount = 1 },
+                new WitcherFixedEncounterPoint { kind = WitcherFixedEncounterKind.BlackMoonKnight, position = new Vector2(0.95f, -2.05f), enemyCount = 1 },
+                new WitcherFixedEncounterPoint { kind = WitcherFixedEncounterKind.CorruptedWolf, position = new Vector2(4.35f, -0.65f), enemyCount = 3 },
+                new WitcherFixedEncounterPoint { kind = WitcherFixedEncounterKind.BloodWraith, position = new Vector2(8.8f, -0.65f), enemyCount = 1 }
             };
+        }
+
+        private static Vector2 SnapToVillageRoad(Vector2 position)
+        {
+            WitcherVillageWalkableMap walkableMap = WitcherVillageWalkableMap.Current;
+            return walkableMap != null && walkableMap.TryGetNearestWalkablePoint(position, out Vector2 walkablePosition)
+                ? walkablePosition
+                : position;
         }
 
         private static bool IsUsingVillageMap()
