@@ -291,12 +291,7 @@ namespace WitcherGame
             Image panel = CreateImage("Equipment Shop Dialogue", root.transform, new Vector2(760f, 150f), new Vector2(0f, -158f), new Color32(7, 9, 12, 238), new Vector2(0.5f, 0.5f));
             dialoguePanel = panel.gameObject;
             AddOutline(panel, new Color32(108, 83, 50, 255), new Vector2(2f, -2f));
-            Image portraitFrame = CreateImage("Equipment Shop Keeper Portrait Frame", dialoguePanel.transform, new Vector2(116f, 116f), new Vector2(26f, -18f), new Color32(12, 14, 17, 255), new Vector2(0f, 1f));
-            AddOutline(portraitFrame, new Color32(143, 100, 56, 255), new Vector2(2f, -2f));
-            Image portrait = CreateImage("Equipment Shop Keeper Portrait", portraitFrame.transform, new Vector2(102f, 102f), new Vector2(7f, -7f), Color.white, new Vector2(0f, 1f));
-            portrait.sprite = LoadShopkeeperPortrait();
-            portrait.preserveAspect = true;
-            portrait.raycastTarget = false;
+            CreateShopkeeperPortrait(dialoguePanel.transform, "Dialogue", new Vector2(26f, -18f), new Vector2(116f, 116f), new Vector2(102f, 102f));
 
             Text name = CreateText("Equipment Shop Keeper Name", dialoguePanel.transform, "铁匠", 24, TextAnchor.MiddleLeft, new Vector2(160f, -18f), new Vector2(160f, 28f), new Color32(255, 219, 132, 255));
             AddOutline(name, Color.black, new Vector2(1f, -1f));
@@ -314,12 +309,17 @@ namespace WitcherGame
             Text title = CreateText("Equipment Shop Title", shopPanel.transform, "乌鸦铁砧装备店", 28, TextAnchor.MiddleCenter, new Vector2(0f, -18f), new Vector2(760f, 36f), new Color32(255, 218, 132, 255));
             AddOutline(title, Color.black, new Vector2(2f, -2f));
             goldText = CreateText("Equipment Shop Gold", shopPanel.transform, "金币 0", 20, TextAnchor.MiddleRight, new Vector2(552f, -62f), new Vector2(170f, 26f), new Color32(255, 220, 96, 255));
+            CreateShopkeeperPortrait(shopPanel.transform, "Shop", new Vector2(38f, -78f), new Vector2(124f, 124f), new Vector2(110f, 110f));
+            Text keeperName = CreateText("Equipment Shop Keeper Card Name", shopPanel.transform, "铁匠", 21, TextAnchor.MiddleCenter, new Vector2(38f, -210f), new Vector2(124f, 28f), new Color32(255, 219, 132, 255));
+            AddOutline(keeperName, Color.black, new Vector2(1f, -1f));
+            Text keeperHint = CreateText("Equipment Shop Keeper Card Hint", shopPanel.transform, "武器 / 护甲", 14, TextAnchor.MiddleCenter, new Vector2(38f, -238f), new Vector2(124f, 24f), new Color32(180, 200, 213, 255));
+            AddOutline(keeperHint, Color.black, new Vector2(1f, -1f));
             ownedText = CreateText("Equipment Shop Owned", shopPanel.transform, "已拥有：暂无", 15, TextAnchor.MiddleLeft, new Vector2(38f, -336f), new Vector2(540f, 24f), new Color32(180, 200, 213, 255));
             shopFeedbackText = CreateText("Equipment Shop Feedback", shopPanel.transform, "方向键选择，回车购买，Esc 返回。", 16, TextAnchor.MiddleRight, new Vector2(456f, -336f), new Vector2(270f, 24f), new Color32(207, 223, 232, 255));
 
             for (int i = 0; i < 5; i++)
             {
-                AddItemButton(i, new Vector2(38f, -100f - i * 44f));
+                AddItemButton(i, new Vector2(184f, -100f - i * 44f), new Vector2(538f, 36f));
             }
 
             Button closeButton = CreateButton("Equipment Shop Close Button", shopPanel.transform, "返回", new Vector2(110f, 30f), new Vector2(614f, -28f));
@@ -334,9 +334,9 @@ namespace WitcherGame
             dialogueButtonImages.Add(button.targetGraphic as Image);
         }
 
-        private void AddItemButton(int index, Vector2 position)
+        private void AddItemButton(int index, Vector2 position, Vector2 size)
         {
-            Button button = CreateButton($"Equipment Shop Item {index + 1}", shopPanel.transform, string.Empty, new Vector2(684f, 36f), position);
+            Button button = CreateButton($"Equipment Shop Item {index + 1}", shopPanel.transform, string.Empty, size, position);
             int capturedIndex = index;
             button.onClick.AddListener(() =>
             {
@@ -371,6 +371,16 @@ namespace WitcherGame
             label.rectTransform.anchoredPosition = Vector2.zero;
             AddOutline(label, Color.black, new Vector2(1f, -1f));
             return button;
+        }
+
+        private static void CreateShopkeeperPortrait(Transform parent, string context, Vector2 position, Vector2 frameSize, Vector2 portraitSize)
+        {
+            Image portraitFrame = CreateImage($"Equipment Shop Keeper {context} Portrait Frame", parent, frameSize, position, new Color32(12, 14, 17, 255), new Vector2(0f, 1f));
+            AddOutline(portraitFrame, new Color32(143, 100, 56, 255), new Vector2(2f, -2f));
+            Image portrait = CreateImage($"Equipment Shop Keeper {context} Portrait", portraitFrame.transform, portraitSize, new Vector2((frameSize.x - portraitSize.x) * 0.5f, -(frameSize.y - portraitSize.y) * 0.5f), Color.white, new Vector2(0f, 1f));
+            portrait.sprite = LoadShopkeeperPortrait();
+            portrait.preserveAspect = true;
+            portrait.raycastTarget = false;
         }
 
         private static Sprite LoadShopkeeperPortrait()
