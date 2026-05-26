@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -10,6 +11,8 @@ namespace WitcherGame
     public class WitcherShopUi : MonoBehaviour
     {
         private const string UiName = "Witcher Equipment Shop UI";
+        private const string ShopkeeperPortraitPath = "Art/Shops/ShopkeeperPortrait.png";
+        private static Sprite cachedShopkeeperPortrait;
 
         private readonly List<Button> itemButtons = new List<Button>();
         private readonly List<Image> itemButtonImages = new List<Image>();
@@ -288,12 +291,19 @@ namespace WitcherGame
             Image panel = CreateImage("Equipment Shop Dialogue", root.transform, new Vector2(760f, 150f), new Vector2(0f, -158f), new Color32(7, 9, 12, 238), new Vector2(0.5f, 0.5f));
             dialoguePanel = panel.gameObject;
             AddOutline(panel, new Color32(108, 83, 50, 255), new Vector2(2f, -2f));
-            Text name = CreateText("Equipment Shop Keeper Name", dialoguePanel.transform, "铁匠", 24, TextAnchor.MiddleLeft, new Vector2(28f, -18f), new Vector2(160f, 28f), new Color32(255, 219, 132, 255));
-            AddOutline(name, Color.black, new Vector2(1f, -1f));
-            dialogueText = CreateText("Equipment Shop Dialogue Text", dialoguePanel.transform, string.Empty, 21, TextAnchor.UpperLeft, new Vector2(28f, -56f), new Vector2(704f, 36f), new Color32(232, 235, 228, 255));
+            Image portraitFrame = CreateImage("Equipment Shop Keeper Portrait Frame", dialoguePanel.transform, new Vector2(116f, 116f), new Vector2(26f, -18f), new Color32(12, 14, 17, 255), new Vector2(0f, 1f));
+            AddOutline(portraitFrame, new Color32(143, 100, 56, 255), new Vector2(2f, -2f));
+            Image portrait = CreateImage("Equipment Shop Keeper Portrait", portraitFrame.transform, new Vector2(102f, 102f), new Vector2(7f, -7f), Color.white, new Vector2(0f, 1f));
+            portrait.sprite = LoadShopkeeperPortrait();
+            portrait.preserveAspect = true;
+            portrait.raycastTarget = false;
 
-            AddDialogueButton("购买装备", 0, new Vector2(224f, -104f));
-            AddDialogueButton("离开", 1, new Vector2(410f, -104f));
+            Text name = CreateText("Equipment Shop Keeper Name", dialoguePanel.transform, "铁匠", 24, TextAnchor.MiddleLeft, new Vector2(160f, -18f), new Vector2(160f, 28f), new Color32(255, 219, 132, 255));
+            AddOutline(name, Color.black, new Vector2(1f, -1f));
+            dialogueText = CreateText("Equipment Shop Dialogue Text", dialoguePanel.transform, string.Empty, 21, TextAnchor.UpperLeft, new Vector2(160f, -56f), new Vector2(572f, 42f), new Color32(232, 235, 228, 255));
+
+            AddDialogueButton("购买装备", 0, new Vector2(318f, -104f));
+            AddDialogueButton("离开", 1, new Vector2(504f, -104f));
         }
 
         private void BuildShopPanel()
@@ -361,6 +371,32 @@ namespace WitcherGame
             label.rectTransform.anchoredPosition = Vector2.zero;
             AddOutline(label, Color.black, new Vector2(1f, -1f));
             return button;
+        }
+
+        private static Sprite LoadShopkeeperPortrait()
+        {
+            if (cachedShopkeeperPortrait != null)
+            {
+                return cachedShopkeeperPortrait;
+            }
+
+            string absolutePath = Path.Combine(Application.dataPath, ShopkeeperPortraitPath);
+            if (!File.Exists(absolutePath))
+            {
+                return WitcherSpriteLibrary.GetSolidSprite(new Color32(42, 31, 24, 255));
+            }
+
+            Texture2D texture = new Texture2D(2, 2, TextureFormat.RGBA32, false);
+            if (!texture.LoadImage(File.ReadAllBytes(absolutePath)))
+            {
+                return WitcherSpriteLibrary.GetSolidSprite(new Color32(42, 31, 24, 255));
+            }
+
+            texture.filterMode = FilterMode.Point;
+            texture.wrapMode = TextureWrapMode.Clamp;
+            cachedShopkeeperPortrait = Sprite.Create(texture, new Rect(0f, 0f, texture.width, texture.height), new Vector2(0.5f, 0.5f), 100f);
+            cachedShopkeeperPortrait.name = "ShopkeeperPortrait_Runtime";
+            return cachedShopkeeperPortrait;
         }
 
         private static Text CreateText(string name, Transform parent, string text, int fontSize, TextAnchor anchor, Vector2 position, Vector2 size, Color32 color)
