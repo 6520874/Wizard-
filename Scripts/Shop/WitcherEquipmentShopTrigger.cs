@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.IO;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -10,6 +11,9 @@ namespace WitcherGame
     public class WitcherEquipmentShopTrigger : MonoBehaviour
     {
         private const string ShopRootName = "Raven Anvil Equipment Shop";
+        private const string ShopSpritePath = "Art/Shops/EquipmentShop_RavenAnvil.png";
+        private const float ShopSpritePixelsPerUnit = 256f;
+        private static Sprite cachedShopSprite;
 
         private readonly List<ShopItemData> shopItems = new List<ShopItemData>
         {
@@ -37,16 +41,16 @@ namespace WitcherGame
             }
 
             GameObject shopRoot = new GameObject(ShopRootName);
-            shopRoot.transform.position = new Vector3(7.6f, 2.18f, 0f);
+            shopRoot.transform.position = new Vector3(7.35f, 0.9f, 0f);
             BuildShopBuilding(shopRoot.transform);
             BuildShopCollision(shopRoot);
 
             GameObject triggerObject = new GameObject("Equipment Shop Door Trigger");
             triggerObject.transform.SetParent(shopRoot.transform, false);
-            triggerObject.transform.localPosition = new Vector3(0f, -1.45f, 0f);
+            triggerObject.transform.localPosition = new Vector3(-0.52f, -1.54f, 0f);
             BoxCollider2D triggerCollider = triggerObject.AddComponent<BoxCollider2D>();
             triggerCollider.isTrigger = true;
-            triggerCollider.size = new Vector2(3.2f, 1.2f);
+            triggerCollider.size = new Vector2(1.65f, 0.9f);
             return triggerObject.AddComponent<WitcherEquipmentShopTrigger>();
         }
 
@@ -171,21 +175,26 @@ namespace WitcherGame
         {
             BoxCollider2D bodyCollider = shopRoot.AddComponent<BoxCollider2D>();
             bodyCollider.isTrigger = false;
-            bodyCollider.size = new Vector2(3.05f, 1.85f);
-            bodyCollider.offset = new Vector2(0f, 0.12f);
+            bodyCollider.size = new Vector2(4.45f, 1.95f);
+            bodyCollider.offset = new Vector2(0f, -0.18f);
         }
 
         private static void BuildShopBuilding(Transform parent)
         {
-            CreateBlock(parent, "Shop Wall", new Vector2(2.8f, 1.45f), new Vector3(0f, -0.1f, 0f), new Color32(47, 39, 34, 255), 35);
-            CreateBlock(parent, "Shop Roof", new Vector2(3.2f, 0.62f), new Vector3(0f, 0.78f, 0f), new Color32(26, 24, 27, 255), 37);
-            CreateBlock(parent, "Shop Roof Edge", new Vector2(3.42f, 0.18f), new Vector3(0f, 0.45f, 0f), new Color32(83, 63, 42, 255), 38);
-            CreateBlock(parent, "Shop Door", new Vector2(0.58f, 0.82f), new Vector3(-0.48f, -0.55f, 0f), new Color32(26, 17, 13, 255), 39);
-            CreateBlock(parent, "Shop Window", new Vector2(0.54f, 0.34f), new Vector3(0.58f, -0.15f, 0f), new Color32(218, 133, 54, 245), 40);
-            CreateBlock(parent, "Shop Sign Back", new Vector2(0.72f, 0.48f), new Vector3(1.12f, 0.42f, 0f), new Color32(18, 16, 18, 255), 41);
-            CreateTextSign(parent);
-            CreateBlock(parent, "Shop Anvil Left", new Vector2(0.56f, 0.18f), new Vector3(1.05f, -0.78f, 0f), new Color32(92, 96, 98, 255), 42);
-            CreateBlock(parent, "Shop Anvil Base", new Vector2(0.28f, 0.28f), new Vector3(1.06f, -0.98f, 0f), new Color32(45, 48, 50, 255), 42);
+            CreateBlock(parent, "Shop Ground Blend", new Vector2(4.9f, 0.62f), new Vector3(0f, -2.18f, 0.08f), new Color32(18, 22, 16, 90), 32);
+            CreateBlock(parent, "Shop Soft Shadow", new Vector2(4.55f, 0.42f), new Vector3(0f, -2.03f, 0.06f), new Color32(0, 0, 0, 116), 33);
+
+            GameObject visual = new GameObject("Equipment Shop Sprite");
+            visual.transform.SetParent(parent, false);
+            visual.transform.localPosition = Vector3.zero;
+            SpriteRenderer renderer = visual.AddComponent<SpriteRenderer>();
+            renderer.sprite = LoadShopSprite();
+            renderer.color = new Color32(218, 214, 201, 255);
+            renderer.sortingOrder = 38;
+            if (renderer.sprite == null)
+            {
+                CreateFallbackShop(parent);
+            }
         }
 
         private static void CreateBlock(Transform parent, string name, Vector2 size, Vector3 position, Color32 color, int sortingOrder)
@@ -200,20 +209,39 @@ namespace WitcherGame
             renderer.sortingOrder = sortingOrder;
         }
 
-        private static void CreateTextSign(Transform parent)
+        private static Sprite LoadShopSprite()
         {
-            GameObject textObject = new GameObject("Shop Sign Text");
-            textObject.transform.SetParent(parent, false);
-            textObject.transform.localPosition = new Vector3(1.12f, 0.34f, -0.02f);
-            TextMesh textMesh = textObject.AddComponent<TextMesh>();
-            textMesh.text = "武";
-            textMesh.fontSize = 42;
-            textMesh.characterSize = 0.045f;
-            textMesh.anchor = TextAnchor.MiddleCenter;
-            textMesh.alignment = TextAlignment.Center;
-            textMesh.color = new Color32(255, 219, 120, 255);
-            MeshRenderer renderer = textObject.GetComponent<MeshRenderer>();
-            renderer.sortingOrder = 43;
+            if (cachedShopSprite != null)
+            {
+                return cachedShopSprite;
+            }
+
+            string absolutePath = Path.Combine(Application.dataPath, ShopSpritePath);
+            if (!File.Exists(absolutePath))
+            {
+                Debug.LogWarning($"Equipment shop sprite not found: {absolutePath}");
+                return null;
+            }
+
+            Texture2D texture = new Texture2D(2, 2, TextureFormat.RGBA32, false);
+            if (!texture.LoadImage(File.ReadAllBytes(absolutePath)))
+            {
+                Debug.LogWarning($"Could not load equipment shop sprite: {absolutePath}");
+                return null;
+            }
+
+            texture.filterMode = FilterMode.Point;
+            texture.wrapMode = TextureWrapMode.Clamp;
+            cachedShopSprite = Sprite.Create(texture, new Rect(0f, 0f, texture.width, texture.height), new Vector2(0.5f, 0.5f), ShopSpritePixelsPerUnit);
+            cachedShopSprite.name = "EquipmentShop_RavenAnvil_Runtime";
+            return cachedShopSprite;
+        }
+
+        private static void CreateFallbackShop(Transform parent)
+        {
+            CreateBlock(parent, "Shop Wall Fallback", new Vector2(2.8f, 1.45f), new Vector3(0f, -0.1f, 0f), new Color32(47, 39, 34, 255), 35);
+            CreateBlock(parent, "Shop Roof Fallback", new Vector2(3.2f, 0.62f), new Vector3(0f, 0.78f, 0f), new Color32(26, 24, 27, 255), 37);
+            CreateBlock(parent, "Shop Door Fallback", new Vector2(0.58f, 0.82f), new Vector3(-0.48f, -0.55f, 0f), new Color32(26, 17, 13, 255), 39);
         }
 
         private static Canvas EnsureCanvas(string name, int sortingOrder)
