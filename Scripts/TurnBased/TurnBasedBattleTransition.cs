@@ -1,0 +1,250 @@
+using System;
+using System.Collections;
+using UnityEngine;
+using UnityEngine.UI;
+
+namespace WitcherGame
+{
+    // 中文说明：负责从地图遭遇切入回合制战斗时的暗幕、扫光和标题转场。
+    public class TurnBasedBattleTransition : MonoBehaviour
+    {
+        private const string TransitionName = "Turn Based Battle Transition";
+        private static TurnBasedBattleTransition instance;
+
+        private Canvas canvas;
+        private GameObject root;
+        private Image dim;
+        private Image topBlade;
+        private Image bottomBlade;
+        private Image redSweep;
+        private Image blueSweep;
+        private Text titleText;
+        private Text subtitleText;
+
+        public static TurnBasedBattleTransition CreateIfMissing()
+        {
+            if (instance != null)
+            {
+                return instance;
+            }
+
+            TurnBasedBattleTransition existing = FindObjectOfType<TurnBasedBattleTransition>();
+            if (existing != null)
+            {
+                instance = existing;
+                return existing;
+            }
+
+            GameObject transitionObject = new GameObject(TransitionName);
+            instance = transitionObject.AddComponent<TurnBasedBattleTransition>();
+            return instance;
+        }
+
+        private void Awake()
+        {
+            instance = this;
+            EnsureUi();
+            HideImmediate();
+        }
+
+        public IEnumerator PlayEncounterTransition(string encounterTitle, Action onBlackout)
+        {
+            EnsureUi();
+            root.SetActive(true);
+            SetAlpha(dim, 0f);
+            SetAlpha(topBlade, 0f);
+            SetAlpha(bottomBlade, 0f);
+            SetAlpha(redSweep, 0f);
+            SetAlpha(blueSweep, 0f);
+            SetTextAlpha(titleText, 0f);
+            SetTextAlpha(subtitleText, 0f);
+
+            titleText.text = "遭遇战";
+            subtitleText.text = string.IsNullOrWhiteSpace(encounterTitle) ? "黑暗中的怪物逼近" : encounterTitle;
+
+            RectTransform topRect = topBlade.rectTransform;
+            RectTransform bottomRect = bottomBlade.rectTransform;
+            RectTransform redRect = redSweep.rectTransform;
+            RectTransform blueRect = blueSweep.rectTransform;
+            Vector2 topHome = new Vector2(0f, 130f);
+            Vector2 bottomHome = new Vector2(0f, -130f);
+
+            yield return Animate(0.28f, t =>
+            {
+                float eased = EaseOutCubic(t);
+                SetAlpha(dim, Mathf.Lerp(0f, 0.62f, eased));
+                SetAlpha(topBlade, Mathf.Lerp(0f, 0.92f, eased));
+                SetAlpha(bottomBlade, Mathf.Lerp(0f, 0.92f, eased));
+                topRect.anchoredPosition = Vector2.Lerp(new Vector2(-980f, 130f), topHome, eased);
+                bottomRect.anchoredPosition = Vector2.Lerp(new Vector2(980f, -130f), bottomHome, eased);
+            });
+
+            yield return Animate(0.36f, t =>
+            {
+                float eased = EaseInOut(t);
+                SetTextAlpha(titleText, Mathf.Sin(t * Mathf.PI));
+                SetTextAlpha(subtitleText, Mathf.Clamp01((t - 0.18f) / 0.55f));
+                SetAlpha(redSweep, Mathf.Sin(t * Mathf.PI) * 0.72f);
+                SetAlpha(blueSweep, Mathf.Sin(t * Mathf.PI) * 0.72f);
+                redRect.anchoredPosition = Vector2.Lerp(new Vector2(-760f, -38f), new Vector2(760f, -38f), eased);
+                blueRect.anchoredPosition = Vector2.Lerp(new Vector2(760f, 42f), new Vector2(-760f, 42f), eased);
+            });
+
+            yield return Animate(0.18f, t =>
+            {
+                float eased = EaseInOut(t);
+                SetAlpha(dim, Mathf.Lerp(0.62f, 1f, eased));
+                SetAlpha(topBlade, Mathf.Lerp(0.92f, 1f, eased));
+                SetAlpha(bottomBlade, Mathf.Lerp(0.92f, 1f, eased));
+                SetTextAlpha(titleText, Mathf.Lerp(0.72f, 0f, eased));
+                SetTextAlpha(subtitleText, Mathf.Lerp(1f, 0f, eased));
+            });
+
+            onBlackout?.Invoke();
+            yield return new WaitForSeconds(0.12f);
+
+            yield return Animate(0.34f, t =>
+            {
+                float eased = EaseOutCubic(t);
+                SetAlpha(dim, Mathf.Lerp(1f, 0f, eased));
+                SetAlpha(topBlade, Mathf.Lerp(1f, 0f, eased));
+                SetAlpha(bottomBlade, Mathf.Lerp(1f, 0f, eased));
+                topRect.anchoredPosition = Vector2.Lerp(topHome, new Vector2(980f, 130f), eased);
+                bottomRect.anchoredPosition = Vector2.Lerp(bottomHome, new Vector2(-980f, -130f), eased);
+            });
+
+            HideImmediate();
+        }
+
+        private void EnsureUi()
+        {
+            if (root != null)
+            {
+                return;
+            }
+
+            canvas = gameObject.AddComponent<Canvas>();
+            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            canvas.sortingOrder = 520;
+
+            CanvasScaler scaler = gameObject.AddComponent<CanvasScaler>();
+            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            scaler.referenceResolution = new Vector2(960f, 540f);
+            scaler.matchWidthOrHeight = 0.5f;
+
+            root = CreateUiObject("Battle Transition Root", transform, Vector2.zero, Vector2.zero, new Vector2(0.5f, 0.5f));
+            StretchToParent(root.GetComponent<RectTransform>());
+            dim = CreateImage("Battle Transition Dim", root.transform, new Vector2(2000f, 1200f), Vector2.zero, new Color32(0, 0, 0, 0), new Vector2(0.5f, 0.5f));
+            dim.raycastTarget = true;
+            topBlade = CreateImage("Battle Transition Top Blade", root.transform, new Vector2(1250f, 82f), new Vector2(0f, 130f), new Color32(6, 11, 18, 0), new Vector2(0.5f, 0.5f));
+            bottomBlade = CreateImage("Battle Transition Bottom Blade", root.transform, new Vector2(1250f, 82f), new Vector2(0f, -130f), new Color32(12, 7, 8, 0), new Vector2(0.5f, 0.5f));
+            redSweep = CreateImage("Battle Transition Red Sweep", root.transform, new Vector2(420f, 8f), new Vector2(-760f, -38f), new Color32(211, 32, 33, 0), new Vector2(0.5f, 0.5f));
+            blueSweep = CreateImage("Battle Transition Blue Sweep", root.transform, new Vector2(420f, 8f), new Vector2(760f, 42f), new Color32(70, 171, 255, 0), new Vector2(0.5f, 0.5f));
+
+            titleText = CreateText("Battle Transition Title", root.transform, "遭遇战", 46, TextAnchor.MiddleCenter, new Vector2(0f, 18f), new Vector2(420f, 66f), new Color32(255, 224, 138, 0));
+            AddOutline(titleText, new Color32(0, 0, 0, 220), new Vector2(2f, -2f));
+            subtitleText = CreateText("Battle Transition Subtitle", root.transform, string.Empty, 22, TextAnchor.MiddleCenter, new Vector2(0f, -42f), new Vector2(520f, 42f), new Color32(226, 233, 238, 0));
+            AddOutline(subtitleText, new Color32(0, 0, 0, 230), new Vector2(1f, -1f));
+        }
+
+        private IEnumerator Animate(float duration, Action<float> tick)
+        {
+            float elapsed = 0f;
+            float safeDuration = Mathf.Max(0.01f, duration);
+            while (elapsed < safeDuration)
+            {
+                elapsed += Time.deltaTime;
+                tick?.Invoke(Mathf.Clamp01(elapsed / safeDuration));
+                yield return null;
+            }
+
+            tick?.Invoke(1f);
+        }
+
+        private void HideImmediate()
+        {
+            if (root != null)
+            {
+                root.SetActive(false);
+            }
+        }
+
+        private static float EaseOutCubic(float t)
+        {
+            float inverted = 1f - Mathf.Clamp01(t);
+            return 1f - inverted * inverted * inverted;
+        }
+
+        private static float EaseInOut(float t)
+        {
+            t = Mathf.Clamp01(t);
+            return t * t * (3f - 2f * t);
+        }
+
+        private static void SetAlpha(Graphic graphic, float alpha)
+        {
+            Color color = graphic.color;
+            color.a = Mathf.Clamp01(alpha);
+            graphic.color = color;
+        }
+
+        private static void SetTextAlpha(Text text, float alpha)
+        {
+            Color color = text.color;
+            color.a = Mathf.Clamp01(alpha);
+            text.color = color;
+        }
+
+        private static Text CreateText(string name, Transform parent, string text, int fontSize, TextAnchor anchor, Vector2 position, Vector2 size, Color32 color)
+        {
+            GameObject obj = CreateUiObject(name, parent, size, position, new Vector2(0.5f, 0.5f));
+            Text textComponent = obj.AddComponent<Text>();
+            textComponent.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            textComponent.text = text;
+            textComponent.fontSize = fontSize;
+            textComponent.alignment = anchor;
+            textComponent.color = color;
+            textComponent.horizontalOverflow = HorizontalWrapMode.Wrap;
+            textComponent.verticalOverflow = VerticalWrapMode.Overflow;
+            return textComponent;
+        }
+
+        private static Image CreateImage(string name, Transform parent, Vector2 size, Vector2 position, Color32 color, Vector2 anchor)
+        {
+            GameObject obj = CreateUiObject(name, parent, size, position, anchor);
+            Image image = obj.AddComponent<Image>();
+            image.sprite = WitcherSpriteLibrary.GetSolidSprite(color);
+            image.color = color;
+            return image;
+        }
+
+        private static GameObject CreateUiObject(string name, Transform parent, Vector2 size, Vector2 position, Vector2 anchor)
+        {
+            GameObject obj = new GameObject(name);
+            obj.transform.SetParent(parent, false);
+            RectTransform rect = obj.AddComponent<RectTransform>();
+            rect.anchorMin = anchor;
+            rect.anchorMax = anchor;
+            rect.pivot = anchor;
+            rect.sizeDelta = size;
+            rect.anchoredPosition = position;
+            return obj;
+        }
+
+        private static void StretchToParent(RectTransform rect)
+        {
+            rect.anchorMin = Vector2.zero;
+            rect.anchorMax = Vector2.one;
+            rect.pivot = new Vector2(0.5f, 0.5f);
+            rect.offsetMin = Vector2.zero;
+            rect.offsetMax = Vector2.zero;
+        }
+
+        private static void AddOutline(Graphic graphic, Color color, Vector2 distance)
+        {
+            Outline outline = graphic.gameObject.AddComponent<Outline>();
+            outline.effectColor = color;
+            outline.effectDistance = distance;
+        }
+    }
+}

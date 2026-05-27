@@ -71,6 +71,7 @@ namespace WitcherGame
         private GeraltController player;
         private GeraltAnimator playerAnimator;
         private TurnBasedBattleHud battleHud;
+        private TurnBasedBattleTransition battleTransition;
         private BattleEncounterTrigger currentEncounter;
         private BattleTurnUnit activeTurnUnit;
         private bool battleActive;
@@ -233,14 +234,34 @@ namespace WitcherGame
             turnNumber = 1;
             BuildTurnUnits();
 
-            battleHud = TurnBasedBattleHud.CreateIfMissing(this);
-            battleHud.Show(enemies, player, potionCount);
-            battleHud.SetSelectedCommand(selectedCommandIndex);
-            battleHud.SetCommandsEnabled(false);
-            PauseWorldRendering();
-            battleHud.SetMessage($"遭遇 {currentEncounter.EncounterTitle}！");
-            StartCoroutine(DispatchNextTurn(0.42f));
+            StartCoroutine(BeginBattleSequence(currentEncounter.EncounterTitle));
             return true;
+        }
+
+        private IEnumerator BeginBattleSequence(string encounterTitle)
+        {
+            battleTransition = TurnBasedBattleTransition.CreateIfMissing();
+            yield return battleTransition.PlayEncounterTransition(encounterTitle, () =>
+            {
+                if (!battleActive || currentEncounter == null)
+                {
+                    return;
+                }
+
+                battleHud = TurnBasedBattleHud.CreateIfMissing(this);
+                battleHud.Show(enemies, player, potionCount);
+                battleHud.SetSelectedCommand(selectedCommandIndex);
+                battleHud.SetCommandsEnabled(false);
+                PauseWorldRendering();
+                battleHud.SetMessage($"遭遇 {encounterTitle}！");
+            });
+
+            if (!battleActive || currentEncounter == null)
+            {
+                yield break;
+            }
+
+            StartCoroutine(DispatchNextTurn(0.24f));
         }
 
         public void SelectAction(TurnBattleAction action)
