@@ -421,6 +421,14 @@ namespace WitcherGame
             dim.sprite = GetBattleBackdropSprite();
             dim.color = Color.white;
 
+            Image topCinemaBar = CreateCenteredImage("Battle Top Cinema Bar", root.transform, new Vector2(1120f, 52f), new Vector2(0f, 258f), new Color32(0, 0, 0, 186));
+            topCinemaBar.sprite = WitcherSpriteLibrary.GetSolidSprite(new Color32(0, 0, 0, 220));
+            topCinemaBar.raycastTarget = false;
+
+            Image bottomCinemaBar = CreateCenteredImage("Battle Bottom Cinema Bar", root.transform, new Vector2(1120f, 46f), new Vector2(0f, -262f), new Color32(0, 0, 0, 160));
+            bottomCinemaBar.sprite = WitcherSpriteLibrary.GetSolidSprite(new Color32(0, 0, 0, 220));
+            bottomCinemaBar.raycastTarget = false;
+
             Image horizonGlow = CreateCenteredImage("Battle Horizon Glow", root.transform, new Vector2(1060f, 190f), new Vector2(0f, 78f), new Color32(42, 79, 101, 82));
             horizonGlow.sprite = GetFloorMistSprite();
             horizonGlow.raycastTarget = false;
@@ -429,9 +437,26 @@ namespace WitcherGame
             stageWash.sprite = GetFloorMistSprite();
             stageWash.raycastTarget = false;
 
+            Image playerAura = CreateCenteredImage("Battle Player Side Aura", root.transform, new Vector2(390f, 270f), new Vector2(-292f, -30f), new Color32(32, 133, 255, 48));
+            playerAura.sprite = GetFloorMistSprite();
+            playerAura.raycastTarget = false;
+
+            Image enemyAura = CreateCenteredImage("Battle Enemy Side Aura", root.transform, new Vector2(450f, 286f), new Vector2(296f, 36f), new Color32(226, 55, 36, 42));
+            enemyAura.sprite = GetFloorMistSprite();
+            enemyAura.raycastTarget = false;
+
+            Image stageFrame = CreateCenteredImage("Battle Stage Focus Frame", root.transform, new Vector2(830f, 306f), new Vector2(0f, 22f), new Color32(7, 10, 13, 16));
+            stageFrame.sprite = WitcherSpriteLibrary.GetSolidSprite(new Color32(7, 10, 13, 24));
+            stageFrame.raycastTarget = false;
+            AddOutline(stageFrame, new Color32(84, 111, 128, 96), new Vector2(2f, -2f));
+
             Image floorPlate = CreateCenteredImage("Battle Floor Plate", root.transform, new Vector2(820f, 124f), new Vector2(0f, -20f), new Color32(10, 15, 18, 192));
             floorPlate.sprite = GetFloorMistSprite();
             floorPlate.raycastTarget = false;
+
+            Image duelLine = CreateCenteredImage("Battle Duel Center Line", root.transform, new Vector2(680f, 2f), new Vector2(0f, -158f), new Color32(174, 190, 203, 70));
+            duelLine.sprite = WitcherSpriteLibrary.GetSolidSprite(new Color32(174, 190, 203, 96));
+            duelLine.raycastTarget = false;
 
             Image frontFog = CreateCenteredImage("Battle Front Fog", root.transform, new Vector2(1260f, 122f), new Vector2(0f, -84f), new Color32(92, 119, 127, 54));
             frontFog.sprite = GetFloorMistSprite();
@@ -582,6 +607,18 @@ namespace WitcherGame
             Image commandPanel = CreateImage("Command Panel", root.transform, new Vector2(620f, 132f), new Vector2(170f, -386f), new Color32(6, 8, 12, 202));
             commandPanel.sprite = WitcherSpriteLibrary.GetSolidSprite(new Color32(6, 8, 12, 218));
             AddOutline(commandPanel, new Color32(128, 126, 154, 255), new Vector2(2f, -2f));
+
+            Image commandInnerGlow = CreateImage("Command Panel Inner Glow", commandPanel.transform, new Vector2(606f, 118f), new Vector2(7f, -7f), new Color32(17, 28, 38, 44));
+            commandInnerGlow.sprite = WitcherSpriteLibrary.GetSolidSprite(new Color32(17, 28, 38, 62));
+            commandInnerGlow.raycastTarget = false;
+
+            Image commandTopRule = CreateImage("Command Panel Top Rule", commandPanel.transform, new Vector2(596f, 2f), new Vector2(12f, -48f), new Color32(118, 151, 186, 124));
+            commandTopRule.sprite = WitcherSpriteLibrary.GetSolidSprite(new Color32(118, 151, 186, 160));
+            commandTopRule.raycastTarget = false;
+
+            Image commandGoldRule = CreateImage("Command Panel Gold Rule", commandPanel.transform, new Vector2(104f, 2f), new Vector2(22f, -45f), new Color32(255, 195, 92, 164));
+            commandGoldRule.sprite = WitcherSpriteLibrary.GetSolidSprite(new Color32(255, 195, 92, 190));
+            commandGoldRule.raycastTarget = false;
 
             Text commandTitle = CreateText("Battle Command Title", commandPanel.transform, "行动", 20, TextAnchor.MiddleLeft, new Vector2(22f, -12f), new Vector2(86f, 28f));
             commandTitle.color = new Color32(255, 214, 132, 255);
@@ -1616,6 +1653,10 @@ namespace WitcherGame
             image.color = new Color32(12, 14, 18, 210);
             image.type = Image.Type.Simple;
             AddOutline(image, new Color32(90, 97, 118, 210), new Vector2(1f, -1f));
+
+            Image accent = CreateImage(label + " Accent", buttonObject.transform, new Vector2(4f, 20f), new Vector2(0f, -4f), action == TurnBattleAction.FlameSign ? new Color32(255, 134, 62, 220) : new Color32(64, 154, 255, 210));
+            accent.sprite = WitcherSpriteLibrary.GetSolidSprite(accent.color);
+            accent.raycastTarget = false;
 
             Image keyBack = CreateImage(label + " Key", buttonObject.transform, new Vector2(30f, 24f), new Vector2(3f, -2f), new Color32(22, 31, 44, 230));
             keyBack.sprite = WitcherSpriteLibrary.GetSolidSprite(new Color32(22, 31, 44, 230));
