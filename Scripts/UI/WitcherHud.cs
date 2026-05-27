@@ -122,13 +122,13 @@ namespace WitcherGame
             RectTransform canvasRect = gameObject.GetComponent<RectTransform>();
             canvasRect.sizeDelta = Vector2.zero;
 
-            GameObject root = CreateUiObject("TopLeft Status", transform, new Vector2(620f, 303f), new Vector2(8f, -8f), new Vector2(0f, 1f));
+            GameObject root = CreateUiObject("TopLeft Status", transform, new Vector2(560f, 286f), new Vector2(8f, -8f), new Vector2(0f, 1f));
             Image panel = root.AddComponent<Image>();
             panel.sprite = WitcherSpriteLibrary.GetSolidSprite(new Color32(0, 0, 0, 0));
             panel.color = new Color32(0, 0, 0, 0);
 
-            Image frame = CreateImage("Dark HUD Reference Frame", root.transform, new Vector2(620f, 303f), Vector2.zero, new Color32(255, 255, 255, 188));
-            frame.sprite = LoadSprite(HudFramePath, 100f, new Rect(0f, 511f, 880f, 430f));
+            Image frame = CreateImage("Dark HUD Reference Frame", root.transform, new Vector2(560f, 286f), Vector2.zero, new Color32(255, 255, 255, 142));
+            frame.sprite = LoadSprite(HudFramePath, 100f, new Rect(0f, 511f, 792f, 430f));
             frame.preserveAspect = true;
 
             Image portraitCover = CreateImage("Portrait Cover", root.transform, new Vector2(118f, 118f), new Vector2(34f, -47f), new Color32(2, 4, 6, 226));
