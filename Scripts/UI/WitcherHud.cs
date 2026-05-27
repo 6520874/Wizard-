@@ -28,7 +28,10 @@ namespace WitcherGame
         private Text healthText;
         private Text manaText;
         private Text roomText;
+        private Text inventoryText;
         private GeraltController subscribedPlayer;
+        private PlayerInventory playerInventory;
+        private PlayerInventory subscribedInventory;
         private GameObject bossStatusRoot;
         private Image bossHealthFill;
         private Text bossHealthText;
@@ -57,12 +60,21 @@ namespace WitcherGame
                 subscribedPlayer.StatsChanged -= UpdateBars;
             }
 
+            if (subscribedInventory != null)
+            {
+                subscribedInventory.InventoryChanged -= UpdateInventoryText;
+            }
+
             player = target;
             subscribedPlayer = target;
+            playerInventory = null;
+            subscribedInventory = null;
             if (subscribedPlayer != null)
             {
                 subscribedPlayer.StatsChanged += UpdateBars;
             }
+
+            BindInventory();
         }
 
         public void SetRoomName(string roomName)
@@ -196,6 +208,13 @@ namespace WitcherGame
             AddOutline(roomText, new Color32(0, 0, 0, 220), new Vector2(1f, -1f));
 
             BuildSkillFrameOverlays(root.transform);
+            Image inventoryBack = CreateImage("Inventory Summary Back", root.transform, new Vector2(330f, 24f), new Vector2(186f, -226f), new Color32(7, 8, 10, 132));
+            inventoryBack.sprite = GetHudPanelSprite();
+            inventoryBack.raycastTarget = false;
+            inventoryText = CreateText("Inventory Summary", root.transform, "金币 0  经验 0  攻+0 防+0", 12, TextAnchor.MiddleLeft, new Vector2(196f, -228f), new Vector2(310f, 22f));
+            inventoryText.color = new Color32(219, 209, 181, 255);
+            AddOutline(inventoryText, new Color32(0, 0, 0, 230), new Vector2(1f, -1f));
+
             BuildBossBar();
             BuildGameOverPanel();
             UpdateBars();
@@ -345,6 +364,7 @@ namespace WitcherGame
             SetMissing(manaMissing, mana01, ManaBarWidth);
             healthText.text = $"HP {player.CurrentHealth} / {player.MaxHealth}";
             manaText.text = $"MP {player.CurrentMana} / {player.MaxMana}";
+            UpdateInventoryText();
             UpdateBossBar();
         }
 
@@ -354,6 +374,52 @@ namespace WitcherGame
             {
                 subscribedPlayer.StatsChanged -= UpdateBars;
             }
+
+            if (subscribedInventory != null)
+            {
+                subscribedInventory.InventoryChanged -= UpdateInventoryText;
+            }
+        }
+
+        private void BindInventory()
+        {
+            if (player == null)
+            {
+                return;
+            }
+
+            PlayerInventory inventory = player.GetComponent<PlayerInventory>();
+            if (inventory == null || inventory == subscribedInventory)
+            {
+                playerInventory = inventory;
+                return;
+            }
+
+            if (subscribedInventory != null)
+            {
+                subscribedInventory.InventoryChanged -= UpdateInventoryText;
+            }
+
+            playerInventory = inventory;
+            subscribedInventory = inventory;
+            subscribedInventory.InventoryChanged += UpdateInventoryText;
+        }
+
+        private void UpdateInventoryText()
+        {
+            if (inventoryText == null)
+            {
+                return;
+            }
+
+            BindInventory();
+            if (playerInventory == null)
+            {
+                inventoryText.text = "金币 0  经验 0  攻+0 防+0";
+                return;
+            }
+
+            inventoryText.text = $"金币 {playerInventory.Gold}  经验 {playerInventory.Experience}  攻+{playerInventory.AttackBonus} 防+{playerInventory.DefenseBonus}";
         }
 
         private void BuildBossBar()

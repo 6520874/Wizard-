@@ -14,6 +14,9 @@ namespace WitcherGame
         [SerializeField] private int enemyAttack = 8;
         [SerializeField] private int enemyDefense = 2;
         [SerializeField] private int experienceReward = 2;
+        [SerializeField] private int goldReward = 8;
+        [SerializeField] private string lootName = "怪物残骸";
+        [SerializeField, Range(0f, 1f)] private float lootChance = 0.35f;
         [SerializeField] private bool destroyOnWin = true;
 
         private Sprite battleSprite;
@@ -48,6 +51,9 @@ namespace WitcherGame
                 enemyAttack = 10 + bonus;
                 enemyDefense = 3;
                 experienceReward = 4;
+                goldReward = 13 + bonus * 3;
+                lootName = "女妖残纱";
+                lootChance = 0.55f;
                 ConfigureTriggerBounds(new Vector2(0f, 0.82f), new Vector2(1.8f, 1.85f), 1.35f, 1.45f);
                 return;
             }
@@ -58,6 +64,9 @@ namespace WitcherGame
             enemyAttack = 8 + bonus;
             enemyDefense = 2;
             experienceReward = 3;
+            goldReward = 8 + bonus * 2;
+            lootName = "腐化狼牙";
+            lootChance = 0.45f;
             ConfigureTriggerBounds(new Vector2(0f, 0.48f), new Vector2(2.35f, 1.25f), 1.55f, 1.05f);
         }
 
@@ -73,6 +82,9 @@ namespace WitcherGame
             enemyAttack = 13 + Mathf.Max(0, waveBonus);
             enemyDefense = 5;
             experienceReward = 9;
+            goldReward = 38 + Mathf.Max(0, waveBonus) * 8;
+            lootName = "月夜骑士残甲";
+            lootChance = 1f;
             ConfigureTriggerBounds(new Vector2(0f, 0.95f), new Vector2(2.35f, 1.95f), 1.65f, 1.35f);
         }
 
@@ -97,6 +109,9 @@ namespace WitcherGame
                     Attack = enemyAttack,
                     Defense = enemyDefense,
                     ExperienceReward = experienceReward,
+                    GoldReward = goldReward,
+                    LootName = lootName,
+                    LootChance = lootChance,
                     Sprite = battleSprite,
                     SourceObject = gameObject
                 };

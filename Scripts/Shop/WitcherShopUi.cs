@@ -214,12 +214,15 @@ namespace WitcherGame
 
         private string BuildOwnedText()
         {
-            if (inventory == null || inventory.OwnedEquipment.Count == 0)
+            if (inventory == null)
             {
                 return "已拥有：暂无";
             }
 
-            return "已拥有：" + string.Join("、", inventory.OwnedEquipment);
+            string equipmentText = inventory.OwnedEquipment.Count == 0
+                ? "暂无"
+                : string.Join("、", inventory.OwnedEquipment);
+            return $"已拥有：{equipmentText}\n装备加成：攻击 +{inventory.AttackBonus}  防御 +{inventory.DefenseBonus}\n经验：{inventory.Experience}  战利品：{inventory.OwnedLoot.Count}";
         }
 
         private void RefreshItemSelection()
@@ -314,7 +317,7 @@ namespace WitcherGame
             AddOutline(keeperName, Color.black, new Vector2(1f, -1f));
             Text keeperHint = CreateText("Equipment Shop Keeper Card Hint", shopPanel.transform, "武器 / 护甲", 14, TextAnchor.MiddleCenter, new Vector2(38f, -238f), new Vector2(124f, 24f), new Color32(180, 200, 213, 255));
             AddOutline(keeperHint, Color.black, new Vector2(1f, -1f));
-            ownedText = CreateText("Equipment Shop Owned", shopPanel.transform, "已拥有：暂无", 15, TextAnchor.MiddleLeft, new Vector2(38f, -336f), new Vector2(540f, 24f), new Color32(180, 200, 213, 255));
+            ownedText = CreateText("Equipment Shop Owned", shopPanel.transform, "已拥有：暂无", 14, TextAnchor.UpperLeft, new Vector2(38f, -314f), new Vector2(384f, 66f), new Color32(180, 200, 213, 255));
             shopFeedbackText = CreateText("Equipment Shop Feedback", shopPanel.transform, "方向键选择，回车购买，Esc 返回。", 16, TextAnchor.MiddleRight, new Vector2(456f, -336f), new Vector2(270f, 24f), new Color32(207, 223, 232, 255));
 
             for (int i = 0; i < 5; i++)

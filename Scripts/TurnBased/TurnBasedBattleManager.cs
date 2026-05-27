@@ -31,6 +31,9 @@ namespace WitcherGame
         public int Attack;
         public int Defense;
         public int ExperienceReward;
+        public int GoldReward;
+        public string LootName;
+        public float LootChance;
         public TurnBasedEnemyVisualKind VisualKind;
         public Sprite Sprite;
         public Sprite[] IdleFrames;
@@ -70,6 +73,7 @@ namespace WitcherGame
         private readonly List<BattleStatusEffect> playerStatuses = new List<BattleStatusEffect>();
         private GeraltController player;
         private GeraltAnimator playerAnimator;
+        private PlayerInventory playerInventory;
         private TurnBasedBattleHud battleHud;
         private TurnBasedBattleTransition battleTransition;
         private BattleEncounterTrigger currentEncounter;
@@ -223,6 +227,7 @@ namespace WitcherGame
             }
 
             playerAnimator = player.GetComponent<GeraltAnimator>();
+            playerInventory = PlayerInventory.CreateIfMissing(player);
             player.SetControlEnabled(false);
             currentEncounter.PrepareForBattle();
             battleActive = true;
@@ -533,7 +538,7 @@ namespace WitcherGame
             }
 
             TurnBasedEnemyState enemy = enemies[enemyIndex];
-            int rawDamage = Mathf.Max(1, enemy.Attack + Random.Range(-2, 3) - playerDefense);
+            int rawDamage = Mathf.Max(1, enemy.Attack + Random.Range(-2, 3) - GetPlayerDefense());
             int damage = CalculatePlayerIncomingDamage(rawDamage);
             battleHud.SetMessage($"敌人回合：{enemy.Name} 发起攻击，造成 {damage} 点伤害！");
             yield return battleHud.PlayEnemyAttack(enemyIndex);
@@ -574,14 +579,29 @@ namespace WitcherGame
             battleEndSequenceStarted = true;
             resolvingTurn = true;
             int reward = 0;
+            int goldReward = 0;
+            List<string> lootRewards = new List<string>();
             foreach (TurnBasedEnemyState enemy in enemies)
             {
                 reward += Mathf.Max(1, enemy.ExperienceReward);
+                goldReward += Mathf.Max(0, enemy.GoldReward);
+                if (!string.IsNullOrEmpty(enemy.LootName) && Random.value <= Mathf.Clamp01(enemy.LootChance))
+                {
+                    lootRewards.Add(enemy.LootName);
+                }
             }
 
-            battleHud.SetMessage($"战斗胜利！获得 {reward} 点猎魔经验。");
+            playerInventory = playerInventory == null && player != null ? PlayerInventory.CreateIfMissing(player) : playerInventory;
+            playerInventory?.AddBattleRewards(goldReward, reward, lootRewards);
+            battleHud.ShowVictoryRewards(reward, goldReward, lootRewards);
+            battleHud.SetMessage($"战斗胜利！获得 {reward} 点经验、{goldReward} 枚金币。");
             WitcherCombatText.Spawn($"+{reward} XP", player.transform.position + Vector3.up * 1.2f, new Color32(255, 219, 91, 255));
-            yield return Wait(0.9f);
+            if (goldReward > 0)
+            {
+                WitcherCombatText.Spawn($"+{goldReward} 金币", player.transform.position + Vector3.up * 1.55f, new Color32(255, 203, 88, 255));
+            }
+
+            yield return Wait(1.25f);
             EndBattle(true, true);
         }
 
@@ -699,7 +719,7 @@ namespace WitcherGame
 
         private BattleSkillUnit CreatePlayerSkillUnit()
         {
-            BattleSkillUnit unit = BattleSkillUnit.CreatePlayer("猎魔人", player.MaxHealth, player.MaxMana, playerAttack, playerDefense);
+            BattleSkillUnit unit = BattleSkillUnit.CreatePlayer("猎魔人", player.MaxHealth, player.MaxMana, GetPlayerAttack(), GetPlayerDefense());
             unit.SetHealth(player.CurrentHealth);
             unit.SetMana(player.CurrentMana);
             for (int i = 0; i < playerStatuses.Count; i++)
@@ -824,6 +844,18 @@ namespace WitcherGame
             }
 
             return damage;
+        }
+
+        private int GetPlayerAttack()
+        {
+            playerInventory = playerInventory == null && player != null ? PlayerInventory.CreateIfMissing(player) : playerInventory;
+            return playerAttack + (playerInventory == null ? 0 : playerInventory.AttackBonus);
+        }
+
+        private int GetPlayerDefense()
+        {
+            playerInventory = playerInventory == null && player != null ? PlayerInventory.CreateIfMissing(player) : playerInventory;
+            return playerDefense + (playerInventory == null ? 0 : playerInventory.DefenseBonus);
         }
 
         private void ConsumePlayerStatusTurns()

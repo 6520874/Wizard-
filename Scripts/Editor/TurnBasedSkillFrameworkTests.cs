@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using NUnit.Framework;
+using UnityEngine;
 
 namespace WitcherGame.Tests
 {
@@ -32,6 +33,39 @@ namespace WitcherGame.Tests
             Assert.AreEqual(1, caster.Statuses.Count);
             Assert.AreEqual(BattleStatusKind.Guard, caster.Statuses[0].Kind);
             Assert.AreEqual(5, caster.CalculateIncomingDamage(12));
+        }
+
+        [Test]
+        public void Inventory_PurchaseEquipment_AddsCombatBonuses()
+        {
+            GameObject inventoryObject = new GameObject("Inventory Test");
+            PlayerInventory inventory = inventoryObject.AddComponent<PlayerInventory>();
+            ShopItemData sword = new ShopItemData("猎人长剑", 120, 7, 0);
+
+            bool purchased = inventory.TryPurchase(sword, out string message);
+
+            Assert.IsTrue(purchased, message);
+            Assert.AreEqual(60, inventory.Gold);
+            Assert.AreEqual(7, inventory.AttackBonus);
+            Assert.AreEqual(0, inventory.DefenseBonus);
+            Assert.IsTrue(inventory.HasEquipment("猎人长剑"));
+            Object.DestroyImmediate(inventoryObject);
+        }
+
+        [Test]
+        public void Inventory_AddBattleRewards_StoresGoldExperienceAndLoot()
+        {
+            GameObject inventoryObject = new GameObject("Reward Test");
+            PlayerInventory inventory = inventoryObject.AddComponent<PlayerInventory>();
+            List<string> loot = new List<string> { "腐化狼牙", "女妖残纱" };
+
+            inventory.AddBattleRewards(21, 7, loot);
+
+            Assert.AreEqual(201, inventory.Gold);
+            Assert.AreEqual(7, inventory.Experience);
+            Assert.AreEqual(2, inventory.OwnedLoot.Count);
+            Assert.AreEqual("腐化狼牙", inventory.OwnedLoot[0]);
+            Object.DestroyImmediate(inventoryObject);
         }
     }
 }

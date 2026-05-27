@@ -38,6 +38,8 @@ namespace WitcherGame
         private Text potionText;
         private Text currentTurnText;
         private Text nextTurnText;
+        private GameObject victoryRewardPanel;
+        private Text victoryRewardText;
         private Image currentActorPortrait;
         private Image playerFigure;
         private Vector2 playerFigureHomePosition;
@@ -126,6 +128,11 @@ namespace WitcherGame
             }
 
             root.SetActive(true);
+            if (victoryRewardPanel != null)
+            {
+                victoryRewardPanel.SetActive(false);
+            }
+
             Refresh(enemies, player, potionCount);
             SetCommandsEnabled(true);
             SetSelectedCommand(0);
@@ -137,6 +144,11 @@ namespace WitcherGame
             {
                 root.SetActive(false);
             }
+
+            if (victoryRewardPanel != null)
+            {
+                victoryRewardPanel.SetActive(false);
+            }
         }
 
         public void SetMessage(string message)
@@ -145,6 +157,24 @@ namespace WitcherGame
             {
                 messageText.text = message;
             }
+        }
+
+        public void ShowVictoryRewards(int experience, int gold, IReadOnlyList<string> loot)
+        {
+            if (victoryRewardPanel == null)
+            {
+                return;
+            }
+
+            if (victoryRewardText != null)
+            {
+                victoryRewardText.text =
+                    "战斗胜利\n" +
+                    $"经验 +{Mathf.Max(0, experience)}    金币 +{Mathf.Max(0, gold)}\n" +
+                    BuildLootLine(loot);
+            }
+
+            victoryRewardPanel.SetActive(true);
         }
 
         public void SetCommandsEnabled(bool enabled)
@@ -639,8 +669,57 @@ namespace WitcherGame
             AddCommandButton(commandPanel.transform, "3 道具", TurnBattleAction.Item, new Vector2(22f, -98f));
             AddCommandButton(commandPanel.transform, "4 防御", TurnBattleAction.Defend, new Vector2(316f, -98f));
             BuildSkillPanel(commandPanel.transform);
+            BuildVictoryRewardPanel(root.transform);
 
             root.SetActive(false);
+        }
+
+        private void BuildVictoryRewardPanel(Transform parent)
+        {
+            Image panel = CreateCenteredImage("Battle Victory Reward Panel", parent, new Vector2(356f, 128f), new Vector2(0f, 36f), new Color32(5, 7, 10, 226));
+            panel.sprite = WitcherSpriteLibrary.GetSolidSprite(new Color32(5, 7, 10, 226));
+            panel.raycastTarget = false;
+            AddOutline(panel, new Color32(198, 154, 76, 255), new Vector2(3f, -3f));
+            victoryRewardPanel = panel.gameObject;
+
+            Image inner = CreateImage("Battle Victory Reward Inner", panel.transform, new Vector2(336f, 106f), new Vector2(10f, -10f), new Color32(24, 18, 13, 156));
+            inner.sprite = WitcherSpriteLibrary.GetSolidSprite(new Color32(24, 18, 13, 156));
+            inner.raycastTarget = false;
+
+            Image topRule = CreateImage("Battle Victory Reward Gold Rule", panel.transform, new Vector2(292f, 2f), new Vector2(32f, -42f), new Color32(255, 204, 101, 180));
+            topRule.sprite = WitcherSpriteLibrary.GetSolidSprite(new Color32(255, 204, 101, 210));
+            topRule.raycastTarget = false;
+
+            victoryRewardText = CreateText("Battle Victory Reward Text", panel.transform, "战斗胜利", 18, TextAnchor.MiddleCenter, new Vector2(12f, -12f), new Vector2(332f, 100f));
+            victoryRewardText.color = new Color32(255, 231, 170, 255);
+            AddOutline(victoryRewardText, Color.black, new Vector2(2f, -2f));
+            victoryRewardPanel.SetActive(false);
+        }
+
+        private static string BuildLootLine(IReadOnlyList<string> loot)
+        {
+            if (loot == null || loot.Count == 0)
+            {
+                return "战利品：无";
+            }
+
+            string line = "战利品：";
+            for (int i = 0; i < loot.Count; i++)
+            {
+                if (string.IsNullOrEmpty(loot[i]))
+                {
+                    continue;
+                }
+
+                if (line.Length > 4)
+                {
+                    line += "、";
+                }
+
+                line += loot[i];
+            }
+
+            return line.Length > 4 ? line : "战利品：无";
         }
 
         private void BuildTurnTimeline(Transform parent)
