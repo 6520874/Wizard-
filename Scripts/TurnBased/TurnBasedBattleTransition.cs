@@ -79,10 +79,10 @@ namespace WitcherGame
                 bottomRect.anchoredPosition = Vector2.Lerp(new Vector2(980f, -130f), bottomHome, eased);
             });
 
-            yield return Animate(0.36f, t =>
+            yield return Animate(0.46f, t =>
             {
                 float eased = EaseInOut(t);
-                SetTextAlpha(titleText, Mathf.Sin(t * Mathf.PI));
+                SetTextAlpha(titleText, Mathf.Clamp01(Mathf.Sin(t * Mathf.PI) * 1.25f));
                 SetTextAlpha(subtitleText, Mathf.Clamp01((t - 0.18f) / 0.55f));
                 SetAlpha(redSweep, Mathf.Sin(t * Mathf.PI) * 0.72f);
                 SetAlpha(blueSweep, Mathf.Sin(t * Mathf.PI) * 0.72f);
@@ -213,7 +213,7 @@ namespace WitcherGame
         {
             GameObject obj = CreateUiObject(name, parent, size, position, anchor);
             Image image = obj.AddComponent<Image>();
-            image.sprite = WitcherSpriteLibrary.GetSolidSprite(color);
+            image.sprite = WitcherSpriteLibrary.GetSolidSprite(new Color32(color.r, color.g, color.b, 255));
             image.color = color;
             return image;
         }
