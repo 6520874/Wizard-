@@ -308,6 +308,7 @@ namespace WitcherGame
             Vector2 effectPosition = GetSkillEffectPosition(skillId, targetRect);
             Vector2 effectSize = GetSkillEffectSize(skillId, targetRect);
             Vector3 effectScale = GetSkillEffectScale(skillId);
+            float frameDuration = GetSkillEffectFrameDuration(skillId);
             skillImpactColor = GetSkillImpactColor(skillId);
 
             flameEffect.gameObject.SetActive(true);
@@ -321,7 +322,7 @@ namespace WitcherGame
             {
                 flameEffect.sprite = GetSkillFallbackSprite(skillId);
                 UpdateFlameImpact(1f, true);
-                yield return new WaitForSeconds(0.28f);
+                yield return new WaitForSeconds(Mathf.Max(0.34f, frameDuration * 4f));
                 flameEffect.gameObject.SetActive(false);
                 HideFlameImpact();
                 yield break;
@@ -337,7 +338,7 @@ namespace WitcherGame
                 color.a = t > 0.72f ? Mathf.Lerp(1f, 0.18f, (t - 0.72f) / 0.28f) : 1f;
                 flameEffect.color = color;
                 UpdateFlameImpact(t, t >= 0.35f);
-                yield return new WaitForSeconds(0.045f);
+                yield return new WaitForSeconds(frameDuration);
             }
 
             flameEffect.gameObject.SetActive(false);
@@ -1241,6 +1242,23 @@ namespace WitcherGame
                     return Vector3.one;
                 default:
                     return Vector3.one;
+            }
+        }
+
+        private static float GetSkillEffectFrameDuration(BattleSkillId skillId)
+        {
+            switch (skillId)
+            {
+                case BattleSkillId.ExecuteSlash:
+                    return 0.064f;
+                case BattleSkillId.FlameSign:
+                    return 0.072f;
+                case BattleSkillId.ThunderSign:
+                    return 0.082f;
+                case BattleSkillId.HunterFocus:
+                    return 0.09f;
+                default:
+                    return 0.074f;
             }
         }
 
