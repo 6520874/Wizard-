@@ -355,6 +355,22 @@ namespace WitcherGame
             yield return PlayPlayerFrames(GetPlayerFrames(GeraltAnimation.Slash), 0.085f, GetPlayerAttackMotion(enemyIndex), false);
         }
 
+        public IEnumerator PlayPlayerComboSlash(int enemyIndex, int hitCount)
+        {
+            Sprite[] slashFrames = GetPlayerFrames(GeraltAnimation.Slash);
+            Vector2 baseMotion = GetPlayerAttackMotion(enemyIndex);
+            int safeHitCount = Mathf.Max(1, hitCount);
+            for (int i = 0; i < safeHitCount; i++)
+            {
+                float motionScale = i == safeHitCount - 1 ? 1f : 0.82f + i * 0.08f;
+                yield return PlayPlayerFrames(slashFrames, 0.04f, baseMotion * motionScale, false);
+                if (i < safeHitCount - 1)
+                {
+                    yield return new WaitForSeconds(0.035f);
+                }
+            }
+        }
+
         public IEnumerator PlayPlayerCast()
         {
             yield return PlayPlayerFrames(GetPlayerFrames(GeraltAnimation.Slash), 0.085f, new Vector2(54f, -6f), false);

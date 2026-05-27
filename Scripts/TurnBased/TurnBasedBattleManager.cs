@@ -416,10 +416,14 @@ namespace WitcherGame
             {
                 case BattleSkillAnimationKind.Slash:
                     playerAnimator?.PlaySlash();
-                    yield return battleHud.PlayPlayerAttack(GetFirstTargetEnemyIndex(result));
                     if (skill.Id == BattleSkillId.ExecuteSlash)
                     {
+                        yield return battleHud.PlayPlayerComboSlash(GetFirstTargetEnemyIndex(result), 3);
                         yield return battleHud.PlaySkillEffect(skill.Id, GetFirstTargetEnemyIndex(result));
+                    }
+                    else
+                    {
+                        yield return battleHud.PlayPlayerAttack(GetFirstTargetEnemyIndex(result));
                     }
                     break;
                 case BattleSkillAnimationKind.Flame:
