@@ -14,6 +14,11 @@ namespace WitcherGame
         private const string HudFramePath = "Art/UI/DarkHudReferenceFull.png";
         private const float PlayerBarWidth = 382f;
         private const float ManaBarWidth = 352f;
+        private static Sprite cachedHudPanelSprite;
+        private static Sprite cachedBarBackSprite;
+        private static Sprite cachedMetalSprite;
+        private static Sprite cachedHealthFillSprite;
+        private static Sprite cachedManaFillSprite;
 
         private GeraltController player;
         private Image healthFill;
@@ -127,33 +132,56 @@ namespace WitcherGame
             panel.sprite = WitcherSpriteLibrary.GetSolidSprite(new Color32(0, 0, 0, 0));
             panel.color = new Color32(0, 0, 0, 0);
 
-            Image frame = CreateImage("Dark HUD Reference Frame", root.transform, new Vector2(560f, 286f), Vector2.zero, new Color32(255, 255, 255, 142));
+            Image forgedPanel = CreateImage("Forged HUD Backplate", root.transform, new Vector2(548f, 270f), new Vector2(6f, -8f), Color.white);
+            forgedPanel.sprite = GetHudPanelSprite();
+            forgedPanel.color = new Color32(255, 255, 255, 218);
+            AddOutline(forgedPanel, new Color32(72, 59, 45, 210), new Vector2(2f, -2f));
+
+            Image frame = CreateImage("Dark HUD Reference Frame", root.transform, new Vector2(560f, 286f), Vector2.zero, new Color32(255, 255, 255, 92));
             frame.sprite = LoadSprite(HudFramePath, 100f, new Rect(0f, 511f, 792f, 430f));
             frame.preserveAspect = true;
 
-            Image portraitCover = CreateImage("Portrait Cover", root.transform, new Vector2(118f, 118f), new Vector2(34f, -47f), new Color32(2, 4, 6, 226));
-            portraitCover.sprite = WitcherSpriteLibrary.GetSolidSprite(new Color32(2, 4, 6, 226));
+            Image portraitCover = CreateImage("Portrait Cover", root.transform, new Vector2(118f, 118f), new Vector2(34f, -47f), new Color32(6, 7, 8, 236));
+            portraitCover.sprite = GetMetalSprite();
+            AddOutline(portraitCover, new Color32(95, 78, 54, 230), new Vector2(2f, -2f));
 
             Image portrait = CreateImage("Geralt Portrait", root.transform, new Vector2(108f, 108f), new Vector2(39f, -52f), Color.white);
             portrait.sprite = LoadSprite(PortraitPath, 96f);
             portrait.preserveAspect = true;
 
-            Image healthTrack = CreateImage("Health Dynamic Track", root.transform, new Vector2(PlayerBarWidth, 34f), new Vector2(158f, -72f), new Color32(48, 6, 10, 245));
-            healthTrack.sprite = WitcherSpriteLibrary.GetSolidSprite(new Color32(48, 6, 10, 245));
+            Image healthFrame = CreateImage("Health Black Iron Frame", root.transform, new Vector2(PlayerBarWidth + 18f, 42f), new Vector2(149f, -68f), new Color32(10, 9, 8, 245));
+            healthFrame.sprite = GetMetalSprite();
+            AddOutline(healthFrame, new Color32(118, 84, 50, 230), new Vector2(2f, -2f));
 
-            Image manaTrack = CreateImage("Mana Dynamic Track", root.transform, new Vector2(ManaBarWidth, 29f), new Vector2(158f, -141f), new Color32(3, 19, 57, 245));
-            manaTrack.sprite = WitcherSpriteLibrary.GetSolidSprite(new Color32(3, 19, 57, 245));
+            Image manaFrame = CreateImage("Mana Black Iron Frame", root.transform, new Vector2(ManaBarWidth + 18f, 38f), new Vector2(149f, -137f), new Color32(10, 9, 8, 242));
+            manaFrame.sprite = GetMetalSprite();
+            AddOutline(manaFrame, new Color32(79, 95, 122, 224), new Vector2(2f, -2f));
 
-            healthFill = CreateReferenceFill("Health Runtime Fill", root.transform, new Vector2(PlayerBarWidth, 34f), new Vector2(158f, -72f), new Color32(239, 20, 33, 222));
-            manaFill = CreateReferenceFill("Mana Runtime Fill", root.transform, new Vector2(ManaBarWidth, 29f), new Vector2(158f, -141f), new Color32(28, 132, 255, 222));
-            healthMissing = CreateRightAnchoredImage("Health Missing Mask", root.transform, new Vector2(PlayerBarWidth, 38f), new Vector2(540f, -70f), new Color32(18, 18, 18, 235));
-            manaMissing = CreateRightAnchoredImage("Mana Missing Mask", root.transform, new Vector2(ManaBarWidth, 32f), new Vector2(510f, -139f), new Color32(12, 17, 24, 235));
+            Image healthTrack = CreateImage("Health Dynamic Track", root.transform, new Vector2(PlayerBarWidth, 28f), new Vector2(158f, -75f), new Color32(24, 8, 10, 244));
+            healthTrack.sprite = GetBarBackSprite();
 
-            Image healthTextCover = CreateImage("Health Original Text Cover", root.transform, new Vector2(230f, 31f), new Vector2(176f, -77f), new Color32(67, 4, 8, 225));
-            healthTextCover.sprite = WitcherSpriteLibrary.GetSolidSprite(new Color32(67, 4, 8, 225));
+            Image manaTrack = CreateImage("Mana Dynamic Track", root.transform, new Vector2(ManaBarWidth, 24f), new Vector2(158f, -144f), new Color32(6, 15, 34, 244));
+            manaTrack.sprite = GetBarBackSprite();
 
-            Image manaTextCover = CreateImage("Mana Original Text Cover", root.transform, new Vector2(218f, 28f), new Vector2(176f, -147f), new Color32(3, 25, 75, 225));
-            manaTextCover.sprite = WitcherSpriteLibrary.GetSolidSprite(new Color32(3, 25, 75, 225));
+            healthFill = CreateReferenceFill("Health Runtime Fill", root.transform, new Vector2(PlayerBarWidth, 28f), new Vector2(158f, -75f), new Color32(139, 16, 24, 238), GetHealthFillSprite());
+            manaFill = CreateReferenceFill("Mana Runtime Fill", root.transform, new Vector2(ManaBarWidth, 24f), new Vector2(158f, -144f), new Color32(37, 70, 132, 236), GetManaFillSprite());
+
+            Image healthSheen = CreateImage("Health Edge Highlight", root.transform, new Vector2(PlayerBarWidth - 12f, 4f), new Vector2(164f, -78f), new Color32(255, 184, 160, 42));
+            healthSheen.sprite = WitcherSpriteLibrary.GetSolidSprite(new Color32(255, 184, 160, 42));
+            healthSheen.raycastTarget = false;
+
+            Image manaSheen = CreateImage("Mana Edge Highlight", root.transform, new Vector2(ManaBarWidth - 12f, 4f), new Vector2(164f, -147f), new Color32(122, 177, 228, 38));
+            manaSheen.sprite = WitcherSpriteLibrary.GetSolidSprite(new Color32(122, 177, 228, 38));
+            manaSheen.raycastTarget = false;
+
+            healthMissing = CreateRightAnchoredImage("Health Missing Mask", root.transform, new Vector2(PlayerBarWidth, 31f), new Vector2(540f, -73f), new Color32(12, 10, 10, 218));
+            manaMissing = CreateRightAnchoredImage("Mana Missing Mask", root.transform, new Vector2(ManaBarWidth, 27f), new Vector2(510f, -142f), new Color32(8, 11, 18, 218));
+
+            Image healthTextCover = CreateImage("Health Original Text Cover", root.transform, new Vector2(224f, 29f), new Vector2(176f, -76f), new Color32(31, 10, 11, 168));
+            healthTextCover.sprite = GetHudPanelSprite();
+
+            Image manaTextCover = CreateImage("Mana Original Text Cover", root.transform, new Vector2(214f, 27f), new Vector2(176f, -145f), new Color32(8, 17, 34, 166));
+            manaTextCover.sprite = GetHudPanelSprite();
 
             healthText = CreateText("Health Value", root.transform, "HP 100 / 100", 23, TextAnchor.MiddleLeft, new Vector2(187f, -76f), new Vector2(240f, 30f));
             healthText.color = new Color32(255, 250, 232, 255);
@@ -167,6 +195,7 @@ namespace WitcherGame
             roomText.color = new Color32(152, 178, 188, 255);
             AddOutline(roomText, new Color32(0, 0, 0, 220), new Vector2(1f, -1f));
 
+            BuildSkillFrameOverlays(root.transform);
             BuildBossBar();
             BuildGameOverPanel();
             UpdateBars();
@@ -286,6 +315,18 @@ namespace WitcherGame
             AddOutline(cooldown, new Color32(0, 0, 0, 245), new Vector2(1f, -1f));
 
             CreateDiamond("Skill Top Gem " + index, frame.transform, new Vector2(35f, 4f), 10f, iconColor, new Color32(7, 8, 10, 255));
+        }
+
+        private void BuildSkillFrameOverlays(Transform parent)
+        {
+            for (int i = 0; i < 4; i++)
+            {
+                Vector2 position = new Vector2(192f + i * 86f, -148f);
+                Image rim = CreateImage("Skill Metal Rim Overlay " + i, parent, new Vector2(70f, 70f), position, new Color32(8, 8, 9, 20));
+                rim.sprite = GetMetalSprite();
+                rim.raycastTarget = false;
+                AddOutline(rim, new Color32(104, 87, 61, 176), new Vector2(1f, -1f));
+            }
         }
 
         private void UpdateBars()
@@ -474,8 +515,14 @@ namespace WitcherGame
 
         private static Image CreateReferenceFill(string name, Transform parent, Vector2 size, Vector2 position, Color32 color)
         {
+            return CreateReferenceFill(name, parent, size, position, color, WitcherSpriteLibrary.GetSolidSprite(color));
+        }
+
+        private static Image CreateReferenceFill(string name, Transform parent, Vector2 size, Vector2 position, Color32 color, Sprite sprite)
+        {
             Image image = CreateImage(name, parent, size, position, color);
-            image.sprite = WitcherSpriteLibrary.GetSolidSprite(color);
+            image.sprite = sprite != null ? sprite : WitcherSpriteLibrary.GetSolidSprite(color);
+            image.color = sprite != null ? Color.white : (Color)color;
             image.type = Image.Type.Filled;
             image.fillMethod = Image.FillMethod.Horizontal;
             image.fillOrigin = (int)Image.OriginHorizontal.Left;
@@ -542,6 +589,143 @@ namespace WitcherGame
             Outline outline = graphic.gameObject.AddComponent<Outline>();
             outline.effectColor = color;
             outline.effectDistance = distance;
+        }
+
+        private static Sprite GetHudPanelSprite()
+        {
+            if (cachedHudPanelSprite == null)
+            {
+                cachedHudPanelSprite = CreateNoisyGradientSprite(
+                    128,
+                    64,
+                    new Color32(20, 17, 14, 232),
+                    new Color32(6, 8, 11, 226),
+                    new Color32(62, 47, 34, 34),
+                    18,
+                    100f);
+            }
+
+            return cachedHudPanelSprite;
+        }
+
+        private static Sprite GetBarBackSprite()
+        {
+            if (cachedBarBackSprite == null)
+            {
+                cachedBarBackSprite = CreateNoisyGradientSprite(
+                    128,
+                    18,
+                    new Color32(11, 10, 10, 255),
+                    new Color32(22, 18, 16, 255),
+                    new Color32(94, 78, 57, 44),
+                    20,
+                    100f);
+            }
+
+            return cachedBarBackSprite;
+        }
+
+        private static Sprite GetMetalSprite()
+        {
+            if (cachedMetalSprite == null)
+            {
+                cachedMetalSprite = CreateNoisyGradientSprite(
+                    80,
+                    40,
+                    new Color32(28, 27, 25, 255),
+                    new Color32(8, 9, 10, 255),
+                    new Color32(116, 103, 80, 48),
+                    22,
+                    100f);
+            }
+
+            return cachedMetalSprite;
+        }
+
+        private static Sprite GetHealthFillSprite()
+        {
+            if (cachedHealthFillSprite == null)
+            {
+                cachedHealthFillSprite = CreateBarFillSprite(
+                    new Color32(70, 6, 11, 255),
+                    new Color32(146, 16, 24, 255),
+                    new Color32(196, 46, 38, 255),
+                    new Color32(255, 150, 112, 58));
+            }
+
+            return cachedHealthFillSprite;
+        }
+
+        private static Sprite GetManaFillSprite()
+        {
+            if (cachedManaFillSprite == null)
+            {
+                cachedManaFillSprite = CreateBarFillSprite(
+                    new Color32(7, 17, 40, 255),
+                    new Color32(28, 58, 118, 255),
+                    new Color32(54, 83, 150, 255),
+                    new Color32(127, 174, 214, 52));
+            }
+
+            return cachedManaFillSprite;
+        }
+
+        private static Sprite CreateBarFillSprite(Color32 dark, Color32 middle, Color32 bright, Color32 highlight)
+        {
+            const int width = 256;
+            const int height = 24;
+            Texture2D texture = new Texture2D(width, height, TextureFormat.RGBA32, false);
+            for (int y = 0; y < height; y++)
+            {
+                float vertical = height <= 1 ? 0f : (float)y / (height - 1);
+                for (int x = 0; x < width; x++)
+                {
+                    float horizontal = width <= 1 ? 0f : (float)x / (width - 1);
+                    Color baseColor = Color.Lerp(dark, middle, Mathf.Clamp01(horizontal * 1.25f));
+                    baseColor = Color.Lerp(baseColor, bright, Mathf.Clamp01((1f - Mathf.Abs(vertical - 0.62f) * 2.1f) * 0.34f));
+                    int noise = ((x * 13 + y * 31 + (x / 7) * 17) & 15) - 7;
+                    float scratch = ((x + y * 5) % 29 == 0 || (x * 3 + y) % 47 == 0) ? -0.16f : 0f;
+                    float edgeShade = vertical < 0.14f || vertical > 0.88f ? -0.22f : 0f;
+                    baseColor *= Mathf.Clamp01(1f + noise / 72f + scratch + edgeShade);
+                    if (y == height - 5 || y == height - 6)
+                    {
+                        baseColor = Color.Lerp(baseColor, highlight, highlight.a / 255f);
+                    }
+
+                    texture.SetPixel(x, y, baseColor);
+                }
+            }
+
+            texture.filterMode = FilterMode.Point;
+            texture.wrapMode = TextureWrapMode.Clamp;
+            texture.Apply();
+            return Sprite.Create(texture, new Rect(0f, 0f, width, height), new Vector2(0.5f, 0.5f), 100f);
+        }
+
+        private static Sprite CreateNoisyGradientSprite(int width, int height, Color32 top, Color32 bottom, Color32 fleck, int noiseStrength, float pixelsPerUnit)
+        {
+            Texture2D texture = new Texture2D(width, height, TextureFormat.RGBA32, false);
+            for (int y = 0; y < height; y++)
+            {
+                float vertical = height <= 1 ? 0f : (float)y / (height - 1);
+                for (int x = 0; x < width; x++)
+                {
+                    Color color = Color.Lerp(bottom, top, vertical);
+                    int noise = ((x * 17 + y * 29 + (x / 5) * 11) & 31) - 15;
+                    color *= Mathf.Clamp01(1f + noise * noiseStrength / 1400f);
+                    if ((x * 7 + y * 3) % 43 == 0)
+                    {
+                        color = Color.Lerp(color, fleck, fleck.a / 255f);
+                    }
+
+                    texture.SetPixel(x, y, color);
+                }
+            }
+
+            texture.filterMode = FilterMode.Point;
+            texture.wrapMode = TextureWrapMode.Clamp;
+            texture.Apply();
+            return Sprite.Create(texture, new Rect(0f, 0f, width, height), new Vector2(0.5f, 0.5f), pixelsPerUnit);
         }
 
         private static GameObject CreateUiObject(string name, Transform parent, Vector2 size, Vector2 anchoredPosition, Vector2 anchor)
