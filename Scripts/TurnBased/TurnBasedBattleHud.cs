@@ -1250,7 +1250,7 @@ namespace WitcherGame
             switch (skillId)
             {
                 case BattleSkillId.ExecuteSlash:
-                    return 0.064f;
+                    return 0.045f;
                 case BattleSkillId.FlameSign:
                     return 0.072f;
                 case BattleSkillId.ThunderSign:
