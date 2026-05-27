@@ -12,6 +12,7 @@ namespace WitcherGame
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void CreateOpeningStoryIfMissing()
         {
+            WitcherStoryNpcDirector.CreateIfMissing();
             if (Object.FindObjectOfType<OpeningStoryManager>() != null)
             {
                 return;

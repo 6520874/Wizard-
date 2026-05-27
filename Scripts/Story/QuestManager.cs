@@ -56,10 +56,14 @@ namespace WitcherGame
             QuestData quest = new QuestData
             {
                 title = "灰鸦村的哭声",
-                description = "调查灰鸦村矿洞中的哭声，找到失踪的孩子，并查明怪物出现的真正原因。",
+                description = "调查灰鸦村矿洞中的哭声，找到失踪的孩子，并查明真正披着人皮的怪物。",
                 objectives = new List<QuestObjective>
                 {
                     new QuestObjective("与老村长对话"),
+                    new QuestObjective("询问铁匠关于银钉的旧事"),
+                    new QuestObjective("质问神父关于驱魔仪式"),
+                    new QuestObjective("追问贵族使者为何封锁村庄"),
+                    new QuestObjective("寻找失踪孩子留下的线索"),
                     new QuestObjective("前往村庄西侧矿洞"),
                     new QuestObjective("调查矿洞入口的血迹"),
                     new QuestObjective("击败第一只低级食尸鬼"),

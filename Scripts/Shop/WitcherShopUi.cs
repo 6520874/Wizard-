@@ -407,9 +407,48 @@ namespace WitcherGame
 
             texture.filterMode = FilterMode.Point;
             texture.wrapMode = TextureWrapMode.Clamp;
-            cachedShopkeeperPortrait = Sprite.Create(texture, new Rect(0f, 0f, texture.width, texture.height), new Vector2(0.5f, 0.5f), 100f);
+            cachedShopkeeperPortrait = Sprite.Create(texture, CalculateUpperBodyRect(texture), new Vector2(0.5f, 0.5f), 100f);
             cachedShopkeeperPortrait.name = "ShopkeeperPortrait_Runtime";
             return cachedShopkeeperPortrait;
+        }
+
+        private static Rect CalculateUpperBodyRect(Texture2D texture)
+        {
+            int minX = texture.width;
+            int minY = texture.height;
+            int maxX = 0;
+            int maxY = 0;
+            Color32[] pixels = texture.GetPixels32();
+            for (int y = 0; y < texture.height; y++)
+            {
+                for (int x = 0; x < texture.width; x++)
+                {
+                    if (pixels[y * texture.width + x].a <= 16)
+                    {
+                        continue;
+                    }
+
+                    minX = Mathf.Min(minX, x);
+                    minY = Mathf.Min(minY, y);
+                    maxX = Mathf.Max(maxX, x);
+                    maxY = Mathf.Max(maxY, y);
+                }
+            }
+
+            if (maxX <= minX || maxY <= minY)
+            {
+                return new Rect(0f, 0f, texture.width, texture.height);
+            }
+
+            int bodyHeight = maxY - minY;
+            int cropBottom = Mathf.Clamp(minY + Mathf.RoundToInt(bodyHeight * 0.44f), 0, texture.height - 1);
+            int paddingX = Mathf.RoundToInt((maxX - minX) * 0.16f);
+            int paddingY = Mathf.RoundToInt(bodyHeight * 0.08f);
+            int xMin = Mathf.Clamp(minX - paddingX, 0, texture.width - 1);
+            int xMax = Mathf.Clamp(maxX + paddingX, xMin + 1, texture.width);
+            int yMin = Mathf.Clamp(cropBottom - paddingY, 0, texture.height - 1);
+            int yMax = Mathf.Clamp(maxY + paddingY, yMin + 1, texture.height);
+            return new Rect(xMin, yMin, xMax - xMin, yMax - yMin);
         }
 
         private static Text CreateText(string name, Transform parent, string text, int fontSize, TextAnchor anchor, Vector2 position, Vector2 size, Color32 color)
