@@ -107,6 +107,24 @@ namespace WitcherGame
             ConfigureTriggerBounds(new Vector2(0f, 0.48f), new Vector2(2.05f, 1.15f), 1.45f, 1.0f);
         }
 
+        public void ConfigureGreyMother(Sprite sprite)
+        {
+            battleSprite = sprite;
+            visualKind = TurnBasedEnemyVisualKind.GreyMother;
+            EnsureMapIdleAnimator();
+            enemyCount = 1;
+            encounterTitle = "灰母回声";
+            enemyName = "灰母回声";
+            enemyHealth = 86;
+            enemyAttack = 14;
+            enemyDefense = 4;
+            experienceReward = 18;
+            goldReward = 32;
+            lootName = "灰母泪晶";
+            lootChance = 1f;
+            ConfigureTriggerBounds(new Vector2(0f, 0.8f), new Vector2(2.35f, 1.85f), 1.55f, 1.3f);
+        }
+
         public void ConfigureQuestCompletion(int objectiveIndex)
         {
             completeQuestObjectiveOnWin = objectiveIndex;

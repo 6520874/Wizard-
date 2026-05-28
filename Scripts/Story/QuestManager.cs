@@ -42,8 +42,11 @@ namespace WitcherGame
         [SerializeField] private Text questDescriptionText;
         [SerializeField] private Text questObjectivesText;
         [SerializeField] private Text questNavigationHintText;
+        [SerializeField] private GameObject questCompletePanel;
+        [SerializeField] private Text questCompleteText;
 
         private QuestData activeQuest;
+        private bool questCompletionShown;
         private static readonly Dictionary<int, Vector2> ObjectiveNavigationTargets = new Dictionary<int, Vector2>();
 
         public QuestData ActiveQuest => activeQuest;
@@ -86,7 +89,9 @@ namespace WitcherGame
                     new QuestObjective("前往村庄西侧矿洞"),
                     new QuestObjective("调查矿洞入口的血迹"),
                     new QuestObjective("击败第一只低级食尸鬼"),
-                    new QuestObjective("进入矿洞深处")
+                    new QuestObjective("进入矿洞深处"),
+                    new QuestObjective("击败灰母回声"),
+                    new QuestObjective("调查灰母祭坛并公开真相")
                 }
             };
 
@@ -97,6 +102,12 @@ namespace WitcherGame
         public void StartQuest(QuestData quest)
         {
             activeQuest = quest;
+            questCompletionShown = false;
+            if (questCompletePanel != null)
+            {
+                questCompletePanel.SetActive(false);
+            }
+
             SetQuestPanelVisible(activeQuest != null);
             RefreshQuestUi();
         }
@@ -110,6 +121,10 @@ namespace WitcherGame
 
             activeQuest.objectives[objectiveIndex].completed = completed;
             RefreshQuestUi();
+            if (completed && !questCompletionShown && AreAllObjectivesCompleted())
+            {
+                ShowQuestCompletePanel();
+            }
         }
 
         public void SetObjectiveCompleted(string objectiveText, bool completed)
@@ -193,6 +208,43 @@ namespace WitcherGame
             return -1;
         }
 
+        private bool AreAllObjectivesCompleted()
+        {
+            if (activeQuest == null || activeQuest.objectives.Count == 0)
+            {
+                return false;
+            }
+
+            for (int i = 0; i < activeQuest.objectives.Count; i++)
+            {
+                if (!activeQuest.objectives[i].completed)
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        private void ShowQuestCompletePanel()
+        {
+            questCompletionShown = true;
+            if (questCompletePanel == null || questCompleteText == null)
+            {
+                EnsureQuestUi();
+            }
+
+            if (questCompleteText != null)
+            {
+                questCompleteText.text = "第一章完成\n灰鸦村的哭声\n\n真相不会拯救所有人，但至少能阻止下一次献祭。";
+            }
+
+            if (questCompletePanel != null)
+            {
+                questCompletePanel.SetActive(true);
+            }
+        }
+
         private void NavigateToCurrentObjective()
         {
             int currentObjectiveIndex = GetCurrentObjectiveIndex();
@@ -238,6 +290,14 @@ namespace WitcherGame
             questDescriptionText = CreateText("Quest Description", questPanel.transform, "任务描述", 14, TextAnchor.UpperLeft, new Vector2(18f, -54f), new Vector2(324f, 46f), new Color32(186, 199, 205, 255));
             questObjectivesText = CreateText("Quest Objectives", questPanel.transform, "任务目标", 18, TextAnchor.UpperLeft, new Vector2(18f, -104f), new Vector2(324f, 48f), new Color32(255, 225, 147, 255));
             questNavigationHintText = CreateText("Quest Navigation Hint", questPanel.transform, "点击任务卡：自动前往目标", 13, TextAnchor.MiddleRight, new Vector2(88f, -150f), new Vector2(254f, 18f), new Color32(151, 178, 190, 255));
+
+            questCompletePanel = CreatePanel("Quest Complete Panel", canvas.transform, new Vector2(500f, 190f), new Vector2(0f, 44f), new Vector2(0.5f, 0.5f), new Color32(6, 8, 11, 232));
+            questCompleteText = CreateText("Quest Complete Text", questCompletePanel.transform, string.Empty, 24, TextAnchor.MiddleCenter, Vector2.zero, new Vector2(460f, 150f), new Color32(255, 225, 148, 255));
+            RectTransform completeTextRect = questCompleteText.GetComponent<RectTransform>();
+            completeTextRect.anchorMin = new Vector2(0.5f, 0.5f);
+            completeTextRect.anchorMax = new Vector2(0.5f, 0.5f);
+            completeTextRect.pivot = new Vector2(0.5f, 0.5f);
+            questCompletePanel.SetActive(false);
         }
 
         private static Canvas EnsureCanvas(string name, int sortingOrder)

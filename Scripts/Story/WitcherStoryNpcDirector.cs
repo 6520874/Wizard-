@@ -11,6 +11,7 @@ namespace WitcherGame
         private const string RootName = "Grey Raven Story NPCs";
         private const string MarkerRootName = "Grey Raven Quest Markers";
         private const float NpcPixelsPerUnit = 820f;
+        private const float MarkerPixelsPerUnit = 96f;
         private static readonly Dictionary<string, Sprite> CachedSprites = new Dictionary<string, Sprite>();
 
         private readonly StoryNpcDefinition[] npcDefinitions =
@@ -87,7 +88,9 @@ namespace WitcherGame
             new StoryMarkerDefinition(
                 "MineEntrance",
                 "西侧矿洞入口",
+                "Art/Story/Markers/MineEntrance.png",
                 new Vector2(-11.25f, 1.55f),
+                new Vector2(1.35f, 0.9f),
                 5,
                 new Color32(43, 47, 52, 240),
                 new[]
@@ -98,7 +101,9 @@ namespace WitcherGame
             new StoryMarkerDefinition(
                 "MineBloodTrail",
                 "矿洞入口的血迹",
+                "Art/Story/Markers/BloodClue.png",
                 new Vector2(-10.38f, 0.95f),
+                new Vector2(0.78f, 0.5f),
                 6,
                 new Color32(111, 15, 18, 245),
                 new[]
@@ -109,13 +114,29 @@ namespace WitcherGame
             new StoryMarkerDefinition(
                 "MineDepth",
                 "矿洞深处",
+                "Art/Story/Markers/DeepMine.png",
                 new Vector2(-11.85f, 2.46f),
+                new Vector2(1.1f, 0.72f),
                 8,
                 new Color32(30, 36, 48, 245),
                 new[]
                 {
                     new DialogueManager.DialogueLine("猎魔人", "风里有灰烬、尸蜡和潮湿的铁味。这里不是巢穴，是祭坛。", "Art/UI/GeraltPortrait.png"),
                     new DialogueManager.DialogueLine("猎魔人", "继续往下，就是灰母的地方。", "Art/UI/GeraltPortrait.png")
+                }),
+            new StoryMarkerDefinition(
+                "GreyMotherTruth",
+                "灰母祭坛",
+                "Art/Story/Markers/GreyMotherSeal.png",
+                new Vector2(-10.95f, 3.4f),
+                new Vector2(0.95f, 0.7f),
+                10,
+                new Color32(70, 64, 74, 245),
+                new[]
+                {
+                    new DialogueManager.DialogueLine("灰母", "我没有吃掉孩子。我只是哭给还活着的人听。", "Art/Story/Markers/GreyMother.png"),
+                    new DialogueManager.DialogueLine("猎魔人", "真正把孩子带下来的，是村里还会说话的人。", "Art/UI/GeraltPortrait.png"),
+                    new DialogueManager.DialogueLine("猎魔人", "真相会让灰鸦村流血，但沉默只会让下一个孩子被献上。", "Art/UI/GeraltPortrait.png")
                 })
         };
 
@@ -169,6 +190,7 @@ namespace WitcherGame
 
             SpawnQuestMarkers(walkableMap);
             SpawnFirstGhoulEncounter(walkableMap);
+            SpawnGreyMotherEncounter(walkableMap);
         }
 
         private void SpawnQuestMarkers(WitcherVillageWalkableMap walkableMap)
@@ -227,6 +249,41 @@ namespace WitcherGame
             trigger.ApplyMapScale(0.32f);
         }
 
+        private static void SpawnGreyMotherEncounter(WitcherVillageWalkableMap walkableMap)
+        {
+            const int greyMotherObjectiveIndex = 9;
+            Vector2 position = new Vector2(-11.35f, 3.02f);
+            if (walkableMap != null)
+            {
+                walkableMap.TryGetNearestWalkablePoint(position, out position);
+            }
+
+            QuestManager.RegisterObjectiveNavigationTarget(greyMotherObjectiveIndex, position);
+
+            GameObject oldBoss = GameObject.Find("Story Encounter - Grey Mother Echo");
+            if (oldBoss != null)
+            {
+                Destroy(oldBoss);
+            }
+
+            GameObject encounterObject = new GameObject("Story Encounter - Grey Mother Echo");
+            encounterObject.transform.position = new Vector3(position.x, position.y, 0f);
+            SpriteRenderer renderer = encounterObject.AddComponent<SpriteRenderer>();
+            renderer.sprite = LoadStorySprite("Art/Story/Markers/GreyMother.png", MarkerPixelsPerUnit);
+            renderer.sortingOrder = Mathf.RoundToInt((6.2f - position.y) * 100f) + 17;
+            Rigidbody2D body = encounterObject.AddComponent<Rigidbody2D>();
+            body.bodyType = RigidbodyType2D.Kinematic;
+            body.gravityScale = 0f;
+            body.constraints = RigidbodyConstraints2D.FreezeRotation;
+            BoxCollider2D collider = encounterObject.AddComponent<BoxCollider2D>();
+            collider.isTrigger = true;
+
+            BattleEncounterTrigger trigger = encounterObject.AddComponent<BattleEncounterTrigger>();
+            trigger.ConfigureGreyMother(renderer.sprite);
+            trigger.ConfigureQuestCompletion(greyMotherObjectiveIndex);
+            trigger.ApplyMapScale(0.36f);
+        }
+
         private static void CreateQuestMarker(Transform root, StoryMarkerDefinition definition, Vector2 position)
         {
             GameObject marker = new GameObject("Story Marker - " + definition.DisplayName);
@@ -243,10 +300,15 @@ namespace WitcherGame
             shadowRenderer.sortingOrder = 15;
 
             SpriteRenderer renderer = marker.AddComponent<SpriteRenderer>();
-            renderer.sprite = WitcherSpriteLibrary.GetSolidSprite(definition.MarkerColor);
+            renderer.sprite = LoadStorySprite(definition.SpritePath, MarkerPixelsPerUnit);
+            if (renderer.sprite == null)
+            {
+                renderer.sprite = WitcherSpriteLibrary.GetSolidSprite(definition.MarkerColor);
+            }
+
             renderer.color = definition.MarkerColor;
             renderer.sortingOrder = Mathf.RoundToInt((6.2f - position.y) * 100f) + 16;
-            marker.transform.localScale = new Vector3(0.42f, 0.26f, 1f);
+            marker.transform.localScale = new Vector3(definition.Scale.x, definition.Scale.y, 1f);
 
             BoxCollider2D collider = marker.AddComponent<BoxCollider2D>();
             collider.isTrigger = true;
@@ -318,6 +380,11 @@ namespace WitcherGame
 
         private static Sprite LoadNpcSprite(string relativePath)
         {
+            return LoadStorySprite(relativePath, NpcPixelsPerUnit);
+        }
+
+        private static Sprite LoadStorySprite(string relativePath, float pixelsPerUnit)
+        {
             if (CachedSprites.TryGetValue(relativePath, out Sprite cached))
             {
                 return cached;
@@ -339,7 +406,7 @@ namespace WitcherGame
 
             texture.filterMode = FilterMode.Point;
             texture.wrapMode = TextureWrapMode.Clamp;
-            Sprite sprite = Sprite.Create(texture, new Rect(0f, 0f, texture.width, texture.height), new Vector2(0.5f, 0f), NpcPixelsPerUnit);
+            Sprite sprite = Sprite.Create(texture, new Rect(0f, 0f, texture.width, texture.height), new Vector2(0.5f, 0f), pixelsPerUnit);
             sprite.name = Path.GetFileNameWithoutExtension(relativePath) + "_StoryNpc_Runtime";
             CachedSprites[relativePath] = sprite;
             return sprite;
@@ -369,11 +436,13 @@ namespace WitcherGame
 
         private readonly struct StoryMarkerDefinition
         {
-            public StoryMarkerDefinition(string id, string displayName, Vector2 position, int questObjectiveIndex, Color32 markerColor, DialogueManager.DialogueLine[] dialogueLines)
+            public StoryMarkerDefinition(string id, string displayName, string spritePath, Vector2 position, Vector2 scale, int questObjectiveIndex, Color32 markerColor, DialogueManager.DialogueLine[] dialogueLines)
             {
                 Id = id;
                 DisplayName = displayName;
+                SpritePath = spritePath;
                 Position = position;
+                Scale = scale;
                 QuestObjectiveIndex = questObjectiveIndex;
                 MarkerColor = markerColor;
                 DialogueLines = dialogueLines;
@@ -381,7 +450,9 @@ namespace WitcherGame
 
             public string Id { get; }
             public string DisplayName { get; }
+            public string SpritePath { get; }
             public Vector2 Position { get; }
+            public Vector2 Scale { get; }
             public int QuestObjectiveIndex { get; }
             public Color32 MarkerColor { get; }
             public DialogueManager.DialogueLine[] DialogueLines { get; }
