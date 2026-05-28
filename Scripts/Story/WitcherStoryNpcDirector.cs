@@ -9,6 +9,7 @@ namespace WitcherGame
     public class WitcherStoryNpcDirector : MonoBehaviour
     {
         private const string RootName = "Grey Raven Story NPCs";
+        private const string MarkerRootName = "Grey Raven Quest Markers";
         private const float NpcPixelsPerUnit = 820f;
         private static readonly Dictionary<string, Sprite> CachedSprites = new Dictionary<string, Sprite>();
 
@@ -81,6 +82,43 @@ namespace WitcherGame
                 })
         };
 
+        private readonly StoryMarkerDefinition[] markerDefinitions =
+        {
+            new StoryMarkerDefinition(
+                "MineEntrance",
+                "西侧矿洞入口",
+                new Vector2(-11.25f, 1.55f),
+                5,
+                new Color32(43, 47, 52, 240),
+                new[]
+                {
+                    new DialogueManager.DialogueLine("猎魔人", "矿洞口的木梁被新钉过，钉痕很浅。有人最近才进出过。", "Art/UI/GeraltPortrait.png"),
+                    new DialogueManager.DialogueLine("猎魔人", "哭声不是从洞口传出来的，是从更深处顺着风爬上来的。", "Art/UI/GeraltPortrait.png")
+                }),
+            new StoryMarkerDefinition(
+                "MineBloodTrail",
+                "矿洞入口的血迹",
+                new Vector2(-10.38f, 0.95f),
+                6,
+                new Color32(111, 15, 18, 245),
+                new[]
+                {
+                    new DialogueManager.DialogueLine("猎魔人", "血迹很新，但没有拖拽痕。孩子应该是自己走进去的，或者被什么声音牵着走。", "Art/UI/GeraltPortrait.png"),
+                    new DialogueManager.DialogueLine("猎魔人", "旁边有细小的银屑……铁匠说的银钉，确实被用过。", "Art/UI/GeraltPortrait.png")
+                }),
+            new StoryMarkerDefinition(
+                "MineDepth",
+                "矿洞深处",
+                new Vector2(-11.85f, 2.46f),
+                8,
+                new Color32(30, 36, 48, 245),
+                new[]
+                {
+                    new DialogueManager.DialogueLine("猎魔人", "风里有灰烬、尸蜡和潮湿的铁味。这里不是巢穴，是祭坛。", "Art/UI/GeraltPortrait.png"),
+                    new DialogueManager.DialogueLine("猎魔人", "继续往下，就是灰母的地方。", "Art/UI/GeraltPortrait.png")
+                })
+        };
+
         public static WitcherStoryNpcDirector CreateIfMissing()
         {
             WitcherStoryNpcDirector existing = FindObjectOfType<WitcherStoryNpcDirector>();
@@ -128,6 +166,98 @@ namespace WitcherGame
                 CreateNpc(root.transform, definition, position);
                 RegisterQuestNavigation(definition, position, walkableMap);
             }
+
+            SpawnQuestMarkers(walkableMap);
+            SpawnFirstGhoulEncounter(walkableMap);
+        }
+
+        private void SpawnQuestMarkers(WitcherVillageWalkableMap walkableMap)
+        {
+            GameObject oldRoot = GameObject.Find(MarkerRootName);
+            if (oldRoot != null)
+            {
+                Destroy(oldRoot);
+            }
+
+            GameObject root = new GameObject(MarkerRootName);
+            foreach (StoryMarkerDefinition definition in markerDefinitions)
+            {
+                Vector2 position = definition.Position;
+                if (walkableMap != null)
+                {
+                    walkableMap.TryGetNearestWalkablePoint(position, out position);
+                }
+
+                CreateQuestMarker(root.transform, definition, position);
+                QuestManager.RegisterObjectiveNavigationTarget(definition.QuestObjectiveIndex, position);
+            }
+        }
+
+        private static void SpawnFirstGhoulEncounter(WitcherVillageWalkableMap walkableMap)
+        {
+            const int ghoulObjectiveIndex = 7;
+            Vector2 position = new Vector2(-9.45f, 0.48f);
+            if (walkableMap != null)
+            {
+                walkableMap.TryGetNearestWalkablePoint(position, out position);
+            }
+
+            QuestManager.RegisterObjectiveNavigationTarget(ghoulObjectiveIndex, position);
+
+            GameObject oldGhoul = GameObject.Find("Story Encounter - Lesser Ghoul");
+            if (oldGhoul != null)
+            {
+                Destroy(oldGhoul);
+            }
+
+            GameObject encounterObject = new GameObject("Story Encounter - Lesser Ghoul");
+            encounterObject.transform.position = new Vector3(position.x, position.y, 0f);
+            SpriteRenderer renderer = encounterObject.AddComponent<SpriteRenderer>();
+            renderer.sortingOrder = Mathf.RoundToInt((6.2f - position.y) * 100f) + 17;
+            Rigidbody2D body = encounterObject.AddComponent<Rigidbody2D>();
+            body.bodyType = RigidbodyType2D.Kinematic;
+            body.gravityScale = 0f;
+            body.constraints = RigidbodyConstraints2D.FreezeRotation;
+            BoxCollider2D collider = encounterObject.AddComponent<BoxCollider2D>();
+            collider.isTrigger = true;
+
+            BattleEncounterTrigger trigger = encounterObject.AddComponent<BattleEncounterTrigger>();
+            trigger.ConfigureStoryGhoul(renderer.sprite);
+            trigger.ConfigureQuestCompletion(ghoulObjectiveIndex);
+            trigger.ApplyMapScale(0.32f);
+        }
+
+        private static void CreateQuestMarker(Transform root, StoryMarkerDefinition definition, Vector2 position)
+        {
+            GameObject marker = new GameObject("Story Marker - " + definition.DisplayName);
+            marker.transform.SetParent(root, false);
+            marker.transform.position = new Vector3(position.x, position.y, 0f);
+
+            GameObject shadow = new GameObject("Marker Shadow");
+            shadow.transform.SetParent(marker.transform, false);
+            shadow.transform.localPosition = new Vector3(0f, -0.16f, 0.04f);
+            shadow.transform.localScale = new Vector3(0.95f, 0.2f, 1f);
+            SpriteRenderer shadowRenderer = shadow.AddComponent<SpriteRenderer>();
+            shadowRenderer.sprite = WitcherSpriteLibrary.GetSolidSprite(new Color32(0, 0, 0, 100));
+            shadowRenderer.color = new Color32(0, 0, 0, 100);
+            shadowRenderer.sortingOrder = 15;
+
+            SpriteRenderer renderer = marker.AddComponent<SpriteRenderer>();
+            renderer.sprite = WitcherSpriteLibrary.GetSolidSprite(definition.MarkerColor);
+            renderer.color = definition.MarkerColor;
+            renderer.sortingOrder = Mathf.RoundToInt((6.2f - position.y) * 100f) + 16;
+            marker.transform.localScale = new Vector3(0.42f, 0.26f, 1f);
+
+            BoxCollider2D collider = marker.AddComponent<BoxCollider2D>();
+            collider.isTrigger = true;
+            collider.size = new Vector2(3.2f, 3.0f);
+
+            Rigidbody2D body = marker.AddComponent<Rigidbody2D>();
+            body.bodyType = RigidbodyType2D.Kinematic;
+            body.simulated = true;
+
+            WitcherStoryQuestMarker questMarker = marker.AddComponent<WitcherStoryQuestMarker>();
+            questMarker.Configure(definition.DisplayName, definition.QuestObjectiveIndex, definition.DialogueLines);
         }
 
         private static void RegisterQuestNavigation(StoryNpcDefinition definition, Vector2 npcPosition, WitcherVillageWalkableMap walkableMap)
@@ -234,6 +364,26 @@ namespace WitcherGame
             public Vector2 Position { get; }
             public float Scale { get; }
             public int QuestObjectiveIndex { get; }
+            public DialogueManager.DialogueLine[] DialogueLines { get; }
+        }
+
+        private readonly struct StoryMarkerDefinition
+        {
+            public StoryMarkerDefinition(string id, string displayName, Vector2 position, int questObjectiveIndex, Color32 markerColor, DialogueManager.DialogueLine[] dialogueLines)
+            {
+                Id = id;
+                DisplayName = displayName;
+                Position = position;
+                QuestObjectiveIndex = questObjectiveIndex;
+                MarkerColor = markerColor;
+                DialogueLines = dialogueLines;
+            }
+
+            public string Id { get; }
+            public string DisplayName { get; }
+            public Vector2 Position { get; }
+            public int QuestObjectiveIndex { get; }
+            public Color32 MarkerColor { get; }
             public DialogueManager.DialogueLine[] DialogueLines { get; }
         }
     }

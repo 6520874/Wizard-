@@ -47,6 +47,7 @@ namespace WitcherGame
         private static readonly Dictionary<int, Vector2> ObjectiveNavigationTargets = new Dictionary<int, Vector2>();
 
         public QuestData ActiveQuest => activeQuest;
+        public int CurrentObjectiveIndex => GetCurrentObjectiveIndex();
 
         public static void RegisterObjectiveNavigationTarget(int objectiveIndex, Vector2 worldPosition)
         {
@@ -56,6 +57,11 @@ namespace WitcherGame
             }
 
             ObjectiveNavigationTargets[objectiveIndex] = worldPosition;
+        }
+
+        public bool IsObjectiveCurrent(int objectiveIndex)
+        {
+            return objectiveIndex >= 0 && CurrentObjectiveIndex == objectiveIndex;
         }
 
         private void Awake()

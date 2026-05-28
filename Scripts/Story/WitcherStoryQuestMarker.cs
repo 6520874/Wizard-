@@ -4,11 +4,11 @@ using UnityEngine.UI;
 
 namespace WitcherGame
 {
-    // 中文说明：负责剧情 NPC 的靠近提示、按 E 对话以及主线任务目标推进。
+    // 中文说明：负责矿洞入口、血迹等非 NPC 剧情目标的靠近交互和任务推进。
     [RequireComponent(typeof(BoxCollider2D))]
-    public class WitcherStoryNpcTrigger : MonoBehaviour
+    public class WitcherStoryQuestMarker : MonoBehaviour
     {
-        [SerializeField] private string npcDisplayName = "村民";
+        [SerializeField] private string markerDisplayName = "线索";
         [SerializeField] private int questObjectiveIndex = -1;
         [SerializeField] private DialogueManager.DialogueLine[] dialogueLines = Array.Empty<DialogueManager.DialogueLine>();
 
@@ -21,12 +21,12 @@ namespace WitcherGame
 
         public void Configure(string displayName, int objectiveIndex, DialogueManager.DialogueLine[] lines)
         {
-            npcDisplayName = displayName;
+            markerDisplayName = displayName;
             questObjectiveIndex = objectiveIndex;
             dialogueLines = lines ?? Array.Empty<DialogueManager.DialogueLine>();
             if (promptText != null)
             {
-                promptText.text = $"按 E 对话：{npcDisplayName}";
+                promptText.text = $"按 E 调查：{markerDisplayName}";
             }
         }
 
@@ -34,11 +34,7 @@ namespace WitcherGame
         {
             BoxCollider2D triggerCollider = GetComponent<BoxCollider2D>();
             triggerCollider.isTrigger = true;
-            if (triggerCollider.size == Vector2.zero)
-            {
-                triggerCollider.size = new Vector2(1.15f, 1.25f);
-            }
-
+            triggerCollider.size = new Vector2(3.4f, 3.0f);
             dialogueManager = FindObjectOfType<DialogueManager>();
             questManager = FindObjectOfType<QuestManager>();
             EnsurePromptUi();
@@ -58,7 +54,7 @@ namespace WitcherGame
             SetPromptVisible(true);
             if (Input.GetKeyDown(KeyCode.E))
             {
-                StartNpcDialogue();
+                InvestigateMarker();
             }
         }
 
@@ -85,35 +81,40 @@ namespace WitcherGame
             SetPromptVisible(false);
         }
 
-        private void StartNpcDialogue()
+        private void InvestigateMarker()
         {
-            dialogueManager = dialogueManager == null ? FindObjectOfType<DialogueManager>() : dialogueManager;
             questManager = questManager == null ? FindObjectOfType<QuestManager>() : questManager;
-            if (dialogueManager == null || dialogueLines.Length == 0)
+            dialogueManager = dialogueManager == null ? FindObjectOfType<DialogueManager>() : dialogueManager;
+            if (questManager == null)
             {
-                Debug.LogWarning($"剧情 NPC {npcDisplayName} 没有可播放的对话。");
                 return;
             }
 
             SetPromptVisible(false);
             player?.SetControlEnabled(false);
-            dialogueManager.StartDialogue(dialogueLines, () =>
+            Action complete = () =>
             {
-                if (questManager != null)
+                if (questManager.ActiveQuest == null)
                 {
-                    if (questManager.ActiveQuest == null)
-                    {
-                        questManager.StartFirstMainQuest();
-                    }
+                    questManager.StartFirstMainQuest();
+                }
 
-                    if (questManager.IsObjectiveCurrent(questObjectiveIndex))
-                    {
-                        questManager.SetObjectiveCompleted(questObjectiveIndex, true);
-                    }
+                if (questManager.IsObjectiveCurrent(questObjectiveIndex))
+                {
+                    questManager.SetObjectiveCompleted(questObjectiveIndex, true);
                 }
 
                 player?.SetControlEnabled(true);
-            });
+            };
+
+            if (dialogueManager != null && dialogueLines.Length > 0)
+            {
+                dialogueManager.StartDialogue(dialogueLines, complete);
+            }
+            else
+            {
+                complete.Invoke();
+            }
         }
 
         private void EnsurePromptUi()
@@ -124,13 +125,13 @@ namespace WitcherGame
             }
 
             Canvas canvas = EnsureCanvas("Story Interaction Canvas", 132);
-            promptRoot = new GameObject("Story NPC Prompt");
+            promptRoot = new GameObject("Story Quest Marker Prompt");
             promptRoot.transform.SetParent(canvas.transform, false);
             RectTransform rootRect = promptRoot.AddComponent<RectTransform>();
             rootRect.anchorMin = new Vector2(0.5f, 0f);
             rootRect.anchorMax = new Vector2(0.5f, 0f);
             rootRect.pivot = new Vector2(0.5f, 0f);
-            rootRect.sizeDelta = new Vector2(280f, 44f);
+            rootRect.sizeDelta = new Vector2(300f, 44f);
             rootRect.anchoredPosition = new Vector2(0f, 168f);
 
             Image background = promptRoot.AddComponent<Image>();
@@ -140,7 +141,7 @@ namespace WitcherGame
             outline.effectColor = new Color32(146, 112, 68, 255);
             outline.effectDistance = new Vector2(2f, -2f);
 
-            GameObject textObject = new GameObject("Story NPC Prompt Text");
+            GameObject textObject = new GameObject("Story Quest Marker Prompt Text");
             textObject.transform.SetParent(promptRoot.transform, false);
             RectTransform textRect = textObject.AddComponent<RectTransform>();
             textRect.anchorMin = Vector2.zero;
@@ -150,7 +151,7 @@ namespace WitcherGame
 
             promptText = textObject.AddComponent<Text>();
             promptText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            promptText.text = $"按 E 对话：{npcDisplayName}";
+            promptText.text = $"按 E 调查：{markerDisplayName}";
             promptText.fontSize = 20;
             promptText.alignment = TextAnchor.MiddleCenter;
             promptText.color = new Color32(255, 226, 150, 255);

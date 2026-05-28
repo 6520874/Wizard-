@@ -18,6 +18,7 @@ namespace WitcherGame
         [SerializeField] private string lootName = "怪物残骸";
         [SerializeField, Range(0f, 1f)] private float lootChance = 0.35f;
         [SerializeField] private bool destroyOnWin = true;
+        [SerializeField] private int completeQuestObjectiveOnWin = -1;
 
         private Sprite battleSprite;
         private TurnBasedEnemyVisualKind visualKind = TurnBasedEnemyVisualKind.CorruptedWolf;
@@ -88,6 +89,29 @@ namespace WitcherGame
             ConfigureTriggerBounds(new Vector2(0f, 0.95f), new Vector2(2.35f, 1.95f), 1.65f, 1.35f);
         }
 
+        public void ConfigureStoryGhoul(Sprite sprite)
+        {
+            battleSprite = sprite;
+            visualKind = TurnBasedEnemyVisualKind.CorruptedWolf;
+            EnsureMapIdleAnimator();
+            enemyCount = 1;
+            encounterTitle = "低级食尸鬼";
+            enemyName = "低级食尸鬼";
+            enemyHealth = 32;
+            enemyAttack = 8;
+            enemyDefense = 2;
+            experienceReward = 5;
+            goldReward = 10;
+            lootName = "食尸鬼爪";
+            lootChance = 0.65f;
+            ConfigureTriggerBounds(new Vector2(0f, 0.48f), new Vector2(2.05f, 1.15f), 1.45f, 1.0f);
+        }
+
+        public void ConfigureQuestCompletion(int objectiveIndex)
+        {
+            completeQuestObjectiveOnWin = objectiveIndex;
+        }
+
         public void ApplyMapScale(float visualScale)
         {
             float safeScale = Mathf.Clamp(visualScale, 0.15f, 1.5f);
@@ -143,6 +167,7 @@ namespace WitcherGame
         public void ConsumeEncounter()
         {
             consumed = true;
+            CompleteQuestObjectiveOnWin();
             if (destroyOnWin)
             {
                 Destroy(gameObject);
@@ -150,6 +175,30 @@ namespace WitcherGame
             else
             {
                 gameObject.SetActive(false);
+            }
+        }
+
+        private void CompleteQuestObjectiveOnWin()
+        {
+            if (completeQuestObjectiveOnWin < 0)
+            {
+                return;
+            }
+
+            QuestManager questManager = FindObjectOfType<QuestManager>();
+            if (questManager == null)
+            {
+                return;
+            }
+
+            if (questManager.ActiveQuest == null)
+            {
+                questManager.StartFirstMainQuest();
+            }
+
+            if (questManager.IsObjectiveCurrent(completeQuestObjectiveOnWin))
+            {
+                questManager.SetObjectiveCompleted(completeQuestObjectiveOnWin, true);
             }
         }
 

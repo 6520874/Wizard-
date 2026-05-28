@@ -6,7 +6,7 @@ namespace WitcherGame
     // 中文说明：定义村庄地图的禁行区域，并为玩家移动提供可走判定和碰撞修正。
     public class WitcherVillageWalkableMap : MonoBehaviour
     {
-        [SerializeField] private bool mapCollisionEnabled = true;
+        [SerializeField] private bool mapCollisionEnabled = false;
         [SerializeField] private bool restrictToRoadMask = true;
         [SerializeField] private bool createPhysicsBlockers = true;
         [SerializeField] private bool usePhysicsQueries = true;
