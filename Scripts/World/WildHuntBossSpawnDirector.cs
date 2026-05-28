@@ -21,6 +21,7 @@ namespace WitcherGame
     // 中文说明：在地图固定位置生成狼、女妖和月夜骑士战斗遭遇。
     public class WildHuntBossSpawnDirector : MonoBehaviour
     {
+        private const string EncounterRootName = "Map Fixed Encounters";
         [SerializeField] private bool autoSpawn = true;
         [SerializeField] private float spawnDelay = 0.35f;
         [SerializeField] private float minStageX = -7.6f;
@@ -69,6 +70,7 @@ namespace WitcherGame
 
         private void SpawnFixedEncounterSet()
         {
+            ClearExistingMapEncounters();
             bool usingVillageMap = IsUsingVillageMap();
             WitcherFixedEncounterPoint[] points = usingVillageMap
                 ? GetVillageFixedEncounters()
@@ -121,13 +123,14 @@ namespace WitcherGame
 
         private static WitcherFixedEncounterPoint[] GetVillageFixedEncounters()
         {
+            // Keep story roads clear: monsters are grouped in the northeast hunting ground.
             return new[]
             {
-                new WitcherFixedEncounterPoint { kind = WitcherFixedEncounterKind.CorruptedWolf, position = new Vector2(-10.75f, 0.15f), enemyCount = 2 },
-                new WitcherFixedEncounterPoint { kind = WitcherFixedEncounterKind.BloodWraith, position = new Vector2(-3.55f, -3.55f), enemyCount = 1 },
-                new WitcherFixedEncounterPoint { kind = WitcherFixedEncounterKind.BlackMoonKnight, position = new Vector2(0.95f, -2.05f), enemyCount = 1 },
-                new WitcherFixedEncounterPoint { kind = WitcherFixedEncounterKind.CorruptedWolf, position = new Vector2(4.35f, -0.65f), enemyCount = 3 },
-                new WitcherFixedEncounterPoint { kind = WitcherFixedEncounterKind.BloodWraith, position = new Vector2(8.8f, -0.65f), enemyCount = 1 }
+                new WitcherFixedEncounterPoint { kind = WitcherFixedEncounterKind.CorruptedWolf, position = new Vector2(9.15f, 3.42f), enemyCount = 2 },
+                new WitcherFixedEncounterPoint { kind = WitcherFixedEncounterKind.BloodWraith, position = new Vector2(10.15f, 3.08f), enemyCount = 1 },
+                new WitcherFixedEncounterPoint { kind = WitcherFixedEncounterKind.BlackMoonKnight, position = new Vector2(11.15f, 3.38f), enemyCount = 1 },
+                new WitcherFixedEncounterPoint { kind = WitcherFixedEncounterKind.CorruptedWolf, position = new Vector2(10.55f, 2.34f), enemyCount = 3 },
+                new WitcherFixedEncounterPoint { kind = WitcherFixedEncounterKind.BloodWraith, position = new Vector2(11.55f, 2.68f), enemyCount = 1 }
             };
         }
 
@@ -174,7 +177,14 @@ namespace WitcherGame
 
         private static GameObject CreateEncounterObject(string objectName, Vector2 position)
         {
+            GameObject root = GameObject.Find(EncounterRootName);
+            if (root == null)
+            {
+                root = new GameObject(EncounterRootName);
+            }
+
             GameObject encounterObject = new GameObject(objectName);
+            encounterObject.transform.SetParent(root.transform, false);
             encounterObject.transform.position = new Vector3(position.x, position.y, 0f);
 
             SpriteRenderer spriteRenderer = encounterObject.AddComponent<SpriteRenderer>();
@@ -188,6 +198,25 @@ namespace WitcherGame
             BoxCollider2D collider = encounterObject.AddComponent<BoxCollider2D>();
             collider.isTrigger = true;
             return encounterObject;
+        }
+
+        private void ClearExistingMapEncounters()
+        {
+            activeEncounters.Clear();
+            GameObject oldRoot = GameObject.Find(EncounterRootName);
+            if (oldRoot != null)
+            {
+                Destroy(oldRoot);
+            }
+
+            BattleEncounterTrigger[] looseEncounters = FindObjectsOfType<BattleEncounterTrigger>();
+            for (int i = 0; i < looseEncounters.Length; i++)
+            {
+                if (looseEncounters[i] != null)
+                {
+                    Destroy(looseEncounters[i].gameObject);
+                }
+            }
         }
 
         private void RemoveDestroyedEncounters()
