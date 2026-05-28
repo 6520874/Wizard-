@@ -18,7 +18,7 @@ namespace WitcherGame
                 "OldVillageChief",
                 "老村长",
                 "Art/Story/Npcs/OldVillageChief.png",
-                new Vector2(-0.8f, -0.92f),
+                new Vector2(-1.08f, -0.82f),
                 0.42f,
                 0,
                 new[]
@@ -31,7 +31,7 @@ namespace WitcherGame
                 "Blacksmith",
                 "铁匠",
                 "Art/Story/Npcs/Blacksmith.png",
-                new Vector2(5.08f, -1.42f),
+                new Vector2(6.35f, -1.82f),
                 0.4f,
                 1,
                 new[]
@@ -44,7 +44,7 @@ namespace WitcherGame
                 "Priest",
                 "神父",
                 "Art/Story/Npcs/Priest.png",
-                new Vector2(1.62f, 3.02f),
+                new Vector2(-9.45f, 2.64f),
                 0.42f,
                 2,
                 new[]
@@ -57,7 +57,7 @@ namespace WitcherGame
                 "NobleEnvoy",
                 "贵族使者",
                 "Art/Story/Npcs/NobleEnvoy.png",
-                new Vector2(9.78f, 0.12f),
+                new Vector2(10.65f, 0.7f),
                 0.42f,
                 3,
                 new[]
@@ -70,7 +70,7 @@ namespace WitcherGame
                 "MissingChild",
                 "失踪男孩",
                 "Art/Story/Npcs/MissingChild.png",
-                new Vector2(-6.9f, -3.42f),
+                new Vector2(-6.55f, -4.18f),
                 0.32f,
                 4,
                 new[]
@@ -126,7 +126,19 @@ namespace WitcherGame
                 }
 
                 CreateNpc(root.transform, definition, position);
+                RegisterQuestNavigation(definition, position, walkableMap);
             }
+        }
+
+        private static void RegisterQuestNavigation(StoryNpcDefinition definition, Vector2 npcPosition, WitcherVillageWalkableMap walkableMap)
+        {
+            Vector2 target = npcPosition + new Vector2(0f, -0.72f);
+            if (walkableMap != null)
+            {
+                walkableMap.TryGetNearestWalkablePoint(target, out target);
+            }
+
+            QuestManager.RegisterObjectiveNavigationTarget(definition.QuestObjectiveIndex, target);
         }
 
         private static void CreateNpc(Transform root, StoryNpcDefinition definition, Vector2 position)

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace WitcherGame
@@ -40,10 +41,22 @@ namespace WitcherGame
         [SerializeField] private Text questTitleText;
         [SerializeField] private Text questDescriptionText;
         [SerializeField] private Text questObjectivesText;
+        [SerializeField] private Text questNavigationHintText;
 
         private QuestData activeQuest;
+        private static readonly Dictionary<int, Vector2> ObjectiveNavigationTargets = new Dictionary<int, Vector2>();
 
         public QuestData ActiveQuest => activeQuest;
+
+        public static void RegisterObjectiveNavigationTarget(int objectiveIndex, Vector2 worldPosition)
+        {
+            if (objectiveIndex < 0)
+            {
+                return;
+            }
+
+            ObjectiveNavigationTargets[objectiveIndex] = worldPosition;
+        }
 
         private void Awake()
         {
@@ -130,18 +143,62 @@ namespace WitcherGame
             if (questObjectivesText != null)
             {
                 StringBuilder builder = new StringBuilder();
-                for (int i = 0; i < activeQuest.objectives.Count; i++)
+                int currentObjectiveIndex = GetCurrentObjectiveIndex();
+                if (currentObjectiveIndex >= 0)
                 {
-                    QuestObjective objective = activeQuest.objectives[i];
-                    builder.Append(objective.completed ? "✓ " : "□ ");
+                    QuestObjective objective = activeQuest.objectives[currentObjectiveIndex];
+                    builder.AppendLine($"当前目标 {currentObjectiveIndex + 1}/{activeQuest.objectives.Count}");
+                    builder.Append("□ ");
                     builder.Append(objective.text);
-                    if (i < activeQuest.objectives.Count - 1)
-                    {
-                        builder.AppendLine();
-                    }
+                }
+                else
+                {
+                    builder.AppendLine("主线目标完成");
+                    builder.Append("✓ 灰鸦村的第一批线索已经串起来了");
                 }
 
                 questObjectivesText.text = builder.ToString();
+            }
+
+            if (questNavigationHintText != null)
+            {
+                int currentObjectiveIndex = GetCurrentObjectiveIndex();
+                questNavigationHintText.text = currentObjectiveIndex >= 0 && ObjectiveNavigationTargets.ContainsKey(currentObjectiveIndex)
+                    ? "点击任务卡：自动前往目标"
+                    : "继续探索灰鸦村";
+            }
+        }
+
+        private int GetCurrentObjectiveIndex()
+        {
+            if (activeQuest == null)
+            {
+                return -1;
+            }
+
+            for (int i = 0; i < activeQuest.objectives.Count; i++)
+            {
+                if (!activeQuest.objectives[i].completed)
+                {
+                    return i;
+                }
+            }
+
+            return -1;
+        }
+
+        private void NavigateToCurrentObjective()
+        {
+            int currentObjectiveIndex = GetCurrentObjectiveIndex();
+            if (currentObjectiveIndex < 0 || !ObjectiveNavigationTargets.TryGetValue(currentObjectiveIndex, out Vector2 target))
+            {
+                return;
+            }
+
+            GeraltController player = FindObjectOfType<GeraltController>();
+            if (player != null && player.MoveToWorldDestination(target))
+            {
+                WitcherCombatText.Spawn("前往目标", player.transform.position + Vector3.up * 1.15f, new Color32(255, 220, 120, 255));
             }
         }
 
@@ -161,11 +218,20 @@ namespace WitcherGame
             }
 
             Canvas canvas = EnsureCanvas("Story UI Canvas", 120);
-            questPanel = CreatePanel("QuestPanel", canvas.transform, new Vector2(360f, 230f), new Vector2(-26f, -110f), new Vector2(1f, 1f), new Color32(8, 11, 15, 210));
+            questPanel = CreatePanel("QuestPanel", canvas.transform, new Vector2(360f, 176f), new Vector2(-26f, -110f), new Vector2(1f, 1f), new Color32(8, 11, 15, 218));
+            Button questButton = questPanel.AddComponent<Button>();
+            questButton.targetGraphic = questPanel.GetComponent<Image>();
+            questButton.onClick.AddListener(NavigateToCurrentObjective);
+            ColorBlock colors = questButton.colors;
+            colors.normalColor = Color.white;
+            colors.highlightedColor = new Color32(42, 53, 61, 255);
+            colors.pressedColor = new Color32(92, 78, 54, 255);
+            questButton.colors = colors;
 
             questTitleText = CreateText("Quest Title", questPanel.transform, "任务标题", 23, TextAnchor.UpperLeft, new Vector2(18f, -16f), new Vector2(324f, 32f), new Color32(236, 230, 211, 255));
-            questDescriptionText = CreateText("Quest Description", questPanel.transform, "任务描述", 15, TextAnchor.UpperLeft, new Vector2(18f, -54f), new Vector2(324f, 58f), new Color32(186, 199, 205, 255));
-            questObjectivesText = CreateText("Quest Objectives", questPanel.transform, "任务目标", 16, TextAnchor.UpperLeft, new Vector2(18f, -122f), new Vector2(324f, 92f), new Color32(224, 221, 204, 255));
+            questDescriptionText = CreateText("Quest Description", questPanel.transform, "任务描述", 14, TextAnchor.UpperLeft, new Vector2(18f, -54f), new Vector2(324f, 46f), new Color32(186, 199, 205, 255));
+            questObjectivesText = CreateText("Quest Objectives", questPanel.transform, "任务目标", 18, TextAnchor.UpperLeft, new Vector2(18f, -104f), new Vector2(324f, 48f), new Color32(255, 225, 147, 255));
+            questNavigationHintText = CreateText("Quest Navigation Hint", questPanel.transform, "点击任务卡：自动前往目标", 13, TextAnchor.MiddleRight, new Vector2(88f, -150f), new Vector2(254f, 18f), new Color32(151, 178, 190, 255));
         }
 
         private static Canvas EnsureCanvas(string name, int sortingOrder)
@@ -182,6 +248,13 @@ namespace WitcherGame
             canvas.sortingOrder = sortingOrder;
             canvasObject.AddComponent<CanvasScaler>();
             canvasObject.AddComponent<GraphicRaycaster>();
+            if (EventSystem.current == null)
+            {
+                GameObject eventSystem = new GameObject("EventSystem");
+                eventSystem.AddComponent<EventSystem>();
+                eventSystem.AddComponent<StandaloneInputModule>();
+            }
+
             return canvas;
         }
 
