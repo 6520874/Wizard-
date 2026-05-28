@@ -123,14 +123,14 @@ namespace WitcherGame
 
         private static WitcherFixedEncounterPoint[] GetVillageFixedEncounters()
         {
-            // Keep story roads clear: monsters are grouped in the northeast hunting ground.
+            // Keep story roads clear: monsters are grouped away from the noble envoy route.
             return new[]
             {
-                new WitcherFixedEncounterPoint { kind = WitcherFixedEncounterKind.CorruptedWolf, position = new Vector2(9.15f, 3.42f), enemyCount = 2 },
-                new WitcherFixedEncounterPoint { kind = WitcherFixedEncounterKind.BloodWraith, position = new Vector2(10.15f, 3.08f), enemyCount = 1 },
-                new WitcherFixedEncounterPoint { kind = WitcherFixedEncounterKind.BlackMoonKnight, position = new Vector2(11.15f, 3.38f), enemyCount = 1 },
-                new WitcherFixedEncounterPoint { kind = WitcherFixedEncounterKind.CorruptedWolf, position = new Vector2(10.55f, 2.34f), enemyCount = 3 },
-                new WitcherFixedEncounterPoint { kind = WitcherFixedEncounterKind.BloodWraith, position = new Vector2(11.55f, 2.68f), enemyCount = 1 }
+                new WitcherFixedEncounterPoint { kind = WitcherFixedEncounterKind.CorruptedWolf, position = new Vector2(6.45f, 3.55f), enemyCount = 2 },
+                new WitcherFixedEncounterPoint { kind = WitcherFixedEncounterKind.BloodWraith, position = new Vector2(7.45f, 3.18f), enemyCount = 1 },
+                new WitcherFixedEncounterPoint { kind = WitcherFixedEncounterKind.BlackMoonKnight, position = new Vector2(8.45f, 3.55f), enemyCount = 1 },
+                new WitcherFixedEncounterPoint { kind = WitcherFixedEncounterKind.CorruptedWolf, position = new Vector2(7.95f, 2.48f), enemyCount = 3 },
+                new WitcherFixedEncounterPoint { kind = WitcherFixedEncounterKind.BloodWraith, position = new Vector2(8.95f, 2.78f), enemyCount = 1 }
             };
         }
 

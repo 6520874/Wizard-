@@ -57,7 +57,7 @@ namespace WitcherGame
                 "NobleEnvoy",
                 "贵族使者",
                 "Art/Story/Npcs/NobleEnvoy.png",
-                new Vector2(10.65f, 0.7f),
+                new Vector2(9.35f, -0.62f),
                 0.42f,
                 3,
                 new[]
