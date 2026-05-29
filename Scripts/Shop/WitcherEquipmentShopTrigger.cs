@@ -29,6 +29,7 @@ namespace WitcherGame
         private GameObject promptRoot;
         private Text promptText;
         private bool playerInRange;
+        private QuestManager questManager;
 
         public static bool ShouldBlockPlayerHealInput { get; private set; }
 
@@ -59,6 +60,7 @@ namespace WitcherGame
             BoxCollider2D triggerCollider = GetComponent<BoxCollider2D>();
             triggerCollider.isTrigger = true;
             shopUi = WitcherShopUi.CreateIfMissing();
+            questManager = FindObjectOfType<QuestManager>();
             EnsurePromptUi();
             SetPromptVisible(false);
         }
@@ -71,8 +73,10 @@ namespace WitcherGame
         private void Update()
         {
             bool shopOpen = shopUi != null && shopUi.IsOpen;
-            ShouldBlockPlayerHealInput = playerInRange || shopOpen;
-            if (!playerInRange || shopOpen)
+            bool directInteraction = playerInRange && IsDirectInteractionCandidate();
+            bool deferredByStory = ShouldDeferEquipmentShopForStory();
+            ShouldBlockPlayerHealInput = shopOpen || directInteraction;
+            if (!playerInRange || shopOpen || !directInteraction || deferredByStory)
             {
                 SetPromptVisible(false);
                 return;
@@ -111,7 +115,7 @@ namespace WitcherGame
 
         private void OpenDialogue()
         {
-            if (player == null)
+            if (player == null || !IsDirectInteractionCandidate() || ShouldDeferEquipmentShopForStory())
             {
                 return;
             }
@@ -122,6 +126,33 @@ namespace WitcherGame
             {
                 ShouldBlockPlayerHealInput = playerInRange;
             });
+        }
+
+        private bool IsDirectInteractionCandidate()
+        {
+            if (player == null)
+            {
+                return false;
+            }
+
+            Vector2 deltaToDoor = transform.position - player.transform.position;
+            if (Mathf.Abs(deltaToDoor.y) > 0.78f || deltaToDoor.magnitude > 0.96f)
+            {
+                return false;
+            }
+
+            if (Mathf.Abs(deltaToDoor.x) <= 0.2f)
+            {
+                return true;
+            }
+
+            return Mathf.Sign(deltaToDoor.x) == Mathf.Sign(player.FacingDirection);
+        }
+
+        private bool ShouldDeferEquipmentShopForStory()
+        {
+            questManager = questManager == null ? FindObjectOfType<QuestManager>() : questManager;
+            return questManager != null && questManager.ActiveQuest != null && questManager.IsObjectiveCurrent(1);
         }
 
         private void EnsurePromptUi()

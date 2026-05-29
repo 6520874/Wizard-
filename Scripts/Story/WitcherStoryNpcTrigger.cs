@@ -11,6 +11,8 @@ namespace WitcherGame
         [SerializeField] private string npcDisplayName = "村民";
         [SerializeField] private int questObjectiveIndex = -1;
         [SerializeField] private DialogueManager.DialogueLine[] dialogueLines = Array.Empty<DialogueManager.DialogueLine>();
+        [SerializeField] private float interactRadius = 0.82f;
+        [SerializeField] private float verticalTolerance = 0.92f;
 
         private GeraltController player;
         private DialogueManager dialogueManager;
@@ -49,7 +51,7 @@ namespace WitcherGame
         {
             dialogueManager = dialogueManager == null ? FindObjectOfType<DialogueManager>() : dialogueManager;
             bool dialogueOpen = dialogueManager != null && dialogueManager.IsDialogueActive;
-            if (!playerInRange || dialogueOpen)
+            if (!playerInRange || dialogueOpen || !IsDirectInteractionCandidate())
             {
                 SetPromptVisible(false);
                 return;
@@ -87,6 +89,11 @@ namespace WitcherGame
 
         private void StartNpcDialogue()
         {
+            if (!IsDirectInteractionCandidate())
+            {
+                return;
+            }
+
             dialogueManager = dialogueManager == null ? FindObjectOfType<DialogueManager>() : dialogueManager;
             questManager = questManager == null ? FindObjectOfType<QuestManager>() : questManager;
             if (dialogueManager == null || dialogueLines.Length == 0)
@@ -114,6 +121,27 @@ namespace WitcherGame
 
                 player?.SetControlEnabled(true);
             });
+        }
+
+        private bool IsDirectInteractionCandidate()
+        {
+            if (player == null)
+            {
+                return false;
+            }
+
+            Vector2 deltaToNpc = transform.position - player.transform.position;
+            if (Mathf.Abs(deltaToNpc.y) > verticalTolerance || deltaToNpc.magnitude > interactRadius)
+            {
+                return false;
+            }
+
+            if (Mathf.Abs(deltaToNpc.x) <= 0.18f)
+            {
+                return true;
+            }
+
+            return Mathf.Sign(deltaToNpc.x) == Mathf.Sign(player.FacingDirection);
         }
 
         private void EnsurePromptUi()

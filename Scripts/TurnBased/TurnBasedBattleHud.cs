@@ -273,7 +273,8 @@ namespace WitcherGame
                     slot.Image.gameObject.SetActive(showEnemy);
                     slot.HealthBack.gameObject.SetActive(showEnemy);
                     slot.GroundShadow.gameObject.SetActive(showEnemy);
-                    slot.GroundGlow.gameObject.SetActive(showEnemy);
+                    slot.GroundGlow.gameObject.SetActive(showEnemy && enemy.VisualKind != TurnBasedEnemyVisualKind.GreyMother);
+                    slot.GroundGlow.color = GetEnemyGroundGlowColor(enemy.VisualKind);
                     slot.NameplateBack.gameObject.SetActive(enemy.Sprite != null);
                     slot.TargetReticle?.gameObject.SetActive(false);
                     float normalizedHealth = enemy.MaxHealth <= 0 ? 0f : Mathf.Clamp01((float)enemy.Health / enemy.MaxHealth);
@@ -319,6 +320,54 @@ namespace WitcherGame
             }
 
             yield return PlayEnemyFrames(slot, enemy.HurtFrames, enemy.Sprite, 0.075f, false, true);
+        }
+
+        public IEnumerator PlayEnemySummon(int enemyIndex)
+        {
+            if (!TryGetSlot(enemyIndex, out EnemyVisualSlot slot) || visibleEnemies == null || enemyIndex >= visibleEnemies.Count)
+            {
+                yield break;
+            }
+
+            slot.Busy = true;
+            TurnBasedEnemyState enemy = visibleEnemies[enemyIndex];
+            Sprite firstFrame = FirstFrame(enemy.IdleFrames, enemy.Sprite);
+            if (firstFrame != null)
+            {
+                slot.Image.sprite = firstFrame;
+            }
+
+            slot.Image.gameObject.SetActive(true);
+            slot.HealthBack.gameObject.SetActive(enemy.IsAlive);
+            slot.GroundShadow.gameObject.SetActive(true);
+            slot.GroundGlow.gameObject.SetActive(true);
+            slot.GroundGlow.color = new Color32(78, 176, 255, 0);
+            slot.NameplateBack.gameObject.SetActive(true);
+            slot.Image.color = new Color(0.72f, 0.92f, 1f, 0f);
+
+            Vector2 home = slot.HomePosition;
+            float duration = 0.78f;
+            float timer = 0f;
+            while (timer < duration)
+            {
+                timer += Time.deltaTime;
+                float t = Mathf.Clamp01(timer / duration);
+                float eased = 1f - Mathf.Pow(1f - t, 3f);
+                float pulse = Mathf.Sin(t * Mathf.PI);
+                slot.Rect.anchoredPosition = home + new Vector2(0f, Mathf.Lerp(28f, 0f, eased));
+                SetEnemyFacingScale(slot, Mathf.Lerp(0.36f, 1f, eased) + pulse * 0.12f);
+                slot.Image.color = Color.Lerp(new Color(0.72f, 0.92f, 1f, 0f), Color.white, eased);
+                slot.GroundGlow.color = new Color32(78, 176, 255, (byte)Mathf.RoundToInt(Mathf.Lerp(0f, 156f, pulse)));
+                slot.GroundGlow.rectTransform.localScale = Vector3.one * Mathf.Lerp(0.55f, 1.35f, eased);
+                yield return null;
+            }
+
+            slot.Rect.anchoredPosition = home;
+            SetEnemyFacingScale(slot, 1f);
+            slot.Image.color = Color.white;
+            slot.GroundGlow.color = GetEnemyGroundGlowColor(enemy.VisualKind);
+            slot.GroundGlow.rectTransform.localScale = Vector3.one;
+            slot.Busy = false;
         }
 
         public IEnumerator PlayGreyMotherCry(int enemyIndex, bool secondPhase = false)
@@ -956,6 +1005,23 @@ namespace WitcherGame
                     return new Color32(124, 25, 40, 220);
                 default:
                     return new Color32(70, 38, 88, 220);
+            }
+        }
+
+        private static Color32 GetEnemyGroundGlowColor(TurnBasedEnemyVisualKind kind)
+        {
+            switch (kind)
+            {
+                case TurnBasedEnemyVisualKind.GreyMother:
+                    return new Color32(0, 0, 0, 0);
+                case TurnBasedEnemyVisualKind.BlackMoonKnight:
+                    return new Color32(78, 176, 255, 86);
+                case TurnBasedEnemyVisualKind.BloodWraith:
+                    return new Color32(172, 54, 116, 76);
+                case TurnBasedEnemyVisualKind.CorruptedWolf:
+                    return new Color32(92, 166, 116, 68);
+                default:
+                    return new Color32(156, 94, 42, 70);
             }
         }
 

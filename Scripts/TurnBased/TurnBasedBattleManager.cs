@@ -886,10 +886,11 @@ namespace WitcherGame
 
                 if (ShouldSummonBlueMoonWarrior(targetResult))
                 {
-                    SummonBlueMoonWarrior();
+                    int summonedIndex = SummonBlueMoonWarrior();
                     battleHud.Refresh(enemies, player, potionCount);
                     battleHud.SetMessage("灰母的血滴进祭坛纹路，蓝月战士从冷光中踏出！");
-                    yield return Wait(0.72f);
+                    yield return battleHud.PlayEnemySummon(summonedIndex);
+                    yield return Wait(0.22f);
                 }
             }
         }
@@ -954,7 +955,7 @@ namespace WitcherGame
             return IsGreyMother(enemy) && enemy.IsAlive;
         }
 
-        private void SummonBlueMoonWarrior()
+        private int SummonBlueMoonWarrior()
         {
             greyMotherBlueMoonSummoned = true;
             TurnBasedEnemyState warrior = new TurnBasedEnemyState
@@ -979,6 +980,7 @@ namespace WitcherGame
                 Speed = GetEnemyTurnSpeed(warrior, enemies.Count - 1),
                 ActionValue = 0f
             });
+            return enemies.Count - 1;
         }
 
         private int GetPlayerAttack()

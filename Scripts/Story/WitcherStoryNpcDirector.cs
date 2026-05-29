@@ -270,6 +270,7 @@ namespace WitcherGame
             encounterObject.transform.position = new Vector3(position.x, position.y, 0f);
             SpriteRenderer renderer = encounterObject.AddComponent<SpriteRenderer>();
             renderer.sprite = LoadStorySprite("Art/Story/Markers/GreyMother.png", MarkerPixelsPerUnit);
+            renderer.enabled = false;
             renderer.sortingOrder = Mathf.RoundToInt((6.2f - position.y) * 100f) + 17;
             Rigidbody2D body = encounterObject.AddComponent<Rigidbody2D>();
             body.bodyType = RigidbodyType2D.Kinematic;
@@ -355,9 +356,9 @@ namespace WitcherGame
 
             BoxCollider2D collider = npc.AddComponent<BoxCollider2D>();
             collider.isTrigger = true;
-            // Trigger range is compensated for the visual scale so small NPCs are still easy to talk to.
-            collider.size = new Vector2(1.35f / definition.Scale, 1.45f / definition.Scale);
-            collider.offset = new Vector2(0f, 0.5f / definition.Scale);
+            // The trigger only wakes the prompt logic; direct distance/facing checks avoid accidental talks while walking past.
+            collider.size = new Vector2(0.98f / definition.Scale, 1.08f / definition.Scale);
+            collider.offset = new Vector2(0f, 0.42f / definition.Scale);
 
             Rigidbody2D body = npc.AddComponent<Rigidbody2D>();
             body.bodyType = RigidbodyType2D.Kinematic;

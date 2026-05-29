@@ -54,6 +54,7 @@ namespace WitcherGame
         public int CurrentMana => Mathf.RoundToInt(currentMana);
         public int MaxMana => maxMana;
         public bool IsAlive => currentHealth > 0;
+        public float FacingDirection => lastFacingDirection;
         public System.Action StatsChanged;
 
         private void Awake()
