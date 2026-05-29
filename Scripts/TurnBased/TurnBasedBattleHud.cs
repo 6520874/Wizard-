@@ -321,6 +321,81 @@ namespace WitcherGame
             yield return PlayEnemyFrames(slot, enemy.HurtFrames, enemy.Sprite, 0.075f, false, true);
         }
 
+        public IEnumerator PlayGreyMotherCry(int enemyIndex, bool secondPhase = false)
+        {
+            if (!TryGetSlot(enemyIndex, out EnemyVisualSlot slot))
+            {
+                yield return new WaitForSeconds(secondPhase ? 0.7f : 0.5f);
+                yield break;
+            }
+
+            slot.Busy = true;
+            Vector2 home = slot.HomePosition;
+            Color originalGlow = slot.GroundGlow == null ? Color.clear : slot.GroundGlow.color;
+            Color originalImage = slot.Image == null ? Color.white : slot.Image.color;
+            float duration = secondPhase ? 0.92f : 0.68f;
+            float timer = 0f;
+
+            if (slot.TargetReticle != null)
+            {
+                slot.TargetReticle.gameObject.SetActive(true);
+            }
+
+            while (timer < duration)
+            {
+                timer += Time.deltaTime;
+                float t = Mathf.Clamp01(timer / duration);
+                float pulse = Mathf.Sin(t * Mathf.PI);
+                float shake = secondPhase ? 9f : 6f;
+                slot.Rect.anchoredPosition = home + new Vector2(Mathf.Sin(timer * 46f) * shake, Mathf.Cos(timer * 31f) * 4f) * pulse;
+                SetEnemyFacingScale(slot, 1f + pulse * (secondPhase ? 0.18f : 0.12f));
+
+                if (slot.Image != null)
+                {
+                    Color tint = secondPhase ? new Color32(216, 225, 255, 255) : new Color32(188, 207, 224, 255);
+                    slot.Image.color = Color.Lerp(Color.white, tint, 0.35f + pulse * 0.45f);
+                }
+
+                if (slot.GroundGlow != null)
+                {
+                    slot.GroundGlow.color = secondPhase
+                        ? new Color32(198, 70, 255, (byte)Mathf.RoundToInt(Mathf.Lerp(70f, 190f, pulse)))
+                        : new Color32(118, 178, 224, (byte)Mathf.RoundToInt(Mathf.Lerp(58f, 154f, pulse)));
+                    slot.GroundGlow.rectTransform.localScale = Vector3.one * Mathf.Lerp(1f, secondPhase ? 1.55f : 1.34f, pulse);
+                }
+
+                if (slot.TargetReticle != null)
+                {
+                    slot.TargetReticle.color = secondPhase
+                        ? new Color32(208, 83, 255, (byte)Mathf.RoundToInt(Mathf.Lerp(40f, 168f, pulse)))
+                        : new Color32(130, 202, 255, (byte)Mathf.RoundToInt(Mathf.Lerp(34f, 126f, pulse)));
+                    slot.TargetReticle.rectTransform.localScale = Vector3.one * Mathf.Lerp(1.05f, secondPhase ? 1.8f : 1.5f, t);
+                }
+
+                yield return null;
+            }
+
+            slot.Rect.anchoredPosition = home;
+            SetEnemyFacingScale(slot, 1f);
+            if (slot.Image != null)
+            {
+                slot.Image.color = originalImage;
+            }
+
+            if (slot.GroundGlow != null)
+            {
+                slot.GroundGlow.color = originalGlow;
+                slot.GroundGlow.rectTransform.localScale = Vector3.one;
+            }
+
+            if (slot.TargetReticle != null)
+            {
+                slot.TargetReticle.gameObject.SetActive(false);
+            }
+
+            slot.Busy = false;
+        }
+
         public IEnumerator PlayFlameSignEffect()
         {
             yield return PlaySkillEffect(BattleSkillId.FlameSign, -1);

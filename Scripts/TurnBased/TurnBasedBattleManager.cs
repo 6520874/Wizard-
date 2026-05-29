@@ -83,6 +83,8 @@ namespace WitcherGame
         private bool worldRenderingPaused;
         private bool nextTurnIsPlayer;
         private bool battleEndSequenceStarted;
+        private int greyMotherActionCount;
+        private bool greyMotherSecondPhaseShown;
         private int potionCount;
         private int turnNumber;
         private int selectedCommandIndex;
@@ -235,6 +237,8 @@ namespace WitcherGame
             nextTurnIsPlayer = true;
             battleEndSequenceStarted = false;
             selectedCommandIndex = 0;
+            greyMotherActionCount = 0;
+            greyMotherSecondPhaseShown = false;
             playerStatuses.Clear();
             turnNumber = 1;
             BuildTurnUnits();
@@ -538,12 +542,61 @@ namespace WitcherGame
             }
 
             TurnBasedEnemyState enemy = enemies[enemyIndex];
+            if (IsGreyMother(enemy))
+            {
+                yield return ResolveGreyMotherTurn(enemyIndex, enemy);
+                yield break;
+            }
+
             int rawDamage = Mathf.Max(1, enemy.Attack + Random.Range(-2, 3) - GetPlayerDefense());
             int damage = CalculatePlayerIncomingDamage(rawDamage);
             battleHud.SetMessage($"敌人回合：{enemy.Name} 发起攻击，造成 {damage} 点伤害！");
             yield return battleHud.PlayEnemyAttack(enemyIndex);
             player.TakeTurnBasedDamage(damage, player.transform.position.x + 1f);
             yield return battleHud.PlayPlayerHurt(damage);
+            ConsumePlayerStatusTurns();
+            battleHud.Refresh(enemies, player, potionCount);
+            yield return Wait(0.24f);
+        }
+
+        private IEnumerator ResolveGreyMotherTurn(int enemyIndex, TurnBasedEnemyState enemy)
+        {
+            greyMotherActionCount++;
+            bool secondPhase = enemy.Health <= Mathf.CeilToInt(enemy.MaxHealth * 0.5f);
+            if (secondPhase && !greyMotherSecondPhaseShown)
+            {
+                greyMotherSecondPhaseShown = true;
+                battleHud.SetMessage("灰母回声的哭声变成祭坛低语，献祭印记苏醒。");
+                yield return battleHud.PlayGreyMotherCry(enemyIndex, true);
+                yield return Wait(0.28f);
+            }
+
+            bool useCry = greyMotherActionCount % 3 == 0 || (secondPhase && greyMotherActionCount % 2 == 0);
+            if (useCry)
+            {
+                int rawCryDamage = Mathf.Max(1, enemy.Attack + (secondPhase ? 5 : 3) - GetPlayerDefense());
+                int cryDamage = CalculatePlayerIncomingDamage(rawCryDamage);
+                int manaDrain = player == null ? 0 : Mathf.Min(player.CurrentMana, secondPhase ? 12 : 8);
+                battleHud.SetMessage($"{enemy.Name} 释放【悲恸哭声】，造成 {cryDamage} 点伤害，并侵蚀 {manaDrain} 点魔力！");
+                yield return battleHud.PlayGreyMotherCry(enemyIndex, secondPhase);
+                if (manaDrain > 0)
+                {
+                    player.TrySpendMana(manaDrain);
+                }
+
+                player.TakeTurnBasedDamage(cryDamage, player.transform.position.x + 1f);
+                yield return battleHud.PlayPlayerHurt(cryDamage);
+            }
+            else
+            {
+                int rawDamage = Mathf.Max(1, enemy.Attack + Random.Range(-1, 3) - GetPlayerDefense());
+                int damage = CalculatePlayerIncomingDamage(rawDamage);
+                battleHud.SetMessage($"{enemy.Name} 伸出祭坛阴影，撕咬猎魔人的灵魂，造成 {damage} 点伤害！");
+                yield return battleHud.PlayEnemyAttack(enemyIndex);
+                player.TakeTurnBasedDamage(damage, player.transform.position.x + 1f);
+                yield return battleHud.PlayPlayerHurt(damage);
+            }
+
             ConsumePlayerStatusTurns();
             battleHud.Refresh(enemies, player, potionCount);
             yield return Wait(0.24f);
@@ -632,6 +685,8 @@ namespace WitcherGame
             resolvingTurn = false;
             nextTurnIsPlayer = true;
             battleEndSequenceStarted = false;
+            greyMotherActionCount = 0;
+            greyMotherSecondPhaseShown = false;
             playerStatuses.Clear();
             currentEncounter = null;
             enemies.Clear();
@@ -844,6 +899,13 @@ namespace WitcherGame
             }
 
             return damage;
+        }
+
+        private static bool IsGreyMother(TurnBasedEnemyState enemy)
+        {
+            return enemy != null &&
+                (enemy.VisualKind == TurnBasedEnemyVisualKind.GreyMother ||
+                (!string.IsNullOrEmpty(enemy.Name) && enemy.Name.Contains("灰母")));
         }
 
         private int GetPlayerAttack()

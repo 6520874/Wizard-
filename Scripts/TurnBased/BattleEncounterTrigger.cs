@@ -154,6 +154,7 @@ namespace WitcherGame
                     GoldReward = goldReward,
                     LootName = lootName,
                     LootChance = lootChance,
+                    VisualKind = visualKind,
                     Sprite = battleSprite,
                     SourceObject = gameObject
                 };
