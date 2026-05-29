@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
@@ -45,6 +46,8 @@ namespace WitcherGame
         private bool defeatHandled;
         private bool hasClickMoveDestination;
         private Vector2 clickMoveDestination;
+        private readonly List<Vector2> clickMovePath = new List<Vector2>();
+        private int clickMovePathIndex;
 
         public int CurrentHealth => currentHealth;
         public int MaxHealth => maxHealth;
@@ -264,7 +267,26 @@ namespace WitcherGame
             }
 
             clickMoveDestination = requestedDestination;
-            hasClickMoveDestination = Vector2.Distance(transform.position, clickMoveDestination) > clickMoveStopDistance;
+            clickMovePath.Clear();
+            clickMovePathIndex = 0;
+
+            if (walkableMap != null && walkableMap.TryFindPath(transform.position, requestedDestination, clickMovePath))
+            {
+                hasClickMoveDestination = clickMovePath.Count > 0;
+                if (hasClickMoveDestination)
+                {
+                    clickMoveDestination = clickMovePath[0];
+                }
+            }
+            else
+            {
+                hasClickMoveDestination = Vector2.Distance(transform.position, clickMoveDestination) > clickMoveStopDistance;
+                if (hasClickMoveDestination)
+                {
+                    clickMovePath.Add(clickMoveDestination);
+                }
+            }
+
             float facingDelta = clickMoveDestination.x - transform.position.x;
             if (Mathf.Abs(facingDelta) > 0.03f)
             {
@@ -308,11 +330,28 @@ namespace WitcherGame
             }
 
             Vector2 currentPosition = transform.position;
+            if (clickMovePath.Count > 0)
+            {
+                clickMovePathIndex = Mathf.Clamp(clickMovePathIndex, 0, clickMovePath.Count - 1);
+                clickMoveDestination = clickMovePath[clickMovePathIndex];
+            }
+
             Vector2 toDestination = clickMoveDestination - currentPosition;
             if (toDestination.magnitude <= clickMoveStopDistance)
             {
-                hasClickMoveDestination = false;
-                return Vector2.zero;
+                if (clickMovePath.Count > 0 && clickMovePathIndex < clickMovePath.Count - 1)
+                {
+                    clickMovePathIndex++;
+                    clickMoveDestination = clickMovePath[clickMovePathIndex];
+                    toDestination = clickMoveDestination - currentPosition;
+                }
+                else
+                {
+                    hasClickMoveDestination = false;
+                    clickMovePath.Clear();
+                    clickMovePathIndex = 0;
+                    return Vector2.zero;
+                }
             }
 
             return toDestination.normalized;

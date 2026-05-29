@@ -3,16 +3,17 @@ using UnityEngine;
 
 namespace WitcherGame
 {
-    // 中文说明：定义村庄地图的禁行区域，并为玩家移动提供可走判定和碰撞修正。
+    // 中文说明：把村庄图片地图切成可走网格，并为点击移动提供轻量 A* NavMesh 寻路。
     public class WitcherVillageWalkableMap : MonoBehaviour
     {
-        [SerializeField] private bool mapCollisionEnabled = false;
+        [SerializeField] private bool mapCollisionEnabled = true;
         [SerializeField] private bool restrictToRoadMask = true;
-        [SerializeField] private bool createPhysicsBlockers = true;
-        [SerializeField] private bool usePhysicsQueries = true;
         [SerializeField] private bool showDebugBlockers;
         [SerializeField] private float characterRadius = 0.26f;
-        [SerializeField] private float castSkin = 0.03f;
+        [Header("Grid NavMesh")]
+        [SerializeField] private Rect navBounds = new Rect(-13.2f, -7.75f, 26.4f, 13.65f);
+        [SerializeField] private float navCellSize = 0.32f;
+        [SerializeField] private int maxPathIterations = 5200;
         [SerializeField]
         private Rect[] blockedZones =
         {
@@ -30,6 +31,7 @@ namespace WitcherGame
         };
 
         private const string BlockerRootName = "Village Collision Blockers";
+        private const string DebugRootName = "Village NavMesh Debug";
         private static readonly Vector2[][] RoadMasks =
         {
             new[]
@@ -103,26 +105,22 @@ namespace WitcherGame
         };
 
         public static WitcherVillageWalkableMap Current { get; private set; }
-        private GameObject blockerRoot;
-        private readonly HashSet<Collider2D> blockerColliders = new HashSet<Collider2D>();
-        private readonly Collider2D[] overlapResults = new Collider2D[32];
-        private readonly RaycastHit2D[] castResults = new RaycastHit2D[32];
+        private GameObject debugRoot;
+        private bool[,] walkableGrid;
+        private int gridWidth;
+        private int gridHeight;
+        private readonly List<Vector2> reusablePath = new List<Vector2>();
 
         private void Awake()
         {
-            if (createPhysicsBlockers)
-            {
-                RebuildPhysicsBlockers();
-            }
+            DestroyOldPhysicsBlockers();
+            RebuildGridNavMesh();
         }
 
         private void OnEnable()
         {
             Current = this;
-            if (blockerRoot != null)
-            {
-                blockerRoot.SetActive(true);
-            }
+            SetDebugVisible(showDebugBlockers);
         }
 
         private void OnDisable()
@@ -132,10 +130,7 @@ namespace WitcherGame
                 Current = null;
             }
 
-            if (blockerRoot != null)
-            {
-                blockerRoot.SetActive(false);
-            }
+            SetDebugVisible(false);
         }
 
         private void OnDestroy()
@@ -145,9 +140,9 @@ namespace WitcherGame
                 Current = null;
             }
 
-            if (blockerRoot != null)
+            if (debugRoot != null)
             {
-                Destroy(blockerRoot);
+                Destroy(debugRoot);
             }
         }
 
@@ -196,7 +191,7 @@ namespace WitcherGame
                 return false;
             }
 
-            return !usePhysicsQueries || !HitsPhysicsBlocker(currentPosition, requestedVelocity, deltaTime);
+            return true;
         }
 
         public bool TryGetNearestWalkablePoint(Vector2 requestedPoint, out Vector2 walkablePoint)
@@ -227,6 +222,119 @@ namespace WitcherGame
             return false;
         }
 
+        public bool TryFindPath(Vector2 start, Vector2 destination, List<Vector2> result)
+        {
+            result?.Clear();
+            if (result == null)
+            {
+                return false;
+            }
+
+            if (!mapCollisionEnabled)
+            {
+                result.Add(destination);
+                return true;
+            }
+
+            if (walkableGrid == null)
+            {
+                RebuildGridNavMesh();
+            }
+
+            if (!TryGetNearestWalkablePoint(start, out Vector2 safeStart) ||
+                !TryGetNearestWalkablePoint(destination, out Vector2 safeDestination) ||
+                !TryWorldToGrid(safeStart, out int startX, out int startY) ||
+                !TryWorldToGrid(safeDestination, out int endX, out int endY))
+            {
+                return false;
+            }
+
+            if (startX == endX && startY == endY)
+            {
+                result.Add(safeDestination);
+                return true;
+            }
+
+            int nodeCount = gridWidth * gridHeight;
+            float[] gScore = new float[nodeCount];
+            float[] fScore = new float[nodeCount];
+            int[] cameFrom = new int[nodeCount];
+            bool[] closed = new bool[nodeCount];
+            List<int> open = new List<int>(128);
+
+            for (int i = 0; i < nodeCount; i++)
+            {
+                gScore[i] = float.PositiveInfinity;
+                fScore[i] = float.PositiveInfinity;
+                cameFrom[i] = -1;
+            }
+
+            int startIndex = ToIndex(startX, startY);
+            int endIndex = ToIndex(endX, endY);
+            gScore[startIndex] = 0f;
+            fScore[startIndex] = Heuristic(startX, startY, endX, endY);
+            open.Add(startIndex);
+
+            int iterations = 0;
+            while (open.Count > 0 && iterations++ < maxPathIterations)
+            {
+                int currentListIndex = FindLowestScoreIndex(open, fScore);
+                int currentIndex = open[currentListIndex];
+                if (currentIndex == endIndex)
+                {
+                    BuildPath(cameFrom, currentIndex, safeDestination, result);
+                    SimplifyPath(result);
+                    return result.Count > 0;
+                }
+
+                open.RemoveAt(currentListIndex);
+                closed[currentIndex] = true;
+                int currentX = currentIndex % gridWidth;
+                int currentY = currentIndex / gridWidth;
+
+                for (int y = -1; y <= 1; y++)
+                {
+                    for (int x = -1; x <= 1; x++)
+                    {
+                        if (x == 0 && y == 0)
+                        {
+                            continue;
+                        }
+
+                        int nextX = currentX + x;
+                        int nextY = currentY + y;
+                        if (!IsGridWalkable(nextX, nextY) || !CanStepDiagonal(currentX, currentY, nextX, nextY))
+                        {
+                            continue;
+                        }
+
+                        int nextIndex = ToIndex(nextX, nextY);
+                        if (closed[nextIndex])
+                        {
+                            continue;
+                        }
+
+                        float stepCost = x != 0 && y != 0 ? 1.4142f : 1f;
+                        float tentativeScore = gScore[currentIndex] + stepCost;
+                        if (tentativeScore >= gScore[nextIndex])
+                        {
+                            continue;
+                        }
+
+                        cameFrom[nextIndex] = currentIndex;
+                        gScore[nextIndex] = tentativeScore;
+                        fScore[nextIndex] = tentativeScore + Heuristic(nextX, nextY, endX, endY);
+                        if (!open.Contains(nextIndex))
+                        {
+                            open.Add(nextIndex);
+                        }
+                    }
+                }
+            }
+
+            return false;
+        }
+
         public bool IsWalkable(Vector2 point)
         {
             if (!mapCollisionEnabled)
@@ -237,11 +345,6 @@ namespace WitcherGame
             if (restrictToRoadMask && !IsInsideAnyRoadMask(point))
             {
                 return false;
-            }
-
-            if (usePhysicsQueries && blockerColliders.Count > 0)
-            {
-                return !OverlapsPhysicsBlocker(point);
             }
 
             float radius = Mathf.Max(0f, characterRadius);
@@ -265,46 +368,151 @@ namespace WitcherGame
             return true;
         }
 
-        private bool OverlapsPhysicsBlocker(Vector2 point)
+        private void RebuildGridNavMesh()
         {
-            float radius = Mathf.Max(0.01f, characterRadius);
-            int hitCount = Physics2D.OverlapCircleNonAlloc(point, radius, overlapResults);
-            for (int i = 0; i < hitCount; i++)
+            float safeCellSize = Mathf.Max(0.08f, navCellSize);
+            gridWidth = Mathf.Max(1, Mathf.CeilToInt(navBounds.width / safeCellSize));
+            gridHeight = Mathf.Max(1, Mathf.CeilToInt(navBounds.height / safeCellSize));
+            walkableGrid = new bool[gridWidth, gridHeight];
+
+            for (int y = 0; y < gridHeight; y++)
             {
-                if (IsBlockerCollider(overlapResults[i]))
+                for (int x = 0; x < gridWidth; x++)
                 {
-                    return true;
+                    walkableGrid[x, y] = IsWalkableWithoutGrid(GridToWorld(x, y));
                 }
             }
 
-            return false;
+            BuildDebugGrid();
         }
 
-        private bool HitsPhysicsBlocker(Vector2 currentPosition, Vector2 requestedVelocity, float deltaTime)
+        private bool IsWalkableWithoutGrid(Vector2 point)
         {
-            float distance = requestedVelocity.magnitude * deltaTime;
-            if (distance <= 0.0001f)
+            if (!mapCollisionEnabled)
+            {
+                return true;
+            }
+
+            if (restrictToRoadMask && !IsInsideAnyRoadMask(point))
             {
                 return false;
             }
 
-            Vector2 direction = requestedVelocity.normalized;
-            float radius = Mathf.Max(0.01f, characterRadius - castSkin);
-            int hitCount = Physics2D.CircleCastNonAlloc(currentPosition, radius, direction, castResults, distance + castSkin);
-            for (int i = 0; i < hitCount; i++)
+            float radius = Mathf.Max(0f, characterRadius);
+            return IsPointClearOfFallbackRects(point)
+                && IsPointClearOfFallbackRects(point + new Vector2(radius, 0f))
+                && IsPointClearOfFallbackRects(point + new Vector2(-radius, 0f))
+                && IsPointClearOfFallbackRects(point + new Vector2(0f, radius))
+                && IsPointClearOfFallbackRects(point + new Vector2(0f, -radius));
+        }
+
+        private bool TryWorldToGrid(Vector2 point, out int x, out int y)
+        {
+            float safeCellSize = Mathf.Max(0.08f, navCellSize);
+            x = Mathf.FloorToInt((point.x - navBounds.xMin) / safeCellSize);
+            y = Mathf.FloorToInt((point.y - navBounds.yMin) / safeCellSize);
+            return IsGridInside(x, y);
+        }
+
+        private Vector2 GridToWorld(int x, int y)
+        {
+            float safeCellSize = Mathf.Max(0.08f, navCellSize);
+            return new Vector2(
+                navBounds.xMin + (x + 0.5f) * safeCellSize,
+                navBounds.yMin + (y + 0.5f) * safeCellSize);
+        }
+
+        private bool IsGridWalkable(int x, int y)
+        {
+            return IsGridInside(x, y) && walkableGrid != null && walkableGrid[x, y];
+        }
+
+        private bool IsGridInside(int x, int y)
+        {
+            return x >= 0 && y >= 0 && x < gridWidth && y < gridHeight;
+        }
+
+        private bool CanStepDiagonal(int currentX, int currentY, int nextX, int nextY)
+        {
+            if (currentX == nextX || currentY == nextY)
             {
-                if (IsBlockerCollider(castResults[i].collider))
+                return true;
+            }
+
+            return IsGridWalkable(nextX, currentY) && IsGridWalkable(currentX, nextY);
+        }
+
+        private int ToIndex(int x, int y)
+        {
+            return y * gridWidth + x;
+        }
+
+        private static float Heuristic(int x, int y, int endX, int endY)
+        {
+            int dx = Mathf.Abs(x - endX);
+            int dy = Mathf.Abs(y - endY);
+            return Mathf.Max(dx, dy) + (1.4142f - 1f) * Mathf.Min(dx, dy);
+        }
+
+        private static int FindLowestScoreIndex(List<int> open, float[] fScore)
+        {
+            int bestListIndex = 0;
+            float bestScore = fScore[open[0]];
+            for (int i = 1; i < open.Count; i++)
+            {
+                float score = fScore[open[i]];
+                if (score < bestScore)
                 {
-                    return true;
+                    bestScore = score;
+                    bestListIndex = i;
                 }
             }
 
-            return false;
+            return bestListIndex;
         }
 
-        private bool IsBlockerCollider(Collider2D collider)
+        private void BuildPath(int[] cameFrom, int currentIndex, Vector2 destination, List<Vector2> result)
         {
-            return collider != null && blockerColliders.Contains(collider);
+            reusablePath.Clear();
+            while (currentIndex >= 0)
+            {
+                int x = currentIndex % gridWidth;
+                int y = currentIndex / gridWidth;
+                reusablePath.Add(GridToWorld(x, y));
+                currentIndex = cameFrom[currentIndex];
+            }
+
+            result.Clear();
+            for (int i = reusablePath.Count - 1; i >= 0; i--)
+            {
+                result.Add(reusablePath[i]);
+            }
+
+            if (result.Count == 0 || Vector2.Distance(result[result.Count - 1], destination) > navCellSize * 0.5f)
+            {
+                result.Add(destination);
+            }
+        }
+
+        private void SimplifyPath(List<Vector2> path)
+        {
+            if (path == null || path.Count <= 2)
+            {
+                return;
+            }
+
+            for (int i = path.Count - 2; i > 0; i--)
+            {
+                Vector2 previous = path[i - 1];
+                Vector2 current = path[i];
+                Vector2 next = path[i + 1];
+                Vector2 a = (current - previous).normalized;
+                Vector2 b = (next - current).normalized;
+                if (Vector2.Dot(a, b) > 0.985f)
+                {
+                    path.RemoveAt(i);
+                }
+            }
         }
 
         private static bool IsInsideAnyRoadMask(Vector2 point)
@@ -339,42 +547,55 @@ namespace WitcherGame
             return inside;
         }
 
-        private void RebuildPhysicsBlockers()
+        private void DestroyOldPhysicsBlockers()
         {
-            blockerColliders.Clear();
             GameObject oldRoot = GameObject.Find(BlockerRootName);
             if (oldRoot != null)
             {
                 Destroy(oldRoot);
             }
+        }
 
-            blockerRoot = new GameObject(BlockerRootName);
-
-            for (int i = 0; i < blockedZones.Length; i++)
+        private void SetDebugVisible(bool visible)
+        {
+            if (debugRoot != null)
             {
-                Rect zone = blockedZones[i];
-                GameObject blocker = new GameObject($"Village Blocker {i + 1:00}");
-                blocker.transform.SetParent(blockerRoot.transform, false);
-                blocker.transform.position = new Vector3(zone.center.x, zone.center.y, 0f);
+                debugRoot.SetActive(visible);
+            }
+        }
 
-                BoxCollider2D collider = blocker.AddComponent<BoxCollider2D>();
-                collider.isTrigger = false;
-                collider.size = zone.size;
-                blockerColliders.Add(collider);
-
-                if (showDebugBlockers)
-                {
-                    GameObject visual = new GameObject("Debug Visual");
-                    visual.transform.SetParent(blocker.transform, false);
-                    SpriteRenderer renderer = visual.AddComponent<SpriteRenderer>();
-                    renderer.sprite = WitcherSpriteLibrary.GetSolidSprite(new Color32(255, 64, 64, 64));
-                    renderer.color = new Color32(255, 64, 64, 64);
-                    renderer.sortingOrder = 300;
-                    visual.transform.localScale = new Vector3(zone.width, zone.height, 1f);
-                }
+        private void BuildDebugGrid()
+        {
+            if (!showDebugBlockers)
+            {
+                return;
             }
 
-            Physics2D.SyncTransforms();
+            if (debugRoot != null)
+            {
+                Destroy(debugRoot);
+            }
+
+            debugRoot = new GameObject(DebugRootName);
+            for (int y = 0; y < gridHeight; y++)
+            {
+                for (int x = 0; x < gridWidth; x++)
+                {
+                    if (!walkableGrid[x, y])
+                    {
+                        continue;
+                    }
+
+                    GameObject cell = new GameObject($"Nav Cell {x:00}_{y:00}");
+                    cell.transform.SetParent(debugRoot.transform, false);
+                    cell.transform.position = GridToWorld(x, y);
+                    cell.transform.localScale = Vector3.one * navCellSize * 0.82f;
+                    SpriteRenderer renderer = cell.AddComponent<SpriteRenderer>();
+                    renderer.sprite = WitcherSpriteLibrary.GetSolidSprite(new Color32(38, 160, 255, 42));
+                    renderer.color = new Color32(38, 160, 255, 42);
+                    renderer.sortingOrder = 301;
+                }
+            }
         }
     }
 }
