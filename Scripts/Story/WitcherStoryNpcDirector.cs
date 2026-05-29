@@ -127,11 +127,11 @@ namespace WitcherGame
             new StoryMarkerDefinition(
                 "GreyMotherTruth",
                 "灰母祭坛",
-                "Art/Story/Markers/GreyMotherSeal.png",
-                new Vector2(-10.95f, 3.4f),
-                new Vector2(0.95f, 0.7f),
+                "Art/Story/Markers/GreyMotherAltar.png",
+                new Vector2(-10.9f, 3.15f),
+                new Vector2(0.31f, 0.31f),
                 10,
-                new Color32(70, 64, 74, 245),
+                new Color32(255, 255, 255, 255),
                 new[]
                 {
                     new DialogueManager.DialogueLine("灰母", "我没有吃掉孩子。我只是哭给还活着的人听。", "Art/Story/Markers/GreyMother.png"),
@@ -252,7 +252,7 @@ namespace WitcherGame
         private static void SpawnGreyMotherEncounter(WitcherVillageWalkableMap walkableMap)
         {
             const int greyMotherObjectiveIndex = 9;
-            Vector2 position = new Vector2(-11.35f, 3.02f);
+            Vector2 position = new Vector2(-10.72f, 2.42f);
             if (walkableMap != null)
             {
                 walkableMap.TryGetNearestWalkablePoint(position, out position);
