@@ -138,6 +138,12 @@ namespace WitcherGame
             triggerHalfHeight *= safeScale;
         }
 
+        public void ConfigureWorldTriggerReach(float halfWidth, float halfHeight)
+        {
+            triggerHalfWidth = Mathf.Max(0.1f, halfWidth);
+            triggerHalfHeight = Mathf.Max(0.1f, halfHeight);
+        }
+
         public List<TurnBasedEnemyState> CreateBattleEnemies()
         {
             List<TurnBasedEnemyState> result = new List<TurnBasedEnemyState>();

@@ -270,7 +270,7 @@ namespace WitcherGame
             encounterObject.transform.position = new Vector3(position.x, position.y, 0f);
             SpriteRenderer renderer = encounterObject.AddComponent<SpriteRenderer>();
             renderer.sprite = LoadStorySprite("Art/Story/Markers/GreyMother.png", MarkerPixelsPerUnit);
-            renderer.enabled = false;
+            renderer.color = new Color32(190, 220, 232, 222);
             renderer.sortingOrder = Mathf.RoundToInt((6.2f - position.y) * 100f) + 17;
             Rigidbody2D body = encounterObject.AddComponent<Rigidbody2D>();
             body.bodyType = RigidbodyType2D.Kinematic;
@@ -283,6 +283,7 @@ namespace WitcherGame
             trigger.ConfigureGreyMother(renderer.sprite);
             trigger.ConfigureQuestCompletion(greyMotherObjectiveIndex);
             trigger.ApplyMapScale(0.36f);
+            trigger.ConfigureWorldTriggerReach(1.45f, 1.1f);
         }
 
         private static void CreateQuestMarker(Transform root, StoryMarkerDefinition definition, Vector2 position)
