@@ -46,7 +46,7 @@ namespace WitcherGame
                 "Priest",
                 "神父",
                 "Art/Story/Npcs/Priest.png",
-                new Vector2(-9.45f, 2.64f),
+                new Vector2(-2.85f, 0.72f),
                 0.42f,
                 2,
                 new[]
@@ -341,6 +341,7 @@ namespace WitcherGame
             npc.transform.localScale = Vector3.one * definition.Scale;
 
             CreateShadow(npc.transform);
+            CreateNameplate(npc.transform, definition.DisplayName);
 
             SpriteRenderer renderer = npc.AddComponent<SpriteRenderer>();
             renderer.sprite = LoadNpcSprite(definition.SpritePath);
@@ -376,6 +377,26 @@ namespace WitcherGame
             renderer.sprite = WitcherSpriteLibrary.GetSolidSprite(new Color32(0, 0, 0, 90));
             renderer.color = new Color32(0, 0, 0, 90);
             renderer.sortingOrder = 16;
+        }
+
+        private static void CreateNameplate(Transform parent, string displayName)
+        {
+            GameObject nameplate = new GameObject("NPC Nameplate - " + displayName);
+            nameplate.transform.SetParent(parent, false);
+            nameplate.transform.localPosition = new Vector3(0f, 2.16f, 0.03f);
+            nameplate.transform.localScale = Vector3.one;
+
+            TextMesh text = nameplate.AddComponent<TextMesh>();
+            text.text = displayName;
+            text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            text.fontSize = 28;
+            text.characterSize = 0.045f;
+            text.anchor = TextAnchor.MiddleCenter;
+            text.alignment = TextAlignment.Center;
+            text.color = new Color32(255, 224, 142, 255);
+
+            MeshRenderer textRenderer = nameplate.GetComponent<MeshRenderer>();
+            textRenderer.sortingOrder = 220;
         }
 
         private static Sprite LoadNpcSprite(string relativePath)
