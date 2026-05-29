@@ -647,7 +647,9 @@ namespace WitcherGame
             playerInventory = playerInventory == null && player != null ? PlayerInventory.CreateIfMissing(player) : playerInventory;
             playerInventory?.AddBattleRewards(goldReward, reward, lootRewards);
             battleHud.ShowVictoryRewards(reward, goldReward, lootRewards);
-            battleHud.SetMessage($"战斗胜利！获得 {reward} 点经验、{goldReward} 枚金币。");
+            battleHud.SetMessage(HasGreyMotherEnemy()
+                ? "灰母回声散去了。哭声不再像诅咒，更像最后一次警告。"
+                : $"战斗胜利！获得 {reward} 点经验、{goldReward} 枚金币。");
             WitcherCombatText.Spawn($"+{reward} XP", player.transform.position + Vector3.up * 1.2f, new Color32(255, 219, 91, 255));
             if (goldReward > 0)
             {
@@ -906,6 +908,19 @@ namespace WitcherGame
             return enemy != null &&
                 (enemy.VisualKind == TurnBasedEnemyVisualKind.GreyMother ||
                 (!string.IsNullOrEmpty(enemy.Name) && enemy.Name.Contains("灰母")));
+        }
+
+        private bool HasGreyMotherEnemy()
+        {
+            for (int i = 0; i < enemies.Count; i++)
+            {
+                if (IsGreyMother(enemies[i]))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private int GetPlayerAttack()

@@ -113,13 +113,13 @@ namespace WitcherGame
             visualKind = TurnBasedEnemyVisualKind.GreyMother;
             EnsureMapIdleAnimator();
             enemyCount = 1;
-            encounterTitle = "灰母回声";
+            encounterTitle = "灰母回声：旧祭坛的哭声";
             enemyName = "灰母回声";
-            enemyHealth = 86;
-            enemyAttack = 14;
+            enemyHealth = 110;
+            enemyAttack = 12;
             enemyDefense = 4;
-            experienceReward = 18;
-            goldReward = 32;
+            experienceReward = 24;
+            goldReward = 45;
             lootName = "灰母泪晶";
             lootChance = 1f;
             ConfigureTriggerBounds(new Vector2(0f, 0.8f), new Vector2(2.35f, 1.85f), 1.55f, 1.3f);
