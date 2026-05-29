@@ -85,6 +85,8 @@ namespace WitcherGame
         private bool battleEndSequenceStarted;
         private int greyMotherActionCount;
         private bool greyMotherSecondPhaseShown;
+        private bool greyMotherBlueMoonSummoned;
+        private int enemyTurnCursor;
         private int potionCount;
         private int turnNumber;
         private int selectedCommandIndex;
@@ -239,6 +241,8 @@ namespace WitcherGame
             selectedCommandIndex = 0;
             greyMotherActionCount = 0;
             greyMotherSecondPhaseShown = false;
+            greyMotherBlueMoonSummoned = false;
+            enemyTurnCursor = 0;
             playerStatuses.Clear();
             turnNumber = 1;
             BuildTurnUnits();
@@ -503,7 +507,7 @@ namespace WitcherGame
                 yield break;
             }
 
-            activeTurnUnit = nextTurnIsPlayer ? GetPlayerTurnUnit() : GetFirstLivingEnemyTurnUnit();
+            activeTurnUnit = nextTurnIsPlayer ? GetPlayerTurnUnit() : TakeNextLivingEnemyTurnUnit();
             if (activeTurnUnit == null)
             {
                 resolvingTurn = false;
@@ -689,6 +693,8 @@ namespace WitcherGame
             battleEndSequenceStarted = false;
             greyMotherActionCount = 0;
             greyMotherSecondPhaseShown = false;
+            greyMotherBlueMoonSummoned = false;
+            enemyTurnCursor = 0;
             playerStatuses.Clear();
             currentEncounter = null;
             enemies.Clear();
@@ -875,6 +881,15 @@ namespace WitcherGame
                 {
                     battleHud.SetMessage($"{targetResult.TargetName} 被击倒了。");
                     yield return Wait(0.28f);
+                    continue;
+                }
+
+                if (ShouldSummonBlueMoonWarrior(targetResult))
+                {
+                    SummonBlueMoonWarrior();
+                    battleHud.Refresh(enemies, player, potionCount);
+                    battleHud.SetMessage("灰母的血滴进祭坛纹路，蓝月战士从冷光中踏出！");
+                    yield return Wait(0.72f);
                 }
             }
         }
@@ -921,6 +936,49 @@ namespace WitcherGame
             }
 
             return false;
+        }
+
+        private bool ShouldSummonBlueMoonWarrior(SkillTargetResult targetResult)
+        {
+            if (greyMotherBlueMoonSummoned || targetResult.Damage <= 0)
+            {
+                return false;
+            }
+
+            if (targetResult.EnemyIndex < 0 || targetResult.EnemyIndex >= enemies.Count)
+            {
+                return false;
+            }
+
+            TurnBasedEnemyState enemy = enemies[targetResult.EnemyIndex];
+            return IsGreyMother(enemy) && enemy.IsAlive;
+        }
+
+        private void SummonBlueMoonWarrior()
+        {
+            greyMotherBlueMoonSummoned = true;
+            TurnBasedEnemyState warrior = new TurnBasedEnemyState
+            {
+                Name = "蓝月战士",
+                MaxHealth = 58,
+                Health = 58,
+                Attack = 10,
+                Defense = 4,
+                ExperienceReward = 8,
+                GoldReward = 18,
+                LootName = "蓝月碎甲",
+                LootChance = 0.65f,
+                VisualKind = TurnBasedEnemyVisualKind.BlackMoonKnight
+            };
+            TurnBasedEnemyAnimationLibrary.FillAnimations(warrior, TurnBasedEnemyVisualKind.BlackMoonKnight);
+            enemies.Add(warrior);
+            turnUnits.Add(new BattleTurnUnit
+            {
+                IsPlayer = false,
+                EnemyIndex = enemies.Count - 1,
+                Speed = GetEnemyTurnSpeed(warrior, enemies.Count - 1),
+                ActionValue = 0f
+            });
         }
 
         private int GetPlayerAttack()
@@ -1000,6 +1058,31 @@ namespace WitcherGame
                 if (IsLivingEnemyTurn(unit))
                 {
                     return unit;
+                }
+            }
+
+            return null;
+        }
+
+        private BattleTurnUnit TakeNextLivingEnemyTurnUnit()
+        {
+            if (enemies.Count == 0)
+            {
+                return null;
+            }
+
+            int safeStart = Mathf.Clamp(enemyTurnCursor, 0, Mathf.Max(0, enemies.Count - 1));
+            for (int offset = 0; offset < enemies.Count; offset++)
+            {
+                int enemyIndex = (safeStart + offset) % enemies.Count;
+                for (int i = 0; i < turnUnits.Count; i++)
+                {
+                    BattleTurnUnit unit = turnUnits[i];
+                    if (unit != null && !unit.IsPlayer && unit.EnemyIndex == enemyIndex && IsLivingEnemyTurn(unit))
+                    {
+                        enemyTurnCursor = (enemyIndex + 1) % enemies.Count;
+                        return unit;
+                    }
                 }
             }
 
