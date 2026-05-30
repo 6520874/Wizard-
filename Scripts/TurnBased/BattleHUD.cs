@@ -684,12 +684,22 @@ namespace WitcherGame
 
             for (int i = 0; i < 5; i++)
             {
-                Text cell = BattleHudStyle.CreateText("Weakness Cell " + i, transform, "?", 13, TextAnchor.MiddleCenter, new Vector2(84f + i * 21f, -7f), new Vector2(18f, 20f), new Color32(226, 238, 244, 255));
-                Image cellBack = cell.gameObject.AddComponent<Image>();
+                GameObject cellRoot = new GameObject("Weakness Cell " + i);
+                cellRoot.transform.SetParent(transform, false);
+                RectTransform cellRect = cellRoot.AddComponent<RectTransform>();
+                cellRect.anchorMin = new Vector2(0f, 1f);
+                cellRect.anchorMax = new Vector2(0f, 1f);
+                cellRect.pivot = new Vector2(0f, 1f);
+                cellRect.sizeDelta = new Vector2(18f, 20f);
+                cellRect.anchoredPosition = new Vector2(84f + i * 21f, -7f);
+
+                Image cellBack = cellRoot.AddComponent<Image>();
                 cellBack.sprite = WitcherSpriteLibrary.GetSolidSprite(new Color32(8, 14, 20, 214));
                 cellBack.color = new Color32(8, 14, 20, 214);
                 cellBack.raycastTarget = false;
-                cell.transform.SetAsLastSibling();
+                BattleHudStyle.AddOutline(cellBack, new Color32(82, 116, 136, 128), new Vector2(1f, -1f));
+
+                Text cell = BattleHudStyle.CreateText("Glyph", cellRoot.transform, "?", 13, TextAnchor.MiddleCenter, Vector2.zero, new Vector2(18f, 20f), new Color32(226, 238, 244, 255));
                 weaknessCells.Add(cell);
             }
         }
