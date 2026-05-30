@@ -90,7 +90,7 @@ namespace WitcherGame
                     new QuestObjective("调查矿洞入口的血迹"),
                     new QuestObjective("击败第一只低级食尸鬼"),
                     new QuestObjective("进入矿洞深处"),
-                    new QuestObjective("击败灰母回声"),
+                    new QuestObjective("击败灰母祭坛前的月夜骑士"),
                     new QuestObjective("调查灰母祭坛并公开真相")
                 }
             };

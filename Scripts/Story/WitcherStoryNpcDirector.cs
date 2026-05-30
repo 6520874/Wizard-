@@ -266,11 +266,17 @@ namespace WitcherGame
                 Destroy(oldBoss);
             }
 
-            GameObject encounterObject = new GameObject("Story Encounter - Grey Mother Echo");
+            GameObject oldGuardian = GameObject.Find("Story Encounter - Moonlit Knight Guardian");
+            if (oldGuardian != null)
+            {
+                Destroy(oldGuardian);
+            }
+
+            GameObject encounterObject = new GameObject("Story Encounter - Moonlit Knight Guardian");
             encounterObject.transform.position = new Vector3(position.x, position.y, 0f);
             SpriteRenderer renderer = encounterObject.AddComponent<SpriteRenderer>();
-            renderer.sprite = LoadStorySprite("Art/Story/Markers/GreyMother.png", MarkerPixelsPerUnit);
-            renderer.color = new Color32(190, 220, 232, 222);
+            renderer.sprite = LoadStorySprite("Art/WildHuntBoss/Frames/Idle/WildHuntBoss_Idle_00.png", MarkerPixelsPerUnit);
+            renderer.color = Color.white;
             renderer.sortingOrder = Mathf.RoundToInt((6.2f - position.y) * 100f) + 17;
             Rigidbody2D body = encounterObject.AddComponent<Rigidbody2D>();
             body.bodyType = RigidbodyType2D.Kinematic;
@@ -280,10 +286,10 @@ namespace WitcherGame
             collider.isTrigger = true;
 
             BattleEncounterTrigger trigger = encounterObject.AddComponent<BattleEncounterTrigger>();
-            trigger.ConfigureGreyMother(renderer.sprite);
+            trigger.ConfigureBoss(renderer.sprite, 4);
             trigger.ConfigureQuestCompletion(greyMotherObjectiveIndex);
-            trigger.ApplyMapScale(0.36f);
-            trigger.ConfigureWorldTriggerReach(1.45f, 1.1f);
+            trigger.ApplyMapScale(0.52f);
+            trigger.ConfigureWorldTriggerReach(1.7f, 1.25f);
         }
 
         private static void CreateQuestMarker(Transform root, StoryMarkerDefinition definition, Vector2 position)
