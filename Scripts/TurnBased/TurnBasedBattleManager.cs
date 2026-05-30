@@ -417,6 +417,7 @@ namespace WitcherGame
 
             SkillResult result = SkillExecutor.Execute(skill, caster, targets);
             battleHud.SetMessage(result.Message);
+            battleHud.ShowSkillName(skill.DisplayName);
             switch (skill.AnimationKind)
             {
                 case BattleSkillAnimationKind.Slash:
