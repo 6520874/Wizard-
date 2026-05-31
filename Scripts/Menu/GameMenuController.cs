@@ -188,7 +188,18 @@ namespace WitcherGame
             string text = "技能";
             foreach (PartyMember member in party.ActiveParty)
             {
-                text += $"\n{member.Name}: {string.Join(" / ", member.Skills)}";
+                text += $"\n\n{member.Name}";
+                if (member.SkillDetails.Count == 0)
+                {
+                    text += $"\n{string.Join(" / ", member.Skills)}";
+                    continue;
+                }
+
+                for (int i = 0; i < member.SkillDetails.Count; i++)
+                {
+                    PartySkill skill = member.SkillDetails[i];
+                    text += $"\n- {skill.Name}  {skill.Role}  MP {skill.MpCost}\n  {skill.Description}";
+                }
             }
 
             ShowDetail(text);
@@ -262,9 +273,9 @@ namespace WitcherGame
                 commandTexts.Add(label);
             }
 
-            GameObject detailPanel = GothicUiFactory.CreatePanel("Command Detail Panel", root.transform, new Vector2(520f, 188f), new Vector2(372f, -60f), new Vector2(0f, 1f), new Color32(6, 8, 12, 215));
+            GameObject detailPanel = GothicUiFactory.CreatePanel("Command Detail Panel", root.transform, new Vector2(640f, 430f), new Vector2(372f, -60f), new Vector2(0f, 1f), new Color32(6, 8, 12, 215));
             GothicUiFactory.AddOutline(detailPanel, new Color32(79, 64, 41, 255), new Vector2(1f, -1f));
-            detailText = GothicUiFactory.CreateText("Command Detail", detailPanel.transform, string.Empty, 20, TextAnchor.UpperLeft, new Vector2(24f, -20f), new Vector2(470f, 142f), new Color32(220, 216, 199, 255));
+            detailText = GothicUiFactory.CreateText("Command Detail", detailPanel.transform, string.Empty, 18, TextAnchor.UpperLeft, new Vector2(24f, -20f), new Vector2(592f, 386f), new Color32(220, 216, 199, 255));
         }
     }
 }

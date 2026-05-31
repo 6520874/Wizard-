@@ -131,9 +131,9 @@ namespace WitcherGame
         public void AddMonsterPartnerPlaceholder(string name)
         {
             PartyMember monster = new PartyMember(name, 1, 98, 74, 18, 8, 19, 12, 0.06f, false);
-            monster.Skills.Add("血焰");
-            monster.Skills.Add("魅惑低语");
-            monster.Skills.Add("恶魔召唤");
+            monster.LearnSkill("血焰", "火焰 / 伤害", 18, "以恶魔血火灼烧单个怪物。");
+            monster.LearnSkill("魅惑低语", "控制 / 弱化", 14, "短暂扰乱敌人的攻击欲望。");
+            monster.LearnSkill("恶魔召唤", "召唤 / 爆发", 28, "召出低阶恶魔影子撕裂敌群。");
             allMembers.Add(monster);
         }
 
@@ -150,24 +150,24 @@ namespace WitcherGame
             }
 
             PartyMember hunter = new PartyMember("猎魔人", 1, 120, 100, 18, 7, 6, 13, 0.06f, true);
-            hunter.Skills.Add("银剑斩");
-            hunter.Skills.Add("焚焰法印");
+            hunter.LearnSkill("银剑斩", "物理 / 单体", 0, "可靠的猎魔人基础攻击。");
+            hunter.LearnSkill("焚焰法印", "火焰 / 群体", 18, "用法印横扫敌群。");
             hunter.CurrentEquipment.Weapon = sampleEquipment[EquipmentSlot.Weapon][0];
             hunter.CurrentEquipment.Armor = sampleEquipment[EquipmentSlot.Armor][0];
             hunter.CurrentEquipment.Accessory1 = sampleEquipment[EquipmentSlot.Accessory1][0];
             hunter.CurrentEquipment.RelicCore = sampleEquipment[EquipmentSlot.RelicCore][0];
 
             PartyMember yennefer = new PartyMember("叶奈法", 1, 88, 142, 8, 5, 24, 12, 0.04f, true);
-            yennefer.Skills.Add("紫晶护盾");
-            yennefer.Skills.Add("诅咒脉冲");
+            yennefer.LearnSkill("紫晶护盾", "防护 / 护盾", 16, "为队伍展开紫色魔法护盾。");
+            yennefer.LearnSkill("诅咒脉冲", "奥术 / 弱化", 20, "释放扭曲脉冲削弱敌人的防御。");
             yennefer.CurrentEquipment.Weapon = sampleEquipment[EquipmentSlot.Weapon][1];
             yennefer.CurrentEquipment.Armor = sampleEquipment[EquipmentSlot.Armor][1];
             yennefer.CurrentEquipment.Accessory1 = sampleEquipment[EquipmentSlot.Accessory1][1];
             yennefer.CurrentEquipment.RelicCore = sampleEquipment[EquipmentSlot.RelicCore][1];
 
             PartyMember triss = new PartyMember("特莉丝", 1, 102, 126, 11, 6, 22, 14, 0.06f, true);
-            triss.Skills.Add("火焰术");
-            triss.Skills.Add("灼热结界");
+            triss.LearnSkill("火焰术", "火焰 / 单体", 14, "向目标投出压缩火球。");
+            triss.LearnSkill("灼热结界", "火焰 / 防护", 22, "以火焰结界保护队伍并反制近身敌人。");
             triss.CurrentEquipment.Weapon = sampleEquipment[EquipmentSlot.Weapon][2];
             triss.CurrentEquipment.Armor = sampleEquipment[EquipmentSlot.Armor][2];
             triss.CurrentEquipment.Accessory1 = sampleEquipment[EquipmentSlot.Accessory1][2];

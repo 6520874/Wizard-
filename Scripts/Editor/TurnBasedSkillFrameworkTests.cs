@@ -164,6 +164,7 @@ namespace WitcherGame.Tests
             Assert.AreEqual("特莉丝", party.ActiveParty[2].Name);
             Assert.GreaterOrEqual(party.AllMembers.Count, 4);
             Assert.IsTrue(party.AllMembers.Any(member => member.Name == "莉莉丝" && !member.IsJoined));
+            Assert.GreaterOrEqual(party.ActiveParty[1].SkillDetails.Count, 2);
             Object.DestroyImmediate(partyObject);
         }
 

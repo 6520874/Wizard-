@@ -100,6 +100,28 @@ namespace WitcherGame
     }
 
     [Serializable]
+    public class PartySkill
+    {
+        public string Name;
+        public string Role;
+        public int MpCost;
+        public string Description;
+
+        public PartySkill(string name, string role, int mpCost, string description)
+        {
+            Name = name;
+            Role = role;
+            MpCost = Math.Max(0, mpCost);
+            Description = description;
+        }
+
+        public override string ToString()
+        {
+            return MpCost > 0 ? $"{Name}({MpCost}MP)" : Name;
+        }
+    }
+
+    [Serializable]
     public class PartyMember
     {
         public string Name;
@@ -116,6 +138,7 @@ namespace WitcherGame
         public bool IsJoined;
         public PartyEquipment CurrentEquipment = new PartyEquipment();
         public List<string> Skills = new List<string>();
+        public List<PartySkill> SkillDetails = new List<PartySkill>();
 
         public int TotalMaxHP => MaxHP + Sum(item => item.HpBonus);
         public int TotalMaxMP => MaxMP + Sum(item => item.MpBonus);
@@ -139,6 +162,16 @@ namespace WitcherGame
             Speed = speed;
             CriticalRate = criticalRate;
             IsJoined = isJoined;
+        }
+
+        public void LearnSkill(string name, string role, int mpCost, string description)
+        {
+            if (!Skills.Contains(name))
+            {
+                Skills.Add(name);
+            }
+
+            SkillDetails.Add(new PartySkill(name, role, mpCost, description));
         }
 
         private int Sum(Func<EquipmentItem, int> selector)
