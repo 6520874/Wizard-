@@ -353,7 +353,7 @@ namespace WitcherGame
             TurnBasedEnemyState enemy = visibleEnemies[enemyIndex];
             if (damage > 0)
             {
-                StartCoroutine(FloatDamageText(slot.DamageText, damage, true));
+                StartCoroutine(FloatDamageText(slot.DamageText, damage, false));
             }
 
             yield return PlayEnemyFrames(slot, enemy.HurtFrames, enemy.Sprite, 0.075f, false, true);
@@ -448,7 +448,7 @@ namespace WitcherGame
         {
             if (damage > 0 && playerDamageText != null)
             {
-                StartCoroutine(FloatDamageText(playerDamageText, damage, false));
+                StartCoroutine(FloatDamageText(playerDamageText, damage, true));
             }
 
             yield return PlayPlayerFrames(GetPlayerFrames(GeraltAnimation.Hurt), 0.09f, new Vector2(22f, 0f), true);
