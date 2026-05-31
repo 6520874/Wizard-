@@ -49,14 +49,14 @@ namespace WitcherGame
                 return "YenneferPortrait";
             }
 
+            if (memberName == "特莉丝")
+            {
+                return "TrissPortrait";
+            }
+
             if (memberName == "莉莉丝")
             {
                 return "LilithPortrait";
-            }
-
-            if (memberName.Contains("红") || memberName.Contains("女巫"))
-            {
-                return "RedWitchReservePortrait";
             }
 
             return string.Empty;

@@ -213,7 +213,7 @@ namespace WitcherGame
             DialogueLine[] lines =
             {
                 new DialogueLine("叶奈法", "这里的魔力流动很混乱，有人故意扭曲了这片土地。"),
-                new DialogueLine("莉莉丝", "也可能不是人。你们总是太高估人类了。"),
+                new DialogueLine("特莉丝", "空气里有烧焦的草药味。有人在用火掩盖更旧的痕迹。"),
                 new DialogueLine("猎魔人", "先找到源头，再决定杀谁。")
             };
 

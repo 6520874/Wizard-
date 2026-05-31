@@ -130,9 +130,10 @@ namespace WitcherGame
 
         public void AddMonsterPartnerPlaceholder(string name)
         {
-            PartyMember monster = new PartyMember(name, 1, 74, 18, 17, 8, 5, 11, 0.04f, false);
-            monster.Skills.Add("撕咬");
-            monster.Skills.Add("嗅血追踪");
+            PartyMember monster = new PartyMember(name, 1, 98, 74, 18, 8, 19, 12, 0.06f, false);
+            monster.Skills.Add("血焰");
+            monster.Skills.Add("魅惑低语");
+            monster.Skills.Add("恶魔召唤");
             allMembers.Add(monster);
         }
 
@@ -164,22 +165,22 @@ namespace WitcherGame
             yennefer.CurrentEquipment.Accessory1 = sampleEquipment[EquipmentSlot.Accessory1][1];
             yennefer.CurrentEquipment.RelicCore = sampleEquipment[EquipmentSlot.RelicCore][1];
 
-            PartyMember lilith = new PartyMember("莉莉丝", 1, 104, 118, 14, 6, 21, 15, 0.08f, true);
-            lilith.Skills.Add("血焰");
-            lilith.Skills.Add("魅惑低语");
-            lilith.CurrentEquipment.Weapon = sampleEquipment[EquipmentSlot.Weapon][2];
-            lilith.CurrentEquipment.Armor = sampleEquipment[EquipmentSlot.Armor][2];
-            lilith.CurrentEquipment.Accessory1 = sampleEquipment[EquipmentSlot.Accessory1][2];
-            lilith.CurrentEquipment.RelicCore = sampleEquipment[EquipmentSlot.RelicCore][2];
+            PartyMember triss = new PartyMember("特莉丝", 1, 102, 126, 11, 6, 22, 14, 0.06f, true);
+            triss.Skills.Add("火焰术");
+            triss.Skills.Add("灼热结界");
+            triss.CurrentEquipment.Weapon = sampleEquipment[EquipmentSlot.Weapon][2];
+            triss.CurrentEquipment.Armor = sampleEquipment[EquipmentSlot.Armor][2];
+            triss.CurrentEquipment.Accessory1 = sampleEquipment[EquipmentSlot.Accessory1][2];
+            triss.CurrentEquipment.RelicCore = sampleEquipment[EquipmentSlot.RelicCore][2];
 
             allMembers.Add(hunter);
             allMembers.Add(yennefer);
-            allMembers.Add(lilith);
-            AddMonsterPartnerPlaceholder("狼魔伙伴");
+            allMembers.Add(triss);
+            AddMonsterPartnerPlaceholder("莉莉丝");
 
             activeParty.Add(hunter);
             activeParty.Add(yennefer);
-            activeParty.Add(lilith);
+            activeParty.Add(triss);
         }
 
         private void BuildSampleEquipment()
@@ -188,19 +189,19 @@ namespace WitcherGame
             {
                 new EquipmentItem("银鸦长剑", EquipmentSlot.Weapon, 0, 0, 7, 0, 0, 1, 0.02f),
                 new EquipmentItem("紫晶法杖", EquipmentSlot.Weapon, 0, 12, 1, 0, 8, 0, 0.01f),
-                new EquipmentItem("血契短刃", EquipmentSlot.Weapon, 8, 0, 5, 0, 5, 2, 0.04f)
+                new EquipmentItem("赤焰法器", EquipmentSlot.Weapon, 4, 8, 2, 0, 7, 2, 0.03f)
             };
             sampleEquipment[EquipmentSlot.Armor] = new List<EquipmentItem>
             {
                 new EquipmentItem("猎魔皮甲", EquipmentSlot.Armor, 16, 0, 0, 6, 0, 1, 0f),
                 new EquipmentItem("黑绒法袍", EquipmentSlot.Armor, 8, 18, 0, 3, 6, 0, 0f),
-                new EquipmentItem("赤夜礼装", EquipmentSlot.Armor, 12, 10, 1, 4, 4, 2, 0.01f)
+                new EquipmentItem("红羽术袍", EquipmentSlot.Armor, 12, 12, 0, 4, 5, 2, 0.01f)
             };
             sampleEquipment[EquipmentSlot.Accessory1] = new List<EquipmentItem>
             {
                 new EquipmentItem("黑月戒指", EquipmentSlot.Accessory1, 0, 8, 1, 0, 2, 0, 0.02f),
                 new EquipmentItem("女术士护符", EquipmentSlot.Accessory1, 0, 14, 0, 0, 5, 1, 0f),
-                new EquipmentItem("血蔷薇耳坠", EquipmentSlot.Accessory1, 6, 0, 2, 0, 3, 1, 0.03f)
+                new EquipmentItem("赤蔷薇耳坠", EquipmentSlot.Accessory1, 4, 6, 1, 0, 4, 1, 0.02f)
             };
             sampleEquipment[EquipmentSlot.Accessory2] = new List<EquipmentItem>
             {
@@ -212,7 +213,7 @@ namespace WitcherGame
             {
                 new EquipmentItem("圣物碎片", EquipmentSlot.RelicCore, 10, 6, 1, 1, 1, 0, 0f),
                 new EquipmentItem("紫曜魔核", EquipmentSlot.RelicCore, 0, 20, 0, 0, 8, 1, 0.02f),
-                new EquipmentItem("恶魔血核", EquipmentSlot.RelicCore, 18, 0, 3, 0, 5, 1, 0.03f)
+                new EquipmentItem("火纹魔核", EquipmentSlot.RelicCore, 10, 10, 1, 0, 7, 1, 0.02f)
             };
         }
     }

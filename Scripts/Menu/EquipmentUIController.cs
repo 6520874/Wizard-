@@ -179,7 +179,7 @@ namespace WitcherGame
             titleText.text = $"{selectedMember.Name} 装备";
             if (portraitImage != null)
             {
-                portraitImage.sprite = PartyPortraitLibrary.GetPortrait(selectedMember);
+                portraitImage.sprite = PartyAnimationLibrary.GetIdlePreview(selectedMember);
                 portraitImage.color = Color.white;
             }
 

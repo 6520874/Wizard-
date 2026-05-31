@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using NUnit.Framework;
 using UnityEngine;
 
@@ -152,7 +153,7 @@ namespace WitcherGame.Tests
         }
 
         [Test]
-        public void PartyManager_DefaultParty_IncludesHunterYenneferAndLilith()
+        public void PartyManager_DefaultParty_IncludesHunterYenneferAndTriss()
         {
             GameObject partyObject = new GameObject("Party Manager Test");
             PartyManager party = partyObject.AddComponent<PartyManager>();
@@ -160,8 +161,9 @@ namespace WitcherGame.Tests
             Assert.AreEqual(3, party.ActiveParty.Count);
             Assert.AreEqual("猎魔人", party.ActiveParty[0].Name);
             Assert.AreEqual("叶奈法", party.ActiveParty[1].Name);
-            Assert.AreEqual("莉莉丝", party.ActiveParty[2].Name);
+            Assert.AreEqual("特莉丝", party.ActiveParty[2].Name);
             Assert.GreaterOrEqual(party.AllMembers.Count, 4);
+            Assert.IsTrue(party.AllMembers.Any(member => member.Name == "莉莉丝" && !member.IsJoined));
             Object.DestroyImmediate(partyObject);
         }
 
