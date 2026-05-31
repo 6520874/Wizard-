@@ -513,11 +513,6 @@ namespace WitcherGame
             enemyAura.sprite = GetFloorMistSprite();
             enemyAura.raycastTarget = false;
 
-            Image stageFrame = CreateCenteredImage("Battle Stage Focus Frame", root.transform, new Vector2(830f, 306f), new Vector2(0f, 22f), new Color32(7, 10, 13, 16));
-            stageFrame.sprite = WitcherSpriteLibrary.GetSolidSprite(new Color32(7, 10, 13, 24));
-            stageFrame.raycastTarget = false;
-            AddOutline(stageFrame, new Color32(84, 111, 128, 96), new Vector2(2f, -2f));
-
             Image floorPlate = CreateCenteredImage("Battle Floor Plate", root.transform, new Vector2(820f, 124f), new Vector2(0f, -20f), new Color32(10, 15, 18, 192));
             floorPlate.sprite = GetFloorMistSprite();
             floorPlate.raycastTarget = false;
