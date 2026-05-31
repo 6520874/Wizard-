@@ -135,9 +135,9 @@ namespace WitcherGame.Tests
 
             Assert.NotNull(enemy.IdleFrames);
             Assert.Greater(enemy.IdleFrames.Length, 0);
-            Assert.GreaterOrEqual(enemy.IdleFrames[0].texture.width, 384);
-            Assert.GreaterOrEqual(enemy.IdleFrames[0].texture.height, 320);
-            Assert.AreEqual(128f, enemy.IdleFrames[0].pixelsPerUnit);
+            Assert.GreaterOrEqual(enemy.IdleFrames[0].texture.width, 768);
+            Assert.GreaterOrEqual(enemy.IdleFrames[0].texture.height, 640);
+            Assert.AreEqual(256f, enemy.IdleFrames[0].pixelsPerUnit);
         }
 
         [TestCase(TurnBasedEnemyVisualKind.CorruptedWolf)]
