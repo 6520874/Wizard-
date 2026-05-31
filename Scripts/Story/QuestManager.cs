@@ -13,6 +13,9 @@ namespace WitcherGame
     // 中文说明：管理当前任务、任务目标进度以及任务面板的显示刷新。
     public class QuestManager : MonoBehaviour
     {
+        private const string ManagerName = "Quest Manager";
+        private static QuestManager instance;
+
         [Serializable]
         // 中文说明：保存单个任务目标的文字说明和完成状态。
         public class QuestObjective
@@ -45,8 +48,26 @@ namespace WitcherGame
 
         public QuestData ActiveQuest => activeQuest;
 
+        public static QuestManager CreateIfMissing()
+        {
+            if (instance != null)
+            {
+                return instance;
+            }
+
+            QuestManager existing = FindObjectOfType<QuestManager>();
+            if (existing != null)
+            {
+                instance = existing;
+                return existing;
+            }
+
+            return new GameObject(ManagerName).AddComponent<QuestManager>();
+        }
+
         private void Awake()
         {
+            instance = this;
             EnsureQuestUi();
             SetQuestPanelVisible(false);
         }

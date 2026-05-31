@@ -151,6 +151,45 @@ namespace WitcherGame.Tests
             Object.DestroyImmediate(mapObject);
         }
 
+        [Test]
+        public void PartyManager_DefaultParty_IncludesHunterYenneferAndLilith()
+        {
+            GameObject partyObject = new GameObject("Party Manager Test");
+            PartyManager party = partyObject.AddComponent<PartyManager>();
+
+            Assert.AreEqual(3, party.ActiveParty.Count);
+            Assert.AreEqual("猎魔人", party.ActiveParty[0].Name);
+            Assert.AreEqual("叶奈法", party.ActiveParty[1].Name);
+            Assert.AreEqual("莉莉丝", party.ActiveParty[2].Name);
+            Assert.GreaterOrEqual(party.AllMembers.Count, 4);
+            Object.DestroyImmediate(partyObject);
+        }
+
+        [Test]
+        public void PartyMember_EquipmentBonuses_RefreshDerivedStats()
+        {
+            PartyMember member = new PartyMember("测试猎人", 1, 100, 30, 10, 5, 4, 8, 0.05f, true);
+
+            member.CurrentEquipment.Weapon = new EquipmentItem("测试剑", EquipmentSlot.Weapon, 0, 0, 6, 0, 0, 1, 0.02f);
+
+            Assert.AreEqual(16, member.TotalAttack);
+            Assert.AreEqual(9, member.TotalSpeed);
+            Assert.AreEqual(0.07f, member.TotalCriticalRate, 0.001f);
+        }
+
+        [Test]
+        public void QuestManager_FirstMainQuest_KeepsExistingStory()
+        {
+            GameObject questObject = new GameObject("Quest Manager Test");
+            QuestManager questManager = questObject.AddComponent<QuestManager>();
+
+            questManager.StartFirstMainQuest();
+
+            Assert.AreEqual("灰鸦村的哭声", questManager.ActiveQuest.title);
+            Assert.That(questManager.ActiveQuest.description, Does.Contain("矿洞"));
+            Object.DestroyImmediate(questObject);
+        }
+
         [TestCase(TurnBasedEnemyVisualKind.CorruptedWolf)]
         [TestCase(TurnBasedEnemyVisualKind.BloodWraith)]
         public void EnemyAnimation_SheetFrames_UseBilinearFiltering(TurnBasedEnemyVisualKind visualKind)

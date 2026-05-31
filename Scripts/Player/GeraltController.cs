@@ -74,6 +74,7 @@ namespace WitcherGame
             WitcherWorldDirector.CreateIfMissing(this);
             TurnBasedBattleManager.CreateIfMissing(this);
             PlayerInventory.CreateIfMissing(this);
+            PlayerInputController.CreateIfMissing(this);
         }
 
         private void Update()

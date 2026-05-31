@@ -5,25 +5,10 @@ using UnityEngine.UI;
 
 namespace WitcherGame
 {
-    /// <summary>
-    /// Plays ordered dialogue lines with speaker names.
-    /// Can be reused by later chapters by passing a new DialogueLine array to StartDialogue.
-    /// </summary>
-    // 中文说明：管理 NPC 对话队列、对话框显示和对白结束后的回调。
+    // 中文说明：管理经典 JRPG 对话框、逐字显示、角色控制暂停和对白结束回调。
     public class DialogueManager : MonoBehaviour
     {
-        [Serializable]
-        public struct DialogueLine
-        {
-            public string speakerName;
-            [TextArea(2, 4)] public string text;
-
-            public DialogueLine(string speakerName, string text)
-            {
-                this.speakerName = speakerName;
-                this.text = text;
-            }
-        }
+        private const string ManagerName = "Dialogue Manager";
 
         [Header("Dialogue")]
         [SerializeField] private float typewriterCharactersPerSecond = 38f;
@@ -38,13 +23,17 @@ namespace WitcherGame
         [Header("Optional Manager References")]
         [SerializeField] private QuestManager questManager;
 
+        private static DialogueManager instance;
         private DialogueLine[] activeLines = Array.Empty<DialogueLine>();
         private int lineIndex;
         private bool isTyping;
         private bool dialogueActive;
+        private bool resumePlayerWhenFinished = true;
         private string currentFullText;
         private Coroutine typingRoutine;
         private Action onDialogueFinished;
+
+        public static bool IsDialogueActive => instance != null && instance.dialogueActive;
 
         private static readonly DialogueLine[] DefaultVillageDialogue =
         {
@@ -60,8 +49,26 @@ namespace WitcherGame
             new DialogueLine("老村长", "但你要小心……这里死去的人，好像都还没真正离开。")
         };
 
+        public static DialogueManager CreateIfMissing()
+        {
+            if (instance != null)
+            {
+                return instance;
+            }
+
+            DialogueManager existing = FindObjectOfType<DialogueManager>();
+            if (existing != null)
+            {
+                instance = existing;
+                return existing;
+            }
+
+            return new GameObject(ManagerName).AddComponent<DialogueManager>();
+        }
+
         private void Awake()
         {
+            instance = this;
             EnsureDialogueUi();
             dialoguePanel.SetActive(false);
             questManager = questManager == null ? FindObjectOfType<QuestManager>() : questManager;
@@ -74,7 +81,7 @@ namespace WitcherGame
                 return;
             }
 
-            if (Input.GetKeyDown(KeyCode.Space) || Input.GetMouseButtonDown(0))
+            if (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.Space) || Input.GetMouseButtonDown(0))
             {
                 AdvanceDialogue();
             }
@@ -87,22 +94,14 @@ namespace WitcherGame
                 if (startFirstQuestWhenDefaultDialogueEnds)
                 {
                     questManager = questManager == null ? FindObjectOfType<QuestManager>() : questManager;
-                    if (questManager != null)
-                    {
-                        questManager.StartFirstMainQuest();
-                    }
+                    questManager?.StartFirstMainQuest();
                 }
             });
         }
 
         public void HideDialogue()
         {
-            if (typingRoutine != null)
-            {
-                StopCoroutine(typingRoutine);
-                typingRoutine = null;
-            }
-
+            StopTyping();
             isTyping = false;
             dialogueActive = false;
             onDialogueFinished = null;
@@ -110,9 +109,16 @@ namespace WitcherGame
             {
                 dialoguePanel.SetActive(false);
             }
+
+            PlayerInputController.RefreshPlayerControl();
         }
 
         public void StartDialogue(DialogueLine[] lines, Action onFinished = null)
+        {
+            StartDialogue(lines, onFinished, true);
+        }
+
+        public void StartDialogue(DialogueLine[] lines, Action onFinished, bool resumePlayerWhenDialogueEnds)
         {
             if (lines == null || lines.Length == 0)
             {
@@ -120,11 +126,14 @@ namespace WitcherGame
                 return;
             }
 
+            StopTyping();
             activeLines = lines;
             onDialogueFinished = onFinished;
+            resumePlayerWhenFinished = resumePlayerWhenDialogueEnds;
             lineIndex = 0;
             dialogueActive = true;
             dialoguePanel.SetActive(true);
+            PlayerInputController.RefreshPlayerControl();
             ShowLine(activeLines[lineIndex]);
         }
 
@@ -148,21 +157,17 @@ namespace WitcherGame
 
         private void ShowLine(DialogueLine line)
         {
-            speakerNameText.text = line.speakerName;
-            currentFullText = line.text;
-            continueHintText.text = "点击或按空格继续";
-
-            if (typingRoutine != null)
-            {
-                StopCoroutine(typingRoutine);
-            }
-
+            speakerNameText.text = line.SpeakerName;
+            currentFullText = line.Text;
+            continueHintText.text = isTyping ? string.Empty : "Enter 继续";
+            StopTyping();
             typingRoutine = StartCoroutine(TypeLine(currentFullText));
         }
 
         private IEnumerator TypeLine(string line)
         {
             isTyping = true;
+            continueHintText.text = string.Empty;
             dialogueText.text = string.Empty;
             float delay = typewriterCharactersPerSecond <= 0f ? 0f : 1f / typewriterCharactersPerSecond;
 
@@ -176,27 +181,38 @@ namespace WitcherGame
             }
 
             isTyping = false;
+            continueHintText.text = "Enter 继续";
         }
 
         private void FinishTypingImmediately()
+        {
+            StopTyping();
+            dialogueText.text = currentFullText;
+            isTyping = false;
+            continueHintText.text = "Enter 继续";
+        }
+
+        private void EndDialogue()
+        {
+            StopTyping();
+            dialogueActive = false;
+            dialoguePanel.SetActive(false);
+            Action finished = onDialogueFinished;
+            onDialogueFinished = null;
+            finished?.Invoke();
+            if (resumePlayerWhenFinished)
+            {
+                PlayerInputController.RefreshPlayerControl();
+            }
+        }
+
+        private void StopTyping()
         {
             if (typingRoutine != null)
             {
                 StopCoroutine(typingRoutine);
                 typingRoutine = null;
             }
-
-            dialogueText.text = currentFullText;
-            isTyping = false;
-        }
-
-        private void EndDialogue()
-        {
-            dialogueActive = false;
-            dialoguePanel.SetActive(false);
-            Action finished = onDialogueFinished;
-            onDialogueFinished = null;
-            finished?.Invoke();
         }
 
         private void EnsureDialogueUi()
@@ -206,11 +222,13 @@ namespace WitcherGame
                 return;
             }
 
-            Canvas canvas = EnsureCanvas("Story UI Canvas", 120);
-            dialoguePanel = CreatePanel("DialoguePanel", canvas.transform, new Vector2(980f, 190f), new Vector2(0f, 36f), new Vector2(0.5f, 0f), new Color32(8, 10, 13, 225));
-            speakerNameText = CreateText("Dialogue Speaker Name", dialoguePanel.transform, "角色名", 24, TextAnchor.MiddleLeft, new Vector2(30f, -20f), new Vector2(260f, 36f), new Color32(233, 222, 193, 255));
-            dialogueText = CreateText("Dialogue Content", dialoguePanel.transform, "对白", 23, TextAnchor.UpperLeft, new Vector2(30f, -66f), new Vector2(920f, 84f), new Color32(225, 231, 232, 255));
-            continueHintText = CreateText("Dialogue Continue Hint", dialoguePanel.transform, "点击或按空格继续", 14, TextAnchor.MiddleRight, new Vector2(710f, -152f), new Vector2(240f, 24f), new Color32(149, 163, 169, 255));
+            Canvas canvas = EnsureCanvas("Story UI Canvas", 160);
+            dialoguePanel = CreatePanel("DialoguePanel", canvas.transform, new Vector2(980f, 196f), new Vector2(0f, 34f), new Vector2(0.5f, 0f), new Color32(5, 7, 10, 232));
+            AddOutline(dialoguePanel, new Color32(117, 92, 52, 255), new Vector2(2f, -2f));
+            CreatePanel("Dialogue Inner Bloodline", dialoguePanel.transform, new Vector2(920f, 2f), new Vector2(30f, -52f), new Vector2(0f, 1f), new Color32(113, 16, 24, 200));
+            speakerNameText = CreateText("Dialogue Speaker Name", dialoguePanel.transform, "角色名", 24, TextAnchor.MiddleLeft, new Vector2(30f, -18f), new Vector2(260f, 36f), new Color32(238, 211, 150, 255));
+            dialogueText = CreateText("Dialogue Content", dialoguePanel.transform, "对白", 23, TextAnchor.UpperLeft, new Vector2(30f, -68f), new Vector2(920f, 86f), new Color32(225, 224, 209, 255));
+            continueHintText = CreateText("Dialogue Continue Hint", dialoguePanel.transform, "Enter 继续", 14, TextAnchor.MiddleRight, new Vector2(710f, -154f), new Vector2(240f, 24f), new Color32(155, 166, 166, 255));
         }
 
         private static Canvas EnsureCanvas(string name, int sortingOrder)
@@ -218,6 +236,7 @@ namespace WitcherGame
             GameObject existing = GameObject.Find(name);
             if (existing != null && existing.TryGetComponent(out Canvas existingCanvas))
             {
+                existingCanvas.sortingOrder = Mathf.Max(existingCanvas.sortingOrder, sortingOrder);
                 return existingCanvas;
             }
 
@@ -225,7 +244,9 @@ namespace WitcherGame
             Canvas canvas = canvasObject.AddComponent<Canvas>();
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
             canvas.sortingOrder = sortingOrder;
-            canvasObject.AddComponent<CanvasScaler>();
+            CanvasScaler scaler = canvasObject.AddComponent<CanvasScaler>();
+            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            scaler.referenceResolution = new Vector2(1280f, 720f);
             canvasObject.AddComponent<GraphicRaycaster>();
             return canvas;
         }
@@ -266,6 +287,13 @@ namespace WitcherGame
             textComponent.horizontalOverflow = HorizontalWrapMode.Wrap;
             textComponent.verticalOverflow = VerticalWrapMode.Overflow;
             return textComponent;
+        }
+
+        private static void AddOutline(GameObject target, Color color, Vector2 distance)
+        {
+            Outline outline = target.AddComponent<Outline>();
+            outline.effectColor = color;
+            outline.effectDistance = distance;
         }
     }
 }
