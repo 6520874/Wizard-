@@ -80,9 +80,37 @@ namespace WitcherGame.Tests
 
             for (int i = 0; i < stagePositions.Length; i++)
             {
-                Vector2 rowPosition = EnemyWeaknessItem.CalculateAnchoredPosition(stagePositions[i]);
+                Vector2 rowPosition = EnemyWeaknessItem.CalculateAnchoredPosition(stagePositions[i], i);
 
                 Assert.GreaterOrEqual(rowPosition.y, -96f, $"Enemy weakness row {i + 1} should not overlap the bottom command panel.");
+            }
+        }
+
+        [Test]
+        public void Hud_EnemyWeaknessRowsForThreeEnemies_DoNotOverlapEnemySprites()
+        {
+            Vector2[] stagePositions =
+            {
+                new Vector2(-322f, 42f),
+                new Vector2(-184f, -32f),
+                new Vector2(-228f, 112f)
+            };
+
+            for (int i = 0; i < stagePositions.Length; i++)
+            {
+                Rect enemyRect = Rect.MinMaxRect(
+                    stagePositions[i].x - 92f,
+                    stagePositions[i].y - 92f,
+                    stagePositions[i].x + 92f,
+                    stagePositions[i].y + 92f);
+                Vector2 rowPosition = EnemyWeaknessItem.CalculateAnchoredPosition(stagePositions[i], i);
+                Rect rowRect = Rect.MinMaxRect(
+                    rowPosition.x - 98f,
+                    rowPosition.y - 17f,
+                    rowPosition.x + 98f,
+                    rowPosition.y + 17f);
+
+                Assert.IsFalse(rowRect.Overlaps(enemyRect), $"Enemy weakness row {i + 1} should not cover the monster sprite.");
             }
         }
     }

@@ -644,7 +644,7 @@ namespace WitcherGame
         }
     }
 
-    // 中文说明：敌人弱点栏容器，按敌人舞台坐标生成护盾和弱点格。
+    // 中文说明：敌人弱点栏容器，使用独立固定列显示，避免遮挡舞台上的怪物。
     public class EnemyWeaknessPanel : MonoBehaviour
     {
         private readonly List<EnemyWeaknessItem> items = new List<EnemyWeaknessItem>();
@@ -683,7 +683,8 @@ namespace WitcherGame
     // 中文说明：单个敌人的护盾和弱点显示，破防归零时闪烁。
     public class EnemyWeaknessItem : MonoBehaviour
     {
-        private const float WeaknessRowVerticalOffset = 74f;
+        private static readonly Vector2 WeaknessColumnStart = new Vector2(90f, 118f);
+        private const float WeaknessRowGap = 42f;
 
         private RectTransform rect;
         private Image frame;
@@ -733,12 +734,18 @@ namespace WitcherGame
 
         public static Vector2 CalculateAnchoredPosition(Vector2 enemyUiPosition)
         {
-            return enemyUiPosition + new Vector2(0f, WeaknessRowVerticalOffset);
+            return CalculateAnchoredPosition(enemyUiPosition, 0);
+        }
+
+        public static Vector2 CalculateAnchoredPosition(Vector2 enemyUiPosition, int enemyIndex)
+        {
+            int safeIndex = Mathf.Clamp(enemyIndex, 0, 3);
+            return WeaknessColumnStart + new Vector2(0f, -safeIndex * WeaknessRowGap);
         }
 
         public void Refresh(BattleUnit unit)
         {
-            rect.anchoredPosition = CalculateAnchoredPosition(unit.UiPosition);
+            rect.anchoredPosition = CalculateAnchoredPosition(unit.UiPosition, unit.EnemyIndex);
             shieldText.text = Mathf.Max(0, unit.Shield).ToString();
             if (previousShield > 0 && unit.Shield == 0)
             {
