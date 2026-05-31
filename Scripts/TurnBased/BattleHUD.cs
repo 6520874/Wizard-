@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -30,6 +31,8 @@ namespace WitcherGame
     // 中文说明：暗黑 HD-2D 回合制战斗 HUD 的总入口，负责协调行动轴、状态栏、弱点栏和技能名。
     public class BattleHUD : MonoBehaviour
     {
+        private const string GeraltPortraitPath = "Art/UI/GeraltPortrait.png";
+        private static Sprite cachedGeraltPortrait;
         private TurnOrderBar turnOrderBar;
         private PartyStatusPanel partyStatusPanel;
         private EnemyWeaknessPanel enemyWeaknessPanel;
@@ -151,19 +154,7 @@ namespace WitcherGame
             skillNameBanner = CreateChild<SkillNameBanner>("SkillNameBanner");
             skillNameBanner.Build();
 
-            GameObject indicator = new GameObject("TargetIndicator");
-            indicator.transform.SetParent(transform, false);
-            targetIndicatorRect = indicator.AddComponent<RectTransform>();
-            targetIndicatorRect.anchorMin = new Vector2(0.5f, 0.5f);
-            targetIndicatorRect.anchorMax = new Vector2(0.5f, 0.5f);
-            targetIndicatorRect.pivot = new Vector2(0.5f, 0.5f);
-            targetIndicatorRect.sizeDelta = new Vector2(34f, 24f);
-            targetIndicator = indicator.AddComponent<Image>();
-            targetIndicator.sprite = BattleHudStyle.CreateTriangleSprite(new Color32(152, 229, 255, 230));
-            targetIndicator.color = new Color32(152, 229, 255, 230);
-            targetIndicator.raycastTarget = false;
-            AddOutline(targetIndicator, new Color32(0, 16, 24, 255), new Vector2(1f, -1f));
-            indicator.SetActive(false);
+            // 目标当前已经由敌人血条和弱点框表达，先移除闪烁三角，避免干扰画面中心。
         }
 
         private T CreateChild<T>(string name) where T : MonoBehaviour
@@ -192,12 +183,44 @@ namespace WitcherGame
                 CurrentSp = player.CurrentMana,
                 MaxSp = player.MaxMana,
                 IsAlive = player.IsAlive,
-                Portrait = WitcherSpriteLibrary.GetGeraltFrame(GeraltAnimation.Idle, 0),
+                Portrait = LoadGeraltPortrait(),
                 UiPosition = new Vector2(304f, -34f),
                 Weaknesses = System.Array.Empty<string>(),
                 WeaknessDiscovered = System.Array.Empty<bool>()
             });
             return units;
+        }
+
+        private static Sprite LoadGeraltPortrait()
+        {
+            if (cachedGeraltPortrait != null)
+            {
+                return cachedGeraltPortrait;
+            }
+
+            string absolutePath = Path.Combine(Application.dataPath, GeraltPortraitPath);
+            if (!File.Exists(absolutePath))
+            {
+                cachedGeraltPortrait = WitcherSpriteLibrary.GetGeraltFrame(GeraltAnimation.Idle, 0);
+                return cachedGeraltPortrait;
+            }
+
+            Texture2D texture = new Texture2D(2, 2, TextureFormat.RGBA32, false);
+            if (!texture.LoadImage(File.ReadAllBytes(absolutePath)))
+            {
+                cachedGeraltPortrait = WitcherSpriteLibrary.GetGeraltFrame(GeraltAnimation.Idle, 0);
+                return cachedGeraltPortrait;
+            }
+
+            texture.filterMode = FilterMode.Point;
+            texture.wrapMode = TextureWrapMode.Clamp;
+            cachedGeraltPortrait = Sprite.Create(
+                texture,
+                new Rect(0f, 0f, texture.width, texture.height),
+                new Vector2(0.5f, 0.5f),
+                128f);
+            cachedGeraltPortrait.name = "GeraltBattlePortrait";
+            return cachedGeraltPortrait;
         }
 
         private static List<BattleUnit> BuildEnemyUnits(IReadOnlyList<TurnBasedEnemyState> enemies, IReadOnlyList<Vector2> enemyPositions)
@@ -457,7 +480,9 @@ namespace WitcherGame
             portrait.sprite = unit.Portrait;
             portrait.color = unit.Portrait == null ? new Color32(255, 255, 255, 0) : new Color32(255, 255, 255, isCurrent ? (byte)255 : (byte)150);
             label.text = string.IsNullOrEmpty(unit.Name) ? "?" : unit.Name.Substring(0, 1);
-            label.color = isCurrent ? new Color32(255, 232, 155, 255) : new Color32(194, 210, 224, 210);
+            label.color = unit.Portrait == null
+                ? (isCurrent ? new Color32(255, 232, 155, 255) : new Color32(194, 210, 224, 210))
+                : new Color32(255, 255, 255, 0);
             Rect.localScale = isCurrent ? Vector3.one * 1.15f : Vector3.one;
         }
 

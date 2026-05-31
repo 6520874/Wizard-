@@ -530,14 +530,6 @@ namespace WitcherGame
             frontFog.sprite = GetFloorMistSprite();
             frontFog.raycastTarget = false;
 
-            Image titlePlate = CreateCenteredImage("Battle Title Plate", root.transform, new Vector2(420f, 44f), new Vector2(0f, 236f), new Color32(12, 15, 19, 228));
-            titlePlate.sprite = WitcherSpriteLibrary.GetSolidSprite(new Color32(12, 15, 19, 228));
-            AddOutline(titlePlate, new Color32(139, 101, 54, 255), new Vector2(2f, -2f));
-
-            Text battleTitle = CreateText("Battle Title", titlePlate.transform, "遭遇战", 28, TextAnchor.MiddleCenter, Vector2.zero, new Vector2(420f, 44f));
-            battleTitle.color = new Color32(255, 211, 123, 255);
-            AddOutline(battleTitle, Color.black, new Vector2(2f, -2f));
-
             // HD-2D HUD owns the visible turn order; the legacy timeline stays disabled to avoid duplicated top UI.
 
             Image playerGlow = CreateCenteredImage("Battle Player Ground Glow", root.transform, new Vector2(178f, 42f), new Vector2(304f, -108f), new Color32(42, 143, 255, 78));
@@ -1244,11 +1236,11 @@ namespace WitcherGame
         // 中文说明：玩家固定站在右侧，战斗立绘翻向左侧敌人。
         private void SetPlayerFacingScale(float scale)
         {
-            float safeScale = Mathf.Abs(scale) <= 0.01f ? 1f : scale;
-            playerFigure.rectTransform.localScale = new Vector3(safeScale, Mathf.Abs(safeScale), 1f);
+            float safeScale = Mathf.Abs(scale) <= 0.01f ? 1f : Mathf.Abs(scale);
+            playerFigure.rectTransform.localScale = new Vector3(-safeScale, safeScale, 1f);
             if (playerDamageText != null && !playerDamageText.gameObject.activeSelf)
             {
-                playerDamageText.rectTransform.localScale = new Vector3(Mathf.Sign(safeScale), 1f, 1f);
+                playerDamageText.rectTransform.localScale = new Vector3(-1f, 1f, 1f);
             }
         }
 
