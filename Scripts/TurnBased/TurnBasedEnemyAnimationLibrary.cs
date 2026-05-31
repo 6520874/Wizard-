@@ -118,6 +118,7 @@ namespace WitcherGame
                     continue;
                 }
 
+                // Folder-loaded frames are scaled in the HUD, so keep them smoothed.
                 texture.filterMode = FilterMode.Bilinear;
                 texture.wrapMode = TextureWrapMode.Clamp;
                 Sprite sprite = Sprite.Create(

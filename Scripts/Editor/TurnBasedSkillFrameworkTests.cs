@@ -113,5 +113,30 @@ namespace WitcherGame.Tests
                 Assert.IsFalse(rowRect.Overlaps(enemyRect), $"Enemy weakness row {i + 1} should not cover the monster sprite.");
             }
         }
+
+        [Test]
+        public void EnemyAnimation_BlackMoonKnightFolderFrames_UseBilinearFiltering()
+        {
+            TurnBasedEnemyState enemy = new TurnBasedEnemyState();
+
+            TurnBasedEnemyAnimationLibrary.FillAnimations(enemy, TurnBasedEnemyVisualKind.BlackMoonKnight);
+
+            Assert.NotNull(enemy.IdleFrames);
+            Assert.Greater(enemy.IdleFrames.Length, 0);
+            Assert.AreEqual(FilterMode.Bilinear, enemy.IdleFrames[0].texture.filterMode);
+        }
+
+        [TestCase(TurnBasedEnemyVisualKind.CorruptedWolf)]
+        [TestCase(TurnBasedEnemyVisualKind.BloodWraith)]
+        public void EnemyAnimation_SheetFrames_UseBilinearFiltering(TurnBasedEnemyVisualKind visualKind)
+        {
+            TurnBasedEnemyState enemy = new TurnBasedEnemyState();
+
+            TurnBasedEnemyAnimationLibrary.FillAnimations(enemy, visualKind);
+
+            Assert.NotNull(enemy.IdleFrames);
+            Assert.Greater(enemy.IdleFrames.Length, 0);
+            Assert.AreEqual(FilterMode.Bilinear, enemy.IdleFrames[0].texture.filterMode);
+        }
     }
 }
