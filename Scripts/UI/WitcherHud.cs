@@ -12,23 +12,22 @@ namespace WitcherGame
         private const string HudName = "Witcher HUD";
         private const string PortraitPath = "Art/UI/GeraltPortrait.png";
         private const string HudFramePath = "Art/UI/DarkHudReferenceFull.png";
-        private const float PlayerBarWidth = 382f;
-        private const float ManaBarWidth = 352f;
-        private static Sprite cachedHudPanelSprite;
-        private static Sprite cachedBarBackSprite;
-        private static Sprite cachedMetalSprite;
+        private const float TopLeftHudScale = 0.74f;
+        private const float PlayerBarWidth = 384f;
+        private const float ManaBarWidth = 384f;
         private static Sprite cachedHealthFillSprite;
         private static Sprite cachedManaFillSprite;
 
         private GeraltController player;
         private Image healthFill;
         private Image manaFill;
-        private Image healthMissing;
-        private Image manaMissing;
         private Text healthText;
         private Text manaText;
         private Text roomText;
-        private Text inventoryText;
+        private Text goldValueText;
+        private Text experienceValueText;
+        private Text attackValueText;
+        private Text defenseValueText;
         private GeraltController subscribedPlayer;
         private PlayerInventory playerInventory;
         private PlayerInventory subscribedInventory;
@@ -139,81 +138,41 @@ namespace WitcherGame
             RectTransform canvasRect = gameObject.GetComponent<RectTransform>();
             canvasRect.sizeDelta = Vector2.zero;
 
-            GameObject root = CreateUiObject("TopLeft Status", transform, new Vector2(560f, 286f), new Vector2(8f, -8f), new Vector2(0f, 1f));
+            GameObject root = CreateUiObject("TopLeft Status", transform, new Vector2(650f, 304f), new Vector2(8f, -8f), new Vector2(0f, 1f));
+            root.transform.localScale = Vector3.one * TopLeftHudScale;
             Image panel = root.AddComponent<Image>();
             panel.sprite = WitcherSpriteLibrary.GetSolidSprite(new Color32(0, 0, 0, 0));
             panel.color = new Color32(0, 0, 0, 0);
 
-            Image forgedPanel = CreateImage("Forged HUD Backplate", root.transform, new Vector2(548f, 270f), new Vector2(6f, -8f), Color.white);
-            forgedPanel.sprite = GetHudPanelSprite();
-            forgedPanel.color = new Color32(255, 255, 255, 218);
-            AddOutline(forgedPanel, new Color32(72, 59, 45, 210), new Vector2(2f, -2f));
-
-            Image frame = CreateImage("Dark HUD Reference Frame", root.transform, new Vector2(560f, 286f), Vector2.zero, new Color32(255, 255, 255, 92));
-            frame.sprite = LoadSprite(HudFramePath, 100f, new Rect(0f, 511f, 792f, 430f));
+            Image frame = CreateImage("Dark HUD Reference Frame", root.transform, new Vector2(650f, 304f), Vector2.zero, Color.white);
+            frame.sprite = LoadSprite(HudFramePath, 100f, new Rect(0f, 511f, 920f, 430f));
             frame.preserveAspect = true;
+            frame.raycastTarget = false;
 
-            Image portraitCover = CreateImage("Portrait Cover", root.transform, new Vector2(118f, 118f), new Vector2(34f, -47f), new Color32(6, 7, 8, 236));
-            portraitCover.sprite = GetMetalSprite();
-            AddOutline(portraitCover, new Color32(95, 78, 54, 230), new Vector2(2f, -2f));
-
-            Image portrait = CreateImage("Geralt Portrait", root.transform, new Vector2(108f, 108f), new Vector2(39f, -52f), Color.white);
+            Image portrait = CreateImage("Geralt Portrait", root.transform, new Vector2(110f, 110f), new Vector2(38f, -52f), Color.white);
             portrait.sprite = LoadSprite(PortraitPath, 96f);
             portrait.preserveAspect = true;
+            portrait.raycastTarget = false;
 
-            Image healthFrame = CreateImage("Health Black Iron Frame", root.transform, new Vector2(PlayerBarWidth + 18f, 42f), new Vector2(149f, -68f), new Color32(10, 9, 8, 245));
-            healthFrame.sprite = GetMetalSprite();
-            AddOutline(healthFrame, new Color32(118, 84, 50, 230), new Vector2(2f, -2f));
+            healthFill = CreateReferenceFill("Health Runtime Fill", root.transform, new Vector2(PlayerBarWidth, 20f), new Vector2(198f, -76f), new Color32(139, 16, 24, 238), GetHealthFillSprite());
+            manaFill = CreateReferenceFill("Mana Runtime Fill", root.transform, new Vector2(ManaBarWidth, 20f), new Vector2(198f, -146f), new Color32(37, 70, 132, 236), GetManaFillSprite());
 
-            Image manaFrame = CreateImage("Mana Black Iron Frame", root.transform, new Vector2(ManaBarWidth + 18f, 38f), new Vector2(149f, -137f), new Color32(10, 9, 8, 242));
-            manaFrame.sprite = GetMetalSprite();
-            AddOutline(manaFrame, new Color32(79, 95, 122, 224), new Vector2(2f, -2f));
-
-            Image healthTrack = CreateImage("Health Dynamic Track", root.transform, new Vector2(PlayerBarWidth, 28f), new Vector2(158f, -75f), new Color32(24, 8, 10, 244));
-            healthTrack.sprite = GetBarBackSprite();
-
-            Image manaTrack = CreateImage("Mana Dynamic Track", root.transform, new Vector2(ManaBarWidth, 24f), new Vector2(158f, -144f), new Color32(6, 15, 34, 244));
-            manaTrack.sprite = GetBarBackSprite();
-
-            healthFill = CreateReferenceFill("Health Runtime Fill", root.transform, new Vector2(PlayerBarWidth, 28f), new Vector2(158f, -75f), new Color32(139, 16, 24, 238), GetHealthFillSprite());
-            manaFill = CreateReferenceFill("Mana Runtime Fill", root.transform, new Vector2(ManaBarWidth, 24f), new Vector2(158f, -144f), new Color32(37, 70, 132, 236), GetManaFillSprite());
-
-            Image healthSheen = CreateImage("Health Edge Highlight", root.transform, new Vector2(PlayerBarWidth - 12f, 4f), new Vector2(164f, -78f), new Color32(255, 184, 160, 42));
-            healthSheen.sprite = WitcherSpriteLibrary.GetSolidSprite(new Color32(255, 184, 160, 42));
-            healthSheen.raycastTarget = false;
-
-            Image manaSheen = CreateImage("Mana Edge Highlight", root.transform, new Vector2(ManaBarWidth - 12f, 4f), new Vector2(164f, -147f), new Color32(122, 177, 228, 38));
-            manaSheen.sprite = WitcherSpriteLibrary.GetSolidSprite(new Color32(122, 177, 228, 38));
-            manaSheen.raycastTarget = false;
-
-            healthMissing = CreateRightAnchoredImage("Health Missing Mask", root.transform, new Vector2(PlayerBarWidth, 31f), new Vector2(540f, -73f), new Color32(12, 10, 10, 218));
-            manaMissing = CreateRightAnchoredImage("Mana Missing Mask", root.transform, new Vector2(ManaBarWidth, 27f), new Vector2(510f, -142f), new Color32(8, 11, 18, 218));
-
-            Image healthTextCover = CreateImage("Health Original Text Cover", root.transform, new Vector2(224f, 29f), new Vector2(176f, -76f), new Color32(31, 10, 11, 168));
-            healthTextCover.sprite = GetHudPanelSprite();
-
-            Image manaTextCover = CreateImage("Mana Original Text Cover", root.transform, new Vector2(214f, 27f), new Vector2(176f, -145f), new Color32(8, 17, 34, 166));
-            manaTextCover.sprite = GetHudPanelSprite();
-
-            healthText = CreateText("Health Value", root.transform, "HP 100 / 100", 23, TextAnchor.MiddleLeft, new Vector2(187f, -76f), new Vector2(240f, 30f));
+            healthText = CreateText("Health Value", root.transform, "HP 100 / 100", 21, TextAnchor.MiddleLeft, new Vector2(220f, -76f), new Vector2(240f, 28f));
             healthText.color = new Color32(255, 250, 232, 255);
             AddOutline(healthText, new Color32(0, 0, 0, 255), new Vector2(2f, -2f));
 
-            manaText = CreateText("Mana Value", root.transform, "MP 100 / 100", 23, TextAnchor.MiddleLeft, new Vector2(187f, -146f), new Vector2(230f, 30f));
+            manaText = CreateText("Mana Value", root.transform, "MP 100 / 100", 21, TextAnchor.MiddleLeft, new Vector2(220f, -146f), new Vector2(230f, 28f));
             manaText.color = new Color32(255, 250, 232, 255);
             AddOutline(manaText, new Color32(0, 0, 0, 255), new Vector2(2f, -2f));
 
-            roomText = CreateText("Room Label", root.transform, "霜林边境", 12, TextAnchor.MiddleRight, new Vector2(420f, -24f), new Vector2(130f, 20f));
+            roomText = CreateText("Room Label", root.transform, "霜林边境", 12, TextAnchor.MiddleRight, new Vector2(480f, -18f), new Vector2(150f, 20f));
             roomText.color = new Color32(152, 178, 188, 255);
             AddOutline(roomText, new Color32(0, 0, 0, 220), new Vector2(1f, -1f));
 
-            BuildSkillFrameOverlays(root.transform);
-            Image inventoryBack = CreateImage("Inventory Summary Back", root.transform, new Vector2(330f, 24f), new Vector2(186f, -226f), new Color32(7, 8, 10, 132));
-            inventoryBack.sprite = GetHudPanelSprite();
-            inventoryBack.raycastTarget = false;
-            inventoryText = CreateText("Inventory Summary", root.transform, "金币 0  经验 0  攻+0 防+0", 12, TextAnchor.MiddleLeft, new Vector2(196f, -228f), new Vector2(310f, 22f));
-            inventoryText.color = new Color32(219, 209, 181, 255);
-            AddOutline(inventoryText, new Color32(0, 0, 0, 230), new Vector2(1f, -1f));
+            goldValueText = CreateStatusValueText("Gold Value", root.transform, new Vector2(119f, -260f));
+            experienceValueText = CreateStatusValueText("Experience Value", root.transform, new Vector2(250f, -260f));
+            attackValueText = CreateStatusValueText("Attack Bonus Value", root.transform, new Vector2(381f, -260f));
+            defenseValueText = CreateStatusValueText("Defense Bonus Value", root.transform, new Vector2(512f, -260f));
 
             BuildBossBar();
             BuildGameOverPanel();
@@ -230,124 +189,6 @@ namespace WitcherGame
             gameOverRoot.SetActive(true);
         }
 
-        private void BuildPortraitBadge(Transform parent)
-        {
-            Image halo = CreateImage("Portrait Halo", parent, new Vector2(132f, 132f), new Vector2(18f, -10f), new Color32(8, 10, 12, 240));
-            halo.sprite = WitcherSpriteLibrary.GetSolidSprite(new Color32(8, 10, 12, 240));
-            AddOutline(halo, new Color32(93, 87, 77, 255), new Vector2(4f, -4f));
-
-            Image ring = CreateImage("Portrait Ring", parent, new Vector2(116f, 116f), new Vector2(26f, -18f), new Color32(19, 22, 24, 255));
-            ring.sprite = WitcherSpriteLibrary.GetSolidSprite(new Color32(19, 22, 24, 255));
-            AddOutline(ring, new Color32(151, 126, 78, 255), new Vector2(2f, -2f));
-
-            Image redCore = CreateImage("Portrait Red Core", parent, new Vector2(102f, 102f), new Vector2(33f, -25f), new Color32(63, 5, 9, 220));
-            redCore.sprite = WitcherSpriteLibrary.GetSolidSprite(new Color32(63, 5, 9, 220));
-
-            Image portraitBack = CreateImage("Portrait Back", parent, new Vector2(88f, 88f), new Vector2(40f, -32f), new Color32(3, 5, 7, 255));
-            portraitBack.sprite = WitcherSpriteLibrary.GetSolidSprite(new Color32(3, 5, 7, 255));
-
-            Image portrait = CreateImage("Geralt Portrait", parent, new Vector2(82f, 82f), new Vector2(43f, -35f), Color.white);
-            portrait.sprite = LoadSprite(PortraitPath, 96f);
-            portrait.preserveAspect = true;
-
-            CreateDiamond("Top Ruby", parent, new Vector2(74f, -1f), 28f, new Color32(229, 24, 35, 255), new Color32(30, 3, 5, 255));
-            CreateDiamond("Bottom Spike", parent, new Vector2(74f, -132f), 22f, new Color32(48, 44, 39, 255), new Color32(12, 12, 12, 255));
-            CreateSpike("Left Wing", parent, new Vector2(6f, -60f), new Vector2(34f, 12f), 18f);
-            CreateSpike("Right Wing", parent, new Vector2(140f, -60f), new Vector2(34f, 12f), -18f);
-        }
-
-        private Image CreateBar(Transform parent, string name, string label, Vector2 position, Color32 fillColor, Color32 lowColor, out Text valueText)
-        {
-            Text labelText = CreateText(name + " Label", parent, label, 22, TextAnchor.MiddleLeft, position + new Vector2(22f, -2f), new Vector2(58f, 30f));
-            labelText.color = new Color32(229, 218, 185, 255);
-            AddOutline(labelText, new Color32(0, 0, 0, 245), new Vector2(2f, -2f));
-
-            Image railShadow = CreateImage(name + " Rail Shadow", parent, new Vector2(PlayerBarWidth + 54f, 42f), position + new Vector2(0f, 0f), new Color32(8, 12, 17, 118));
-            railShadow.sprite = WitcherSpriteLibrary.GetSolidSprite(new Color32(8, 12, 17, 118));
-
-            Image outer = CreateImage(name + " Outer Frame", parent, new Vector2(PlayerBarWidth + 42f, 32f), position + new Vector2(6f, -5f), new Color32(52, 48, 43, 245));
-            outer.sprite = WitcherSpriteLibrary.GetSolidSprite(new Color32(55, 50, 45, 255));
-            AddOutline(outer, new Color32(7, 8, 9, 255), new Vector2(2f, -2f));
-
-            Image leftCap = CreateImage(name + " Left Cap", parent, new Vector2(16f, 42f), position + new Vector2(-4f, -1f), new Color32(25, 23, 22, 255));
-            leftCap.sprite = WitcherSpriteLibrary.GetSolidSprite(new Color32(25, 23, 22, 255));
-            AddOutline(leftCap, new Color32(117, 103, 74, 255), new Vector2(1f, -1f));
-
-            Image rightArrow = CreateCenteredImage(name + " Arrow Head", parent, new Vector2(45f, 34f), position + new Vector2(PlayerBarWidth + 42f, -22f), new Color32(39, 36, 34, 255));
-            rightArrow.sprite = WitcherSpriteLibrary.GetSolidSprite(new Color32(39, 36, 34, 255));
-            rightArrow.rectTransform.rotation = Quaternion.Euler(0f, 0f, 45f);
-            AddOutline(rightArrow, new Color32(119, 104, 76, 255), new Vector2(1f, -1f));
-
-            Image back = CreateImage(name + " Back", outer.transform, new Vector2(PlayerBarWidth, 22f), new Vector2(18f, -5f), new Color32(2, 4, 7, 255));
-            back.sprite = WitcherSpriteLibrary.GetSolidSprite(new Color32(2, 4, 7, 255));
-
-            Image lowFill = CreateImage(name + " Low Fill", back.transform, new Vector2(PlayerBarWidth - 6f, 16f), new Vector2(3f, -3f), lowColor);
-            lowFill.sprite = WitcherSpriteLibrary.GetSolidSprite(lowColor);
-
-            Image fill = CreateImage(name + " Fill", back.transform, new Vector2(PlayerBarWidth - 6f, 16f), new Vector2(3f, -3f), fillColor);
-            RectTransform fillRect = fill.rectTransform;
-            fillRect.anchorMin = new Vector2(0f, 1f);
-            fillRect.anchorMax = new Vector2(0f, 1f);
-            fillRect.pivot = new Vector2(0f, 1f);
-            fill.sprite = WitcherSpriteLibrary.GetSolidSprite(fillColor);
-            fill.type = Image.Type.Filled;
-            fill.fillMethod = Image.FillMethod.Horizontal;
-            fill.fillOrigin = (int)Image.OriginHorizontal.Left;
-            fill.fillAmount = 1f;
-
-            Image highlight = CreateImage(name + " Highlight", back.transform, new Vector2(PlayerBarWidth - 6f, 5f), new Vector2(3f, -3f), new Color32(255, 255, 255, 70));
-            highlight.sprite = WitcherSpriteLibrary.GetSolidSprite(new Color32(255, 255, 255, 45));
-            highlight.raycastTarget = false;
-
-            CreateDiamond(name + " Gem", parent, position + new Vector2(PlayerBarWidth + 31f, -6f), 20f, fillColor, new Color32(7, 8, 10, 255));
-
-            valueText = CreateText(name + " Value", outer.transform, "100/100", 22, TextAnchor.MiddleLeft, new Vector2(92f, 0f), new Vector2(PlayerBarWidth - 110f, 28f));
-            valueText.color = new Color32(255, 248, 228, 255);
-            AddOutline(valueText, new Color32(0, 0, 0, 250), new Vector2(2f, -2f));
-            return fill;
-        }
-
-        private void BuildSkillSlots(Transform parent)
-        {
-            CreateSkillSlot(parent, 0, "盾", new Color32(42, 151, 250, 255), "15 s");
-            CreateSkillSlot(parent, 1, "火", new Color32(255, 93, 25, 255), "22 s");
-            CreateSkillSlot(parent, 2, "冰", new Color32(89, 210, 255, 255), "30 s");
-            CreateSkillSlot(parent, 3, "印", new Color32(155, 93, 255, 255), "25%");
-        }
-
-        private void CreateSkillSlot(Transform parent, int index, string iconText, Color32 iconColor, string cooldownText)
-        {
-            Vector2 position = new Vector2(192f + index * 86f, -148f);
-            Image frame = CreateImage("Skill Slot " + index, parent, new Vector2(70f, 70f), position, new Color32(9, 10, 12, 235));
-            frame.sprite = WitcherSpriteLibrary.GetSolidSprite(new Color32(9, 10, 12, 235));
-            AddOutline(frame, new Color32(105, 94, 73, 255), new Vector2(2f, -2f));
-
-            Image inset = CreateImage("Skill Slot Inset " + index, frame.transform, new Vector2(56f, 46f), new Vector2(7f, -8f), new Color32(5, 8, 12, 255));
-            inset.sprite = WitcherSpriteLibrary.GetSolidSprite(new Color32(5, 8, 12, 255));
-
-            Text icon = CreateText("Skill Icon " + index, frame.transform, iconText, 27, TextAnchor.MiddleCenter, new Vector2(7f, -7f), new Vector2(56f, 44f));
-            icon.color = iconColor;
-            AddOutline(icon, new Color32(0, 0, 0, 245), new Vector2(2f, -2f));
-
-            Text cooldown = CreateText("Skill Cooldown " + index, frame.transform, cooldownText, 15, TextAnchor.MiddleCenter, new Vector2(5f, -48f), new Vector2(60f, 18f));
-            cooldown.color = new Color32(214, 255, 204, 255);
-            AddOutline(cooldown, new Color32(0, 0, 0, 245), new Vector2(1f, -1f));
-
-            CreateDiamond("Skill Top Gem " + index, frame.transform, new Vector2(35f, 4f), 10f, iconColor, new Color32(7, 8, 10, 255));
-        }
-
-        private void BuildSkillFrameOverlays(Transform parent)
-        {
-            for (int i = 0; i < 4; i++)
-            {
-                Vector2 position = new Vector2(192f + i * 86f, -148f);
-                Image rim = CreateImage("Skill Metal Rim Overlay " + i, parent, new Vector2(70f, 70f), position, new Color32(8, 8, 9, 20));
-                rim.sprite = GetMetalSprite();
-                rim.raycastTarget = false;
-                AddOutline(rim, new Color32(104, 87, 61, 176), new Vector2(1f, -1f));
-            }
-        }
-
         private void UpdateBars()
         {
             if (player == null || healthText == null || manaText == null)
@@ -360,8 +201,6 @@ namespace WitcherGame
 
             SetFill(healthFill, health01, PlayerBarWidth);
             SetFill(manaFill, mana01, ManaBarWidth);
-            SetMissing(healthMissing, health01, PlayerBarWidth);
-            SetMissing(manaMissing, mana01, ManaBarWidth);
             healthText.text = $"HP {player.CurrentHealth} / {player.MaxHealth}";
             manaText.text = $"MP {player.CurrentMana} / {player.MaxMana}";
             UpdateInventoryText();
@@ -407,7 +246,7 @@ namespace WitcherGame
 
         private void UpdateInventoryText()
         {
-            if (inventoryText == null)
+            if (goldValueText == null || experienceValueText == null || attackValueText == null || defenseValueText == null)
             {
                 return;
             }
@@ -415,11 +254,17 @@ namespace WitcherGame
             BindInventory();
             if (playerInventory == null)
             {
-                inventoryText.text = "金币 0  经验 0  攻+0 防+0";
+                goldValueText.text = "0";
+                experienceValueText.text = "0";
+                attackValueText.text = "+0";
+                defenseValueText.text = "+0";
                 return;
             }
 
-            inventoryText.text = $"金币 {playerInventory.Gold}  经验 {playerInventory.Experience}  攻+{playerInventory.AttackBonus} 防+{playerInventory.DefenseBonus}";
+            goldValueText.text = playerInventory.Gold.ToString();
+            experienceValueText.text = playerInventory.Experience.ToString();
+            attackValueText.text = $"+{playerInventory.AttackBonus}";
+            defenseValueText.text = $"+{playerInventory.DefenseBonus}";
         }
 
         private void BuildBossBar()
@@ -560,17 +405,6 @@ namespace WitcherGame
             rect.sizeDelta = new Vector2(maxWidth * normalizedValue, rect.sizeDelta.y);
         }
 
-        private static void SetMissing(Image image, float normalizedValue, float maxWidth)
-        {
-            if (image == null)
-            {
-                return;
-            }
-
-            RectTransform rect = image.rectTransform;
-            rect.sizeDelta = new Vector2(maxWidth * (1f - normalizedValue), rect.sizeDelta.y);
-        }
-
         private static Image CreateImage(string name, Transform parent, Vector2 size, Vector2 position, Color color)
         {
             GameObject obj = CreateUiObject(name, parent, size, position, new Vector2(0f, 1f));
@@ -606,35 +440,12 @@ namespace WitcherGame
             return image;
         }
 
-        private static Image CreateRightAnchoredImage(string name, Transform parent, Vector2 size, Vector2 position, Color32 color)
+        private static Text CreateStatusValueText(string name, Transform parent, Vector2 position)
         {
-            GameObject obj = CreateUiObject(name, parent, size, position, new Vector2(0f, 1f));
-            RectTransform rect = obj.GetComponent<RectTransform>();
-            rect.pivot = new Vector2(1f, 1f);
-            Image image = obj.AddComponent<Image>();
-            image.color = color;
-            image.sprite = WitcherSpriteLibrary.GetSolidSprite(color);
-            return image;
-        }
-
-        private static Image CreateDiamond(string name, Transform parent, Vector2 position, float size, Color32 fillColor, Color32 outlineColor)
-        {
-            Image outline = CreateCenteredImage(name + " Outline", parent, new Vector2(size + 8f, size + 8f), position, outlineColor);
-            outline.sprite = WitcherSpriteLibrary.GetSolidSprite(outlineColor);
-            outline.rectTransform.rotation = Quaternion.Euler(0f, 0f, 45f);
-
-            Image diamond = CreateCenteredImage(name, parent, new Vector2(size, size), position, fillColor);
-            diamond.sprite = WitcherSpriteLibrary.GetSolidSprite(fillColor);
-            diamond.rectTransform.rotation = Quaternion.Euler(0f, 0f, 45f);
-            return diamond;
-        }
-
-        private static void CreateSpike(string name, Transform parent, Vector2 position, Vector2 size, float rotation)
-        {
-            Image spike = CreateCenteredImage(name, parent, size, position, new Color32(38, 36, 33, 255));
-            spike.sprite = WitcherSpriteLibrary.GetSolidSprite(new Color32(38, 36, 33, 255));
-            spike.rectTransform.rotation = Quaternion.Euler(0f, 0f, rotation);
-            AddOutline(spike, new Color32(110, 97, 72, 255), new Vector2(1f, -1f));
+            Text text = CreateText(name, parent, "0", 16, TextAnchor.MiddleCenter, position, new Vector2(96f, 24f));
+            text.color = new Color32(226, 198, 132, 255);
+            AddOutline(text, new Color32(0, 0, 0, 245), new Vector2(1f, -1f));
+            return text;
         }
 
         private static Text CreateText(string name, Transform parent, string text, int fontSize, TextAnchor anchor, Vector2 position, Vector2 size)
@@ -655,57 +466,6 @@ namespace WitcherGame
             Outline outline = graphic.gameObject.AddComponent<Outline>();
             outline.effectColor = color;
             outline.effectDistance = distance;
-        }
-
-        private static Sprite GetHudPanelSprite()
-        {
-            if (cachedHudPanelSprite == null)
-            {
-                cachedHudPanelSprite = CreateNoisyGradientSprite(
-                    128,
-                    64,
-                    new Color32(20, 17, 14, 232),
-                    new Color32(6, 8, 11, 226),
-                    new Color32(62, 47, 34, 34),
-                    18,
-                    100f);
-            }
-
-            return cachedHudPanelSprite;
-        }
-
-        private static Sprite GetBarBackSprite()
-        {
-            if (cachedBarBackSprite == null)
-            {
-                cachedBarBackSprite = CreateNoisyGradientSprite(
-                    128,
-                    18,
-                    new Color32(11, 10, 10, 255),
-                    new Color32(22, 18, 16, 255),
-                    new Color32(94, 78, 57, 44),
-                    20,
-                    100f);
-            }
-
-            return cachedBarBackSprite;
-        }
-
-        private static Sprite GetMetalSprite()
-        {
-            if (cachedMetalSprite == null)
-            {
-                cachedMetalSprite = CreateNoisyGradientSprite(
-                    80,
-                    40,
-                    new Color32(28, 27, 25, 255),
-                    new Color32(8, 9, 10, 255),
-                    new Color32(116, 103, 80, 48),
-                    22,
-                    100f);
-            }
-
-            return cachedMetalSprite;
         }
 
         private static Sprite GetHealthFillSprite()
@@ -766,32 +526,6 @@ namespace WitcherGame
             texture.wrapMode = TextureWrapMode.Clamp;
             texture.Apply();
             return Sprite.Create(texture, new Rect(0f, 0f, width, height), new Vector2(0.5f, 0.5f), 100f);
-        }
-
-        private static Sprite CreateNoisyGradientSprite(int width, int height, Color32 top, Color32 bottom, Color32 fleck, int noiseStrength, float pixelsPerUnit)
-        {
-            Texture2D texture = new Texture2D(width, height, TextureFormat.RGBA32, false);
-            for (int y = 0; y < height; y++)
-            {
-                float vertical = height <= 1 ? 0f : (float)y / (height - 1);
-                for (int x = 0; x < width; x++)
-                {
-                    Color color = Color.Lerp(bottom, top, vertical);
-                    int noise = ((x * 17 + y * 29 + (x / 5) * 11) & 31) - 15;
-                    color *= Mathf.Clamp01(1f + noise * noiseStrength / 1400f);
-                    if ((x * 7 + y * 3) % 43 == 0)
-                    {
-                        color = Color.Lerp(color, fleck, fleck.a / 255f);
-                    }
-
-                    texture.SetPixel(x, y, color);
-                }
-            }
-
-            texture.filterMode = FilterMode.Point;
-            texture.wrapMode = TextureWrapMode.Clamp;
-            texture.Apply();
-            return Sprite.Create(texture, new Rect(0f, 0f, width, height), new Vector2(0.5f, 0.5f), pixelsPerUnit);
         }
 
         private static GameObject CreateUiObject(string name, Transform parent, Vector2 size, Vector2 anchoredPosition, Vector2 anchor)
