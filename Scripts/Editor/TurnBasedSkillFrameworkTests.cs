@@ -126,6 +126,20 @@ namespace WitcherGame.Tests
             Assert.AreEqual(FilterMode.Bilinear, enemy.IdleFrames[0].texture.filterMode);
         }
 
+        [Test]
+        public void EnemyAnimation_BlackMoonKnightFolderFrames_UseHighResolutionSourceWithoutChangingWorldSize()
+        {
+            TurnBasedEnemyState enemy = new TurnBasedEnemyState();
+
+            TurnBasedEnemyAnimationLibrary.FillAnimations(enemy, TurnBasedEnemyVisualKind.BlackMoonKnight);
+
+            Assert.NotNull(enemy.IdleFrames);
+            Assert.Greater(enemy.IdleFrames.Length, 0);
+            Assert.GreaterOrEqual(enemy.IdleFrames[0].texture.width, 384);
+            Assert.GreaterOrEqual(enemy.IdleFrames[0].texture.height, 320);
+            Assert.AreEqual(128f, enemy.IdleFrames[0].pixelsPerUnit);
+        }
+
         [TestCase(TurnBasedEnemyVisualKind.CorruptedWolf)]
         [TestCase(TurnBasedEnemyVisualKind.BloodWraith)]
         public void EnemyAnimation_SheetFrames_UseBilinearFiltering(TurnBasedEnemyVisualKind visualKind)

@@ -16,7 +16,7 @@ namespace WitcherGame
     public static class TurnBasedEnemyAnimationLibrary
     {
         private const float MonsterPixelsPerUnit = 96f;
-        private const float BossPixelsPerUnit = 64f;
+        private const float BossPixelsPerUnit = 128f;
         private static readonly Dictionary<string, Sprite[]> CachedRows = new Dictionary<string, Sprite[]>();
         private static readonly Dictionary<string, Sprite[]> CachedFolders = new Dictionary<string, Sprite[]>();
 
