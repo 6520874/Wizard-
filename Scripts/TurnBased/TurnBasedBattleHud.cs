@@ -19,6 +19,7 @@ namespace WitcherGame
         private readonly List<Button> skillButtons = new List<Button>();
         private readonly List<Image> timelineGems = new List<Image>();
         private readonly List<Text> timelineGemLabels = new List<Text>();
+        private readonly List<PartyVisualSlot> partyVisualSlots = new List<PartyVisualSlot>();
         private static Sprite cachedBattleBackdrop;
         private static Sprite cachedFloorMist;
         private static Sprite cachedGroundShadow;
@@ -75,6 +76,14 @@ namespace WitcherGame
             public float IdleTimer;
         }
 
+        private class PartyVisualSlot
+        {
+            public Image Image;
+            public PartyMember Member;
+            public int IdleIndex;
+            public float IdleTimer;
+        }
+
         private void Update()
         {
             if (root == null || !root.activeSelf || visibleEnemies == null)
@@ -83,6 +92,7 @@ namespace WitcherGame
             }
 
             UpdatePlayerIdleFigure();
+            UpdatePartyIdleFigures();
 
             for (int i = 0; i < enemySlots.Count && i < visibleEnemies.Count; i++)
             {
@@ -264,6 +274,7 @@ namespace WitcherGame
         {
             visibleEnemies = enemies;
             RefreshTurnTimeline();
+            RefreshPartyVisuals();
             EnsureHdBattleHud();
             hdBattleHud?.RefreshFromBattle(manager, enemies, player, GetEnemyHudPositions());
             if (playerText != null && player != null)
@@ -534,6 +545,8 @@ namespace WitcherGame
             Image playerShadow = CreateCenteredImage("Battle Player Ground Shadow", root.transform, new Vector2(150f, 32f), new Vector2(304f, -116f), new Color32(0, 0, 0, 178));
             playerShadow.sprite = GetGroundShadowSprite();
             playerShadow.raycastTarget = false;
+
+            BuildPartySupportSlots();
 
             playerFigure = CreateCenteredImage("Battle Player Figure", root.transform, new Vector2(132f, 156f), new Vector2(304f, -34f), Color.white);
             playerFigure.sprite = GetPlayerIdleFrame();
@@ -1641,6 +1654,88 @@ namespace WitcherGame
             playerIdleTimer = 0f;
             playerIdleIndex = (playerIdleIndex + 1) % frames.Length;
             playerFigure.sprite = frames[playerIdleIndex];
+        }
+
+        private void BuildPartySupportSlots()
+        {
+            partyVisualSlots.Clear();
+            Vector2[] positions =
+            {
+                new Vector2(184f, -66f),
+                new Vector2(238f, -78f),
+                new Vector2(392f, -82f)
+            };
+
+            for (int i = 0; i < positions.Length; i++)
+            {
+                Image supportImage = CreateCenteredImage($"Battle Party Support {i + 1}", root.transform, new Vector2(88f, 116f), positions[i], Color.white);
+                supportImage.preserveAspect = true;
+                supportImage.raycastTarget = false;
+                supportImage.color = new Color32(255, 255, 255, 218);
+                supportImage.gameObject.SetActive(false);
+                partyVisualSlots.Add(new PartyVisualSlot { Image = supportImage });
+            }
+        }
+
+        private void RefreshPartyVisuals()
+        {
+            if (partyVisualSlots.Count == 0)
+            {
+                return;
+            }
+
+            IReadOnlyList<PartyMember> members = PartyManager.CreateIfMissing().ActiveParty;
+            int visualIndex = 0;
+            for (int i = 0; i < members.Count && visualIndex < partyVisualSlots.Count; i++)
+            {
+                PartyMember member = members[i];
+                if (member.Name == "猎魔人")
+                {
+                    continue;
+                }
+
+                PartyVisualSlot slot = partyVisualSlots[visualIndex];
+                slot.Member = member;
+                slot.IdleIndex = 0;
+                slot.IdleTimer = 0f;
+                slot.Image.sprite = PartyAnimationLibrary.GetIdlePreview(member);
+                slot.Image.gameObject.SetActive(slot.Image.sprite != null);
+                visualIndex++;
+            }
+
+            for (int i = visualIndex; i < partyVisualSlots.Count; i++)
+            {
+                partyVisualSlots[i].Member = null;
+                partyVisualSlots[i].Image.gameObject.SetActive(false);
+            }
+        }
+
+        private void UpdatePartyIdleFigures()
+        {
+            for (int i = 0; i < partyVisualSlots.Count; i++)
+            {
+                PartyVisualSlot slot = partyVisualSlots[i];
+                if (slot.Member == null || !slot.Image.gameObject.activeSelf)
+                {
+                    continue;
+                }
+
+                Sprite[] frames = PartyAnimationLibrary.GetFrames(slot.Member, PartyAnimationKind.Idle);
+                if (frames.Length <= 1)
+                {
+                    continue;
+                }
+
+                slot.IdleTimer += Time.deltaTime;
+                if (slot.IdleTimer < 0.18f)
+                {
+                    continue;
+                }
+
+                slot.IdleTimer = 0f;
+                slot.IdleIndex = (slot.IdleIndex + 1) % frames.Length;
+                slot.Image.sprite = frames[slot.IdleIndex];
+            }
         }
 
         private Sprite GetPlayerIdleFrame()
