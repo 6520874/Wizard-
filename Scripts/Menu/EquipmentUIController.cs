@@ -23,6 +23,7 @@ namespace WitcherGame
         private readonly List<Text> memberTexts = new List<Text>();
         private readonly List<Text> slotTexts = new List<Text>();
         private GameObject root;
+        private Image portraitImage;
         private Text titleText;
         private Text statsText;
         private Text helpText;
@@ -176,6 +177,12 @@ namespace WitcherGame
 
             PartyMember selectedMember = party.GetActiveMember(selectedMemberIndex);
             titleText.text = $"{selectedMember.Name} 装备";
+            if (portraitImage != null)
+            {
+                portraitImage.sprite = PartyPortraitLibrary.GetPortrait(selectedMember);
+                portraitImage.color = Color.white;
+            }
+
             for (int i = 0; i < slotTexts.Count; i++)
             {
                 EquipmentSlot slot = slotOrder[i];
@@ -249,10 +256,23 @@ namespace WitcherGame
             GothicUiFactory.AddOutline(rightPanel, new Color32(105, 82, 49, 255), new Vector2(2f, -2f));
             titleText = GothicUiFactory.CreateText("Equipment Detail Title", rightPanel.transform, "装备", 28, TextAnchor.MiddleLeft, new Vector2(32f, -18f), new Vector2(330f, 36f), new Color32(238, 205, 130, 255));
             GothicUiFactory.CreatePanel("Equipment Detail Rule", rightPanel.transform, new Vector2(626f, 2f), new Vector2(32f, -62f), new Vector2(0f, 1f), new Color32(128, 20, 28, 210));
+            GameObject portraitFrame = GothicUiFactory.CreatePanel("Equipment Portrait Frame", rightPanel.transform, new Vector2(116f, 132f), new Vector2(36f, -88f), new Vector2(0f, 1f), new Color32(8, 10, 13, 244));
+            GothicUiFactory.AddOutline(portraitFrame, new Color32(90, 72, 47, 255), new Vector2(1f, -1f));
+            GameObject portraitObject = new GameObject("Equipment Portrait");
+            portraitObject.transform.SetParent(portraitFrame.transform, false);
+            RectTransform portraitRect = portraitObject.AddComponent<RectTransform>();
+            portraitRect.anchorMin = new Vector2(0.5f, 0.5f);
+            portraitRect.anchorMax = new Vector2(0.5f, 0.5f);
+            portraitRect.pivot = new Vector2(0.5f, 0.5f);
+            portraitRect.sizeDelta = new Vector2(104f, 118f);
+            portraitRect.anchoredPosition = Vector2.zero;
+            portraitImage = portraitObject.AddComponent<Image>();
+            portraitImage.preserveAspect = true;
+            portraitImage.raycastTarget = false;
 
             for (int i = 0; i < slotOrder.Length; i++)
             {
-                slotTexts.Add(GothicUiFactory.CreateText($"Equipment Slot {i + 1}", rightPanel.transform, string.Empty, 22, TextAnchor.MiddleLeft, new Vector2(36f, -92f - i * 42f), new Vector2(388f, 32f), new Color32(220, 218, 203, 255)));
+                slotTexts.Add(GothicUiFactory.CreateText($"Equipment Slot {i + 1}", rightPanel.transform, string.Empty, 22, TextAnchor.MiddleLeft, new Vector2(176f, -92f - i * 42f), new Vector2(250f, 32f), new Color32(220, 218, 203, 255)));
             }
 
             statsText = GothicUiFactory.CreateText("Equipment Stats", rightPanel.transform, string.Empty, 21, TextAnchor.UpperLeft, new Vector2(466f, -92f), new Vector2(178f, 236f), new Color32(224, 223, 208, 255));
