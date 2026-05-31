@@ -298,7 +298,7 @@ namespace WitcherGame
 
                 TurnBasedEnemyState enemy = enemies[i];
                 string state = enemy.IsAlive ? $"HP {enemy.Health}/{enemy.MaxHealth}" : "已击败";
-                enemyRows[i].text = $"{enemy.Name}\n弱点  ?  剑  ?  火\n{state}";
+                enemyRows[i].text = $"{enemy.Name}\n{state}";
                 enemyRows[i].color = enemy.IsAlive ? new Color32(233, 238, 229, 255) : new Color32(128, 126, 119, 255);
 
                 if (i < enemySlots.Count)

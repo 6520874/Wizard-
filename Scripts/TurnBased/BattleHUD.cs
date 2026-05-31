@@ -683,6 +683,8 @@ namespace WitcherGame
     // 中文说明：单个敌人的护盾和弱点显示，破防归零时闪烁。
     public class EnemyWeaknessItem : MonoBehaviour
     {
+        private const float WeaknessRowVerticalOffset = 74f;
+
         private RectTransform rect;
         private Image frame;
         private Text shieldText;
@@ -729,9 +731,14 @@ namespace WitcherGame
             }
         }
 
+        public static Vector2 CalculateAnchoredPosition(Vector2 enemyUiPosition)
+        {
+            return enemyUiPosition + new Vector2(0f, WeaknessRowVerticalOffset);
+        }
+
         public void Refresh(BattleUnit unit)
         {
-            rect.anchoredPosition = unit.UiPosition + new Vector2(0f, -114f);
+            rect.anchoredPosition = CalculateAnchoredPosition(unit.UiPosition);
             shieldText.text = Mathf.Max(0, unit.Shield).ToString();
             if (previousShield > 0 && unit.Shield == 0)
             {
