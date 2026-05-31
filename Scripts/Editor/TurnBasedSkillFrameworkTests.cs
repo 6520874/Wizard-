@@ -140,6 +140,17 @@ namespace WitcherGame.Tests
             Assert.AreEqual(256f, enemy.IdleFrames[0].pixelsPerUnit);
         }
 
+        [Test]
+        public void Movement_WalkableMap_DoesNotCreateRuntimePhysicsBlockers()
+        {
+            GameObject mapObject = new GameObject("Walkable Map Test");
+
+            mapObject.AddComponent<WitcherVillageWalkableMap>();
+
+            Assert.IsNull(GameObject.Find("Village Collision Blockers"));
+            Object.DestroyImmediate(mapObject);
+        }
+
         [TestCase(TurnBasedEnemyVisualKind.CorruptedWolf)]
         [TestCase(TurnBasedEnemyVisualKind.BloodWraith)]
         public void EnemyAnimation_SheetFrames_UseBilinearFiltering(TurnBasedEnemyVisualKind visualKind)

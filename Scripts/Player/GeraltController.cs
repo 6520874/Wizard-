@@ -62,7 +62,9 @@ namespace WitcherGame
             currentMana = maxMana;
             transform.localScale = Vector3.one * visualScale;
             body.gravityScale = 0f;
+            body.bodyType = RigidbodyType2D.Kinematic;
             body.constraints = RigidbodyConstraints2D.FreezeRotation;
+            StopPhysicsVelocity();
             ClampToStage();
         }
 
@@ -82,7 +84,7 @@ namespace WitcherGame
 
             if (!IsAlive)
             {
-                body.velocity = Vector2.zero;
+                StopPhysicsVelocity();
                 hasClickMoveDestination = false;
                 ClampToStage();
                 return;
@@ -90,7 +92,7 @@ namespace WitcherGame
 
             if (!controlsEnabled)
             {
-                body.velocity = Vector2.zero;
+                StopPhysicsVelocity();
                 hasClickMoveDestination = false;
                 geraltAnimator.ForceIdle();
                 ClampToStage();
@@ -100,7 +102,7 @@ namespace WitcherGame
             if (hurtLockTimer > 0f)
             {
                 hurtLockTimer -= Time.deltaTime;
-                body.velocity = Vector2.zero;
+                StopPhysicsVelocity();
                 hasClickMoveDestination = false;
                 ClampToStage();
                 return;
@@ -110,7 +112,8 @@ namespace WitcherGame
             {
                 dashTimer -= Time.deltaTime;
                 hasClickMoveDestination = false;
-                body.velocity = ResolveMapVelocity(new Vector2(lastFacingDirection * dashSpeed, 0f));
+                Vector2 dashVelocity = ResolveMapVelocity(new Vector2(lastFacingDirection * dashSpeed, 0f));
+                ApplyMovement(dashVelocity);
                 geraltAnimator.PlayLocomotion(true);
                 ClampToStage();
                 return;
@@ -130,7 +133,7 @@ namespace WitcherGame
                 : GetClickMoveInput();
             Vector2 requestedVelocity = new Vector2(movement.x * moveSpeed, movement.y * verticalMoveSpeed);
             Vector2 resolvedVelocity = ResolveMapVelocity(requestedVelocity);
-            body.velocity = resolvedVelocity;
+            ApplyMovement(resolvedVelocity);
             ClampToStage();
 
             if (Mathf.Abs(movement.x) > 0.01f)
@@ -245,7 +248,7 @@ namespace WitcherGame
         public void WarpTo(Vector2 position)
         {
             transform.position = new Vector3(position.x, position.y, transform.position.z);
-            body.velocity = Vector2.zero;
+            StopPhysicsVelocity();
             hasClickMoveDestination = false;
             ClampToStage();
         }
@@ -365,7 +368,7 @@ namespace WitcherGame
             currentMana = Mathf.Max(0f, currentMana - healManaCost);
             StatsChanged?.Invoke();
             RestoreHealth(healAmount);
-            body.velocity = Vector2.zero;
+            StopPhysicsVelocity();
             geraltAnimator.ForceIdle();
         }
 
@@ -388,7 +391,7 @@ namespace WitcherGame
             invulnerableTimer = Mathf.Max(invulnerableTimer, 0.32f);
             float knockDirection = transform.position.x >= attackerX ? 1f : -1f;
             transform.position += new Vector3(knockDirection * 0.38f, 0f, 0f);
-            body.velocity = Vector2.zero;
+            StopPhysicsVelocity();
             if (currentHealth <= 0)
             {
                 HandleDefeat();
@@ -454,6 +457,26 @@ namespace WitcherGame
             return walkableMap == null
                 ? requestedVelocity
                 : walkableMap.ResolveVelocity(transform.position, requestedVelocity, Time.deltaTime);
+        }
+
+        private void ApplyMovement(Vector2 velocity)
+        {
+            StopPhysicsVelocity();
+            if (velocity.sqrMagnitude <= 0.0001f)
+            {
+                return;
+            }
+
+            transform.position += new Vector3(velocity.x, velocity.y, 0f) * Time.deltaTime;
+        }
+
+        private void StopPhysicsVelocity()
+        {
+            if (body != null)
+            {
+                body.velocity = Vector2.zero;
+                body.angularVelocity = 0f;
+            }
         }
 
         private void SetFacingDirection(float direction)
