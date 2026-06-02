@@ -361,7 +361,7 @@ MonoBehaviour:
   maxStageX: 55.6
   minStageY: -2.55
   maxStageY: 5
-  visualScale: 0.38
+  visualScale: 0.45
   hurtLockDuration: 0.48
   maxHealth: 120
   maxMana: 100
@@ -464,7 +464,7 @@ MonoBehaviour:
   slashFramesPerSecond: 14
   hurtFramesPerSecond: 12
   deathFramesPerSecond: 9
-  pixelsPerUnit: 96
+  pixelsPerUnit: 82
 --- !u!212 &1129717112
 SpriteRenderer:
   m_ObjectHideFlags: 0

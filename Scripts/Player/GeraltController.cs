@@ -115,7 +115,7 @@ namespace WitcherGame
                 hasClickMoveDestination = false;
                 Vector2 dashVelocity = ResolveMapVelocity(new Vector2(lastFacingDirection * dashSpeed, 0f));
                 ApplyMovement(dashVelocity);
-                geraltAnimator.PlayLocomotion(true);
+                geraltAnimator.PlayLocomotion(dashVelocity);
                 ClampToStage();
                 return;
             }
@@ -137,7 +137,12 @@ namespace WitcherGame
             ApplyMovement(resolvedVelocity);
             ClampToStage();
 
-            if (Mathf.Abs(movement.x) > 0.01f)
+            bool verticalDominant = Mathf.Abs(movement.y) > 0.01f && Mathf.Abs(movement.y) >= Mathf.Abs(movement.x) * 0.65f;
+            if (verticalDominant)
+            {
+                spriteRenderer.flipX = false;
+            }
+            else if (Mathf.Abs(movement.x) > 0.01f)
             {
                 SetFacingDirection(Mathf.Sign(movement.x));
             }
@@ -152,7 +157,7 @@ namespace WitcherGame
             }
             else
             {
-                geraltAnimator.PlayLocomotion(resolvedVelocity.sqrMagnitude > 0.01f);
+                geraltAnimator.PlayLocomotion(resolvedVelocity);
             }
 
             UpdateDepthSorting();

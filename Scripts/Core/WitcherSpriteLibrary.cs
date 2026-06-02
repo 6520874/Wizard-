@@ -7,6 +7,8 @@ namespace WitcherGame
     {
         Idle,
         Run,
+        RunDown,
+        RunUp,
         Jump,
         Slash,
         Hurt,
@@ -43,6 +45,8 @@ namespace WitcherGame
             switch (animation)
             {
                 case GeraltAnimation.Run:
+                case GeraltAnimation.RunDown:
+                case GeraltAnimation.RunUp:
                     return 9;
                 case GeraltAnimation.Jump:
                     return 5;
@@ -84,13 +88,14 @@ namespace WitcherGame
         private static void DrawGeralt(Texture2D texture, GeraltAnimation animation, int frame)
         {
             int step = frame % 2 == 0 ? -1 : 1;
-            int bob = animation == GeraltAnimation.Run && (frame == 1 || frame == 4) ? 1 : 0;
+            bool isRunAnimation = animation == GeraltAnimation.Run || animation == GeraltAnimation.RunDown || animation == GeraltAnimation.RunUp;
+            int bob = isRunAnimation && (frame == 1 || frame == 4) ? 1 : 0;
             if (animation == GeraltAnimation.Jump)
             {
                 bob = 2;
             }
 
-            int armSwing = animation == GeraltAnimation.Run ? step : 0;
+            int armSwing = isRunAnimation ? step : 0;
 
             Color32 outline = new Color32(24, 22, 20, 255);
             Color32 skin = new Color32(231, 190, 151, 255);
@@ -133,8 +138,9 @@ namespace WitcherGame
 
         private static void DrawLegs(Texture2D texture, GeraltAnimation animation, int frame, int bob, Color32 outline, Color32 leather, Color32 boot)
         {
-            int forward = animation == GeraltAnimation.Run && frame % 2 == 0 ? 2 : 0;
-            int back = animation == GeraltAnimation.Run && frame % 2 != 0 ? 2 : 0;
+            bool isRunAnimation = animation == GeraltAnimation.Run || animation == GeraltAnimation.RunDown || animation == GeraltAnimation.RunUp;
+            int forward = isRunAnimation && frame % 2 == 0 ? 2 : 0;
+            int back = isRunAnimation && frame % 2 != 0 ? 2 : 0;
             if (animation == GeraltAnimation.Jump)
             {
                 forward = frame < 2 ? 1 : 3;

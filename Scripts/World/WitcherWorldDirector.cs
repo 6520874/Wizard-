@@ -83,7 +83,7 @@ namespace WitcherGame
             StageBounds stageBounds = GetActiveStageBounds();
 
             player.ConfigureStage(stageBounds.MinX, stageBounds.MaxX, stageBounds.MinY, stageBounds.MaxY);
-            player.ConfigureExplorationView(stageBounds.IsIsometricVillage ? 0.38f : 0.65f, stageBounds.IsIsometricVillage ? 3.45f : 5f, stageBounds.IsIsometricVillage ? 1.82f : 3.25f);
+            player.ConfigureExplorationView(stageBounds.IsIsometricVillage ? 0.45f : 0.76f, stageBounds.IsIsometricVillage ? 3.45f : 5f, stageBounds.IsIsometricVillage ? 1.82f : 3.25f);
             if (preserveDirection)
             {
                 float spawnX = requestedRoomIndex > previousRoom ? stageBounds.MinX + 0.45f : stageBounds.MaxX - 0.45f;

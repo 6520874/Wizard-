@@ -1819,13 +1819,13 @@ namespace WitcherGame
                     continue;
                 }
 
-                texture.filterMode = FilterMode.Point;
+                texture.filterMode = FilterMode.Bilinear;
                 texture.wrapMode = TextureWrapMode.Clamp;
                 Sprite frame = Sprite.Create(
                     texture,
                     new Rect(0f, 0f, texture.width, texture.height),
                     new Vector2(0.5f, 0.08f),
-                    96f);
+                    82f);
                 frame.name = Path.GetFileNameWithoutExtension(filePaths[i]);
                 frames.Add(frame);
             }

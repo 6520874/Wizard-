@@ -16,7 +16,7 @@ namespace WitcherGame
         [SerializeField] private float slashFramesPerSecond = 14f;
         [SerializeField] private float hurtFramesPerSecond = 12f;
         [SerializeField] private float deathFramesPerSecond = 9f;
-        [SerializeField] private float pixelsPerUnit = 96f;
+        [SerializeField] private float pixelsPerUnit = 82f;
 
         private readonly Dictionary<GeraltAnimation, Sprite[]> framesByAnimation = new Dictionary<GeraltAnimation, Sprite[]>();
         private SpriteRenderer spriteRenderer;
@@ -54,6 +54,11 @@ namespace WitcherGame
 
         public void PlayLocomotion(bool isMoving, bool isGrounded = true)
         {
+            PlayLocomotion(isMoving ? Vector2.right : Vector2.zero, isGrounded);
+        }
+
+        public void PlayLocomotion(Vector2 movement, bool isGrounded = true)
+        {
             if (IsSlashPlaying || IsHurtPlaying || IsDeathPlaying)
             {
                 return;
@@ -65,7 +70,13 @@ namespace WitcherGame
                 return;
             }
 
-            Play(isMoving ? GeraltAnimation.Run : GeraltAnimation.Idle);
+            if (movement.sqrMagnitude <= 0.01f)
+            {
+                Play(GeraltAnimation.Idle);
+                return;
+            }
+
+            Play(GetRunAnimation(movement));
         }
 
         public void PlayJump()
@@ -177,6 +188,8 @@ namespace WitcherGame
             switch (animation)
             {
                 case GeraltAnimation.Run:
+                case GeraltAnimation.RunDown:
+                case GeraltAnimation.RunUp:
                     return runFramesPerSecond;
                 case GeraltAnimation.Jump:
                     return jumpFramesPerSecond;
@@ -195,10 +208,24 @@ namespace WitcherGame
         {
             LoadFrames(GeraltAnimation.Idle);
             LoadFrames(GeraltAnimation.Run);
+            LoadFrames(GeraltAnimation.RunDown);
+            LoadFrames(GeraltAnimation.RunUp);
             LoadFrames(GeraltAnimation.Jump);
             LoadFrames(GeraltAnimation.Slash);
             LoadFrames(GeraltAnimation.Hurt);
             LoadFrames(GeraltAnimation.Death);
+        }
+
+        private GeraltAnimation GetRunAnimation(Vector2 movement)
+        {
+            float absoluteX = Mathf.Abs(movement.x);
+            float absoluteY = Mathf.Abs(movement.y);
+            if (absoluteY > 0.01f && absoluteY >= absoluteX * 0.65f)
+            {
+                return movement.y > 0f ? GeraltAnimation.RunUp : GeraltAnimation.RunDown;
+            }
+
+            return GeraltAnimation.Run;
         }
 
         private void LoadFrames(GeraltAnimation animation)
@@ -220,7 +247,7 @@ namespace WitcherGame
                     continue;
                 }
 
-                texture.filterMode = FilterMode.Point;
+                texture.filterMode = FilterMode.Bilinear;
                 texture.wrapMode = TextureWrapMode.Clamp;
                 Sprite sprite = Sprite.Create(
                     texture,
