@@ -22,6 +22,7 @@ namespace WitcherGame
         private SpriteRenderer spriteRenderer;
         private GeraltAnimation currentAnimation = GeraltAnimation.Idle;
         private GeraltAnimation lastLocomotionAnimation = GeraltAnimation.Run;
+        private GeraltAnimation directionalIdleAnimation = GeraltAnimation.Idle;
         private int frameIndex;
         private float frameTimer;
         private bool holdDirectionalIdle;
@@ -80,11 +81,12 @@ namespace WitcherGame
 
             if (movement.sqrMagnitude <= 0.01f)
             {
-                HoldLastLocomotionFrame();
+                HoldDirectionalIdleFrame();
                 return;
             }
 
             lastLocomotionAnimation = GetRunAnimation(movement);
+            directionalIdleAnimation = GetDirectionalIdleAnimation(lastLocomotionAnimation);
             Play(lastLocomotionAnimation);
         }
 
@@ -147,7 +149,7 @@ namespace WitcherGame
             IsSlashPlaying = false;
             IsSkillPlaying = false;
             IsHurtPlaying = false;
-            HoldLastLocomotionFrame(true);
+            HoldDirectionalIdleFrame(true);
         }
 
         public Sprite[] GetFramesForBattleHud(GeraltAnimation animation)
@@ -190,7 +192,7 @@ namespace WitcherGame
                 IsSlashPlaying = false;
                 IsSkillPlaying = false;
                 IsHurtPlaying = false;
-                HoldLastLocomotionFrame(true);
+                HoldDirectionalIdleFrame(true);
                 return;
             }
 
@@ -254,25 +256,38 @@ namespace WitcherGame
             return GeraltAnimation.Run;
         }
 
-        private void HoldLastLocomotionFrame(bool restart = false)
+        private void HoldDirectionalIdleFrame(bool restart = false)
         {
-            Sprite[] frames = GetFrames(lastLocomotionAnimation);
+            Sprite[] frames = GetFrames(directionalIdleAnimation);
             if (frames.Length == 0)
             {
                 Play(GeraltAnimation.Idle, restart);
                 return;
             }
 
-            if (!restart && holdDirectionalIdle && currentAnimation == lastLocomotionAnimation)
+            if (!restart && holdDirectionalIdle && currentAnimation == directionalIdleAnimation)
             {
                 return;
             }
 
             holdDirectionalIdle = true;
-            currentAnimation = lastLocomotionAnimation;
-            frameIndex = frames.Length - 1;
+            currentAnimation = directionalIdleAnimation;
+            frameIndex = 0;
             frameTimer = 0f;
             spriteRenderer.sprite = frames[frameIndex];
+        }
+
+        private static GeraltAnimation GetDirectionalIdleAnimation(GeraltAnimation locomotionAnimation)
+        {
+            switch (locomotionAnimation)
+            {
+                case GeraltAnimation.RunUp:
+                    return GeraltAnimation.RunUp;
+                case GeraltAnimation.RunDown:
+                    return GeraltAnimation.RunDown;
+                default:
+                    return GeraltAnimation.Idle;
+            }
         }
 
         private static bool IsOneShotAnimation(GeraltAnimation animation)
