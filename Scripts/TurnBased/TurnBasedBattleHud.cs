@@ -29,6 +29,7 @@ namespace WitcherGame
         private static Sprite[] cachedGeraltIdleFrames;
         private static Sprite[] cachedGeraltSlashFrames;
         private static Sprite[] cachedGeraltHurtFrames;
+        private static readonly Dictionary<GeraltAnimation, Sprite[]> cachedGeraltFrames = new Dictionary<GeraltAnimation, Sprite[]>();
 
         private TurnBasedBattleManager manager;
         private GeraltAnimator playerAnimator;
@@ -426,7 +427,7 @@ namespace WitcherGame
 
         public IEnumerator PlayPlayerAttack()
         {
-            yield return PlayPlayerCast();
+            yield return PlayPlayerFrames(GetPlayerFrames(GeraltAnimation.Slash), 0.085f, new Vector2(54f, -6f), false);
         }
 
         public IEnumerator PlayPlayerAttack(int enemyIndex)
@@ -452,7 +453,17 @@ namespace WitcherGame
 
         public IEnumerator PlayPlayerCast()
         {
-            yield return PlayPlayerFrames(GetPlayerFrames(GeraltAnimation.Slash), 0.085f, new Vector2(54f, -6f), false);
+            yield return PlayPlayerSkill(BattleSkillId.ArcaneBurst, BattleSkillAnimationKind.Cast);
+        }
+
+        public IEnumerator PlayPlayerSkill(BattleSkillId skillId, BattleSkillAnimationKind animationKind)
+        {
+            GeraltAnimation animation = GetGeraltAnimationForSkill(skillId, animationKind);
+            yield return PlayPlayerFrames(
+                GetPlayerFrames(animation),
+                GetPlayerSkillFrameDuration(animation),
+                GetPlayerSkillMotion(animation),
+                animation == GeraltAnimation.ShieldSign);
         }
 
         public IEnumerator PlayPlayerHurt(int damage = 0)
@@ -1762,7 +1773,7 @@ namespace WitcherGame
                 case GeraltAnimation.Hurt:
                     return LoadGeraltHurtFrames();
                 default:
-                    return LoadGeraltIdleFrames();
+                    return LoadGeraltFrames(animation);
             }
         }
 
@@ -1801,10 +1812,17 @@ namespace WitcherGame
 
         private static Sprite[] LoadGeraltFrames(GeraltAnimation animation)
         {
+            if (cachedGeraltFrames.TryGetValue(animation, out Sprite[] cachedFrames))
+            {
+                return cachedFrames;
+            }
+
             string folderPath = Path.Combine(Application.dataPath, "Art/Geralt/Frames", animation.ToString());
             if (!Directory.Exists(folderPath))
             {
-                return CreateGeraltFallbackFrames(animation);
+                Sprite[] fallbackFrames = CreateGeraltFallbackFrames(animation);
+                cachedGeraltFrames[animation] = fallbackFrames;
+                return fallbackFrames;
             }
 
             string[] filePaths = Directory.GetFiles(folderPath, "*.png");
@@ -1830,7 +1848,56 @@ namespace WitcherGame
                 frames.Add(frame);
             }
 
-            return frames.Count > 0 ? frames.ToArray() : CreateGeraltFallbackFrames(animation);
+            Sprite[] loadedFrames = frames.Count > 0 ? frames.ToArray() : CreateGeraltFallbackFrames(animation);
+            cachedGeraltFrames[animation] = loadedFrames;
+            return loadedFrames;
+        }
+
+        private static GeraltAnimation GetGeraltAnimationForSkill(BattleSkillId skillId, BattleSkillAnimationKind animationKind)
+        {
+            switch (animationKind)
+            {
+                case BattleSkillAnimationKind.Flame:
+                    return GeraltAnimation.FlameSign;
+                case BattleSkillAnimationKind.Defend:
+                    return GeraltAnimation.ShieldSign;
+                case BattleSkillAnimationKind.Cast:
+                    return GeraltAnimation.PurpleSign;
+                case BattleSkillAnimationKind.Slash:
+                    return GeraltAnimation.Slash;
+                default:
+                    return skillId == BattleSkillId.Potion ? GeraltAnimation.PurpleSign : GeraltAnimation.Idle;
+            }
+        }
+
+        private static Vector2 GetPlayerSkillMotion(GeraltAnimation animation)
+        {
+            switch (animation)
+            {
+                case GeraltAnimation.FlameSign:
+                    return new Vector2(34f, -5f);
+                case GeraltAnimation.PurpleSign:
+                    return new Vector2(24f, -4f);
+                case GeraltAnimation.ShieldSign:
+                    return Vector2.zero;
+                default:
+                    return new Vector2(54f, -6f);
+            }
+        }
+
+        private static float GetPlayerSkillFrameDuration(GeraltAnimation animation)
+        {
+            switch (animation)
+            {
+                case GeraltAnimation.FlameSign:
+                    return 0.075f;
+                case GeraltAnimation.PurpleSign:
+                    return 0.08f;
+                case GeraltAnimation.ShieldSign:
+                    return 0.085f;
+                default:
+                    return 0.085f;
+            }
         }
 
         private static Sprite[] CreateGeraltFallbackFrames(GeraltAnimation animation)

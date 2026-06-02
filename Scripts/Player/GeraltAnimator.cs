@@ -25,6 +25,7 @@ namespace WitcherGame
         private float frameTimer;
 
         public bool IsSlashPlaying { get; private set; }
+        public bool IsSkillPlaying { get; private set; }
         public bool IsHurtPlaying { get; private set; }
         public bool IsDeathPlaying { get; private set; }
 
@@ -59,7 +60,7 @@ namespace WitcherGame
 
         public void PlayLocomotion(Vector2 movement, bool isGrounded = true)
         {
-            if (IsSlashPlaying || IsHurtPlaying || IsDeathPlaying)
+            if (IsSlashPlaying || IsSkillPlaying || IsHurtPlaying || IsDeathPlaying)
             {
                 return;
             }
@@ -81,7 +82,7 @@ namespace WitcherGame
 
         public void PlayJump()
         {
-            if (IsSlashPlaying || IsHurtPlaying || IsDeathPlaying)
+            if (IsSlashPlaying || IsSkillPlaying || IsHurtPlaying || IsDeathPlaying)
             {
                 return;
             }
@@ -91,13 +92,19 @@ namespace WitcherGame
 
         public void PlaySlash()
         {
-            if (IsSlashPlaying || IsHurtPlaying || IsDeathPlaying)
+            PlaySkillAnimation(GeraltAnimation.Slash);
+        }
+
+        public void PlaySkillAnimation(GeraltAnimation animation)
+        {
+            if (IsSlashPlaying || IsSkillPlaying || IsHurtPlaying || IsDeathPlaying)
             {
                 return;
             }
 
-            IsSlashPlaying = true;
-            Play(GeraltAnimation.Slash, true);
+            IsSlashPlaying = animation == GeraltAnimation.Slash;
+            IsSkillPlaying = animation != GeraltAnimation.Slash;
+            Play(animation, true);
         }
 
         public void PlayHurt()
@@ -108,6 +115,7 @@ namespace WitcherGame
             }
 
             IsSlashPlaying = false;
+            IsSkillPlaying = false;
             IsHurtPlaying = true;
             Play(GeraltAnimation.Hurt, true);
         }
@@ -115,6 +123,7 @@ namespace WitcherGame
         public void PlayDeath()
         {
             IsSlashPlaying = false;
+            IsSkillPlaying = false;
             IsHurtPlaying = false;
             IsDeathPlaying = true;
             Play(GeraltAnimation.Death, true);
@@ -128,6 +137,7 @@ namespace WitcherGame
             }
 
             IsSlashPlaying = false;
+            IsSkillPlaying = false;
             IsHurtPlaying = false;
             Play(GeraltAnimation.Idle, true);
         }
@@ -165,10 +175,11 @@ namespace WitcherGame
                 return;
             }
 
-            bool isOneShot = currentAnimation == GeraltAnimation.Slash || currentAnimation == GeraltAnimation.Hurt;
+            bool isOneShot = IsOneShotAnimation(currentAnimation);
             if (isOneShot && frameIndex >= frames.Length)
             {
                 IsSlashPlaying = false;
+                IsSkillPlaying = false;
                 IsHurtPlaying = false;
                 Play(GeraltAnimation.Idle, true);
                 return;
@@ -194,6 +205,9 @@ namespace WitcherGame
                 case GeraltAnimation.Jump:
                     return jumpFramesPerSecond;
                 case GeraltAnimation.Slash:
+                case GeraltAnimation.FlameSign:
+                case GeraltAnimation.ShieldSign:
+                case GeraltAnimation.PurpleSign:
                     return slashFramesPerSecond;
                 case GeraltAnimation.Hurt:
                     return hurtFramesPerSecond;
@@ -210,6 +224,9 @@ namespace WitcherGame
             LoadFrames(GeraltAnimation.Run);
             LoadFrames(GeraltAnimation.RunDown);
             LoadFrames(GeraltAnimation.RunUp);
+            LoadFrames(GeraltAnimation.FlameSign);
+            LoadFrames(GeraltAnimation.ShieldSign);
+            LoadFrames(GeraltAnimation.PurpleSign);
             LoadFrames(GeraltAnimation.Jump);
             LoadFrames(GeraltAnimation.Slash);
             LoadFrames(GeraltAnimation.Hurt);
@@ -226,6 +243,15 @@ namespace WitcherGame
             }
 
             return GeraltAnimation.Run;
+        }
+
+        private static bool IsOneShotAnimation(GeraltAnimation animation)
+        {
+            return animation == GeraltAnimation.Slash
+                || animation == GeraltAnimation.FlameSign
+                || animation == GeraltAnimation.ShieldSign
+                || animation == GeraltAnimation.PurpleSign
+                || animation == GeraltAnimation.Hurt;
         }
 
         private void LoadFrames(GeraltAnimation animation)

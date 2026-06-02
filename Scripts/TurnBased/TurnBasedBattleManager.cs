@@ -421,7 +421,7 @@ namespace WitcherGame
             switch (skill.AnimationKind)
             {
                 case BattleSkillAnimationKind.Slash:
-                    playerAnimator?.PlaySlash();
+                    playerAnimator?.PlaySkillAnimation(GetGeraltAnimationForSkill(skill));
                     if (skill.Id == BattleSkillId.ExecuteSlash)
                     {
                         yield return battleHud.PlayPlayerComboSlash(GetFirstTargetEnemyIndex(result), 3);
@@ -433,17 +433,20 @@ namespace WitcherGame
                     }
                     break;
                 case BattleSkillAnimationKind.Flame:
-                    playerAnimator?.PlaySlash();
-                    yield return battleHud.PlayPlayerCast();
+                    playerAnimator?.PlaySkillAnimation(GetGeraltAnimationForSkill(skill));
+                    yield return battleHud.PlayPlayerSkill(skill.Id, skill.AnimationKind);
                     WitcherCombatFeedback.HeavyEnemyHit(player.transform.position + Vector3.right * 1.8f);
                     yield return battleHud.PlaySkillEffect(skill.Id, GetFirstTargetEnemyIndex(result));
                     break;
                 case BattleSkillAnimationKind.Cast:
-                    playerAnimator?.PlaySlash();
-                    yield return battleHud.PlayPlayerCast();
+                    playerAnimator?.PlaySkillAnimation(GetGeraltAnimationForSkill(skill));
+                    yield return battleHud.PlayPlayerSkill(skill.Id, skill.AnimationKind);
                     yield return battleHud.PlaySkillEffect(skill.Id, GetFirstTargetEnemyIndex(result));
                     break;
                 case BattleSkillAnimationKind.Defend:
+                    playerAnimator?.PlaySkillAnimation(GetGeraltAnimationForSkill(skill));
+                    yield return battleHud.PlayPlayerSkill(skill.Id, skill.AnimationKind);
+                    break;
                 case BattleSkillAnimationKind.Item:
                     yield return Wait(0.55f);
                     break;
@@ -452,6 +455,23 @@ namespace WitcherGame
             ApplyPlayerSkillResult(caster, result);
             yield return PlaySkillResultFeedback(result);
             battleHud.Refresh(enemies, player, potionCount);
+        }
+
+        private static GeraltAnimation GetGeraltAnimationForSkill(SkillDefinition skill)
+        {
+            switch (skill.AnimationKind)
+            {
+                case BattleSkillAnimationKind.Flame:
+                    return GeraltAnimation.FlameSign;
+                case BattleSkillAnimationKind.Defend:
+                    return GeraltAnimation.ShieldSign;
+                case BattleSkillAnimationKind.Cast:
+                    return GeraltAnimation.PurpleSign;
+                case BattleSkillAnimationKind.Slash:
+                    return GeraltAnimation.Slash;
+                default:
+                    return GeraltAnimation.Idle;
+            }
         }
 
         private bool CanUsePotion()

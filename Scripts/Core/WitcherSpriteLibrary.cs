@@ -12,7 +12,10 @@ namespace WitcherGame
         Jump,
         Slash,
         Hurt,
-        Death
+        Death,
+        FlameSign,
+        ShieldSign,
+        PurpleSign
     }
 
     // 中文说明：集中提供主角和 UI 使用的运行时精灵图读取与占位资源。
@@ -47,6 +50,9 @@ namespace WitcherGame
                 case GeraltAnimation.Run:
                 case GeraltAnimation.RunDown:
                 case GeraltAnimation.RunUp:
+                case GeraltAnimation.FlameSign:
+                case GeraltAnimation.ShieldSign:
+                case GeraltAnimation.PurpleSign:
                     return 9;
                 case GeraltAnimation.Jump:
                     return 5;
