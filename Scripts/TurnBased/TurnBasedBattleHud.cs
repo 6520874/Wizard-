@@ -1700,7 +1700,7 @@ namespace WitcherGame
             for (int i = 0; i < members.Count && visualIndex < partyVisualSlots.Count; i++)
             {
                 PartyMember member = members[i];
-                if (member.Name == "猎魔人")
+                if (ShouldHideBattleSupportMember(member))
                 {
                     continue;
                 }
@@ -1719,6 +1719,14 @@ namespace WitcherGame
                 partyVisualSlots[i].Member = null;
                 partyVisualSlots[i].Image.gameObject.SetActive(false);
             }
+        }
+
+        private static bool ShouldHideBattleSupportMember(PartyMember member)
+        {
+            return member == null
+                || member.Name == "猎魔人"
+                || member.Name == "叶奈法"
+                || member.Name == "莉莉丝";
         }
 
         private void UpdatePartyIdleFigures()

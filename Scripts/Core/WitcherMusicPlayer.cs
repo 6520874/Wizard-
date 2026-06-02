@@ -2,16 +2,18 @@ using UnityEngine;
 
 namespace WitcherGame
 {
-    // 中文说明：运行时加载并循环播放探索地图背景音乐。
+    // Runtime exploration music player with async loading to keep map entry smooth.
     public class WitcherMusicPlayer : MonoBehaviour
     {
         private const string PlayerName = "Witcher Music Player";
         private const string DefaultMusicResourcePath = "Music/UserProvided_Velen_BGM";
+        private const float FadeInDuration = 2.4f;
 
         [SerializeField] private string musicResourcePath = DefaultMusicResourcePath;
         [SerializeField] private float volume = 0.34f;
 
         private AudioSource audioSource;
+        private bool loadingClip;
 
         public static WitcherMusicPlayer CreateIfMissing()
         {
@@ -49,14 +51,8 @@ namespace WitcherGame
 
             if (audioSource.clip == null)
             {
-                AudioClip clip = Resources.Load<AudioClip>(musicResourcePath);
-                if (clip == null)
-                {
-                    Debug.LogWarning($"Music clip not found at Resources/{musicResourcePath}");
-                    return;
-                }
-
-                audioSource.clip = clip;
+                StartAsyncLoadIfNeeded();
+                return;
             }
 
             audioSource.volume = volume;
@@ -84,6 +80,53 @@ namespace WitcherGame
             audioSource.spatialBlend = 0f;
             audioSource.priority = 40;
             audioSource.volume = volume;
+        }
+
+        private void StartAsyncLoadIfNeeded()
+        {
+            if (loadingClip)
+            {
+                return;
+            }
+
+            loadingClip = true;
+            StartCoroutine(LoadAndPlayMusic());
+        }
+
+        private System.Collections.IEnumerator LoadAndPlayMusic()
+        {
+            ResourceRequest request = Resources.LoadAsync<AudioClip>(musicResourcePath);
+            yield return request;
+
+            loadingClip = false;
+            AudioClip clip = request.asset as AudioClip;
+            if (clip == null)
+            {
+                Debug.LogWarning($"Music clip not found at Resources/{musicResourcePath}");
+                yield break;
+            }
+
+            EnsureAudioSource();
+            if (audioSource == null)
+            {
+                yield break;
+            }
+
+            audioSource.clip = clip;
+            audioSource.volume = 0f;
+            audioSource.Play();
+            float elapsed = 0f;
+            while (elapsed < FadeInDuration && audioSource != null && audioSource.isPlaying)
+            {
+                elapsed += Time.unscaledDeltaTime;
+                audioSource.volume = Mathf.Lerp(0f, volume, Mathf.Clamp01(elapsed / FadeInDuration));
+                yield return null;
+            }
+
+            if (audioSource != null)
+            {
+                audioSource.volume = volume;
+            }
         }
     }
 }
