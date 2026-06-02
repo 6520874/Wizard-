@@ -10,12 +10,12 @@ namespace WitcherGame
         private const float MaxStageX = 55.6f;
         private const float MinStageY = -2.55f;
         private const float MaxStageY = 5f;
-        private const float VillageStartX = -0.35f;
-        private const float VillageStartY = -1.15f;
-        private const float VillageMinStageX = -12.35f;
-        private const float VillageMaxStageX = 12.35f;
-        private const float VillageMinStageY = -6.35f;
-        private const float VillageMaxStageY = 5.85f;
+        private const float VillageStartX = -0.2f;
+        private const float VillageStartY = -1.6f;
+        private const float VillageMinStageX = -10.8f;
+        private const float VillageMaxStageX = 10.8f;
+        private const float VillageMinStageY = -5.75f;
+        private const float VillageMaxStageY = 4.75f;
 
         private GeraltController player;
         private WitcherHud hud;
@@ -25,13 +25,13 @@ namespace WitcherGame
         {
             new RoomDefinition(
                 "威伦荒村长路",
-                new Color32(106, 92, 86, 255),
-                new Color32(42, 19, 17, 104),
-                new Color32(120, 112, 100, 82),
-                new Color32(224, 82, 36, 148),
-                0.48f,
-                0.88f,
-                0.78f)
+                new Color32(168, 196, 214, 255),
+                new Color32(54, 94, 128, 104),
+                new Color32(132, 178, 212, 96),
+                new Color32(255, 139, 70, 148),
+                0.58f,
+                0.9f,
+                0.52f)
         };
 
         public static WitcherWorldDirector CreateIfMissing(GeraltController target)
@@ -83,6 +83,7 @@ namespace WitcherGame
             StageBounds stageBounds = GetActiveStageBounds();
 
             player.ConfigureStage(stageBounds.MinX, stageBounds.MaxX, stageBounds.MinY, stageBounds.MaxY);
+            player.ConfigureExplorationView(stageBounds.IsIsometricVillage ? 0.38f : 0.65f, stageBounds.IsIsometricVillage ? 3.45f : 5f, stageBounds.IsIsometricVillage ? 1.82f : 3.25f);
             if (preserveDirection)
             {
                 float spawnX = requestedRoomIndex > previousRoom ? stageBounds.MinX + 0.45f : stageBounds.MaxX - 0.45f;
@@ -132,6 +133,10 @@ namespace WitcherGame
             if (camera != null)
             {
                 camera.backgroundColor = Color.Lerp(new Color32(4, 5, 6, 255), room.BackgroundTint, 0.18f);
+                if (background != null && background.TryGetComponent(out WitcherRuntimeBackground runtimeBackground) && runtimeBackground.IsUsingPreferredMap)
+                {
+                    WitcherIsometricAtmosphere.EnsureOn(camera);
+                }
             }
         }
 
@@ -160,7 +165,8 @@ namespace WitcherGame
                     VillageMinStageX,
                     VillageMaxStageX,
                     VillageMinStageY,
-                    VillageMaxStageY);
+                    VillageMaxStageY,
+                    true);
             }
 
             return new StageBounds(
@@ -169,7 +175,8 @@ namespace WitcherGame
                 MinStageX,
                 MaxStageX,
                 MinStageY,
-                MaxStageY);
+                MaxStageY,
+                false);
         }
 
         private void EnsureCameraFollow(StageBounds stageBounds)
@@ -180,7 +187,7 @@ namespace WitcherGame
                 return;
             }
 
-            camera.orthographicSize = stageBounds.MaxX - stageBounds.MinX > 30f ? 3.8f : 4.6f;
+            camera.orthographicSize = stageBounds.IsIsometricVillage ? 5.35f : 3.8f;
             WitcherCameraFollow follow = camera.GetComponent<WitcherCameraFollow>();
             if (follow == null)
             {
@@ -188,12 +195,13 @@ namespace WitcherGame
             }
 
             follow.SetTarget(player.transform);
-            follow.ConfigureBounds(stageBounds.MinX, stageBounds.MaxX, stageBounds.MinY + 1.1f, stageBounds.MaxY);
+            follow.ConfigureBounds(stageBounds.MinX, stageBounds.MaxX, stageBounds.MinY + 0.75f, stageBounds.MaxY);
+            follow.ConfigureView(stageBounds.IsIsometricVillage ? new Vector3(0.15f, 1.45f, -10f) : new Vector3(2.4f, 1.25f, -10f), stageBounds.IsIsometricVillage ? 0.24f : 0.18f);
         }
 
         private readonly struct StageBounds
         {
-            public StageBounds(float startX, float startY, float minX, float maxX, float minY, float maxY)
+            public StageBounds(float startX, float startY, float minX, float maxX, float minY, float maxY, bool isIsometricVillage)
             {
                 StartX = startX;
                 StartY = startY;
@@ -201,6 +209,7 @@ namespace WitcherGame
                 MaxX = maxX;
                 MinY = minY;
                 MaxY = maxY;
+                IsIsometricVillage = isIsometricVillage;
             }
 
             public float StartX { get; }
@@ -209,6 +218,7 @@ namespace WitcherGame
             public float MaxX { get; }
             public float MinY { get; }
             public float MaxY { get; }
+            public bool IsIsometricVillage { get; }
         }
 
         private readonly struct RoomDefinition

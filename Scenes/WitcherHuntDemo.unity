@@ -183,12 +183,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   imagePath: Art/Backgrounds/Witcher_Village_Longroad.png
+  preferredImagePath: Art/Backgrounds/Witcher_Isometric_Village.png
   segmentImagePaths: []
   pixelsPerUnit: 64
   sortingOrder: -50
   fitToCamera: 0
   worldWidth: 64
   worldCenter: {x: 24, y: -0.35}
+  preferredWorldWidth: 24
+  preferredWorldCenter: {x: 0, y: -0.35}
   segmentWorldWidth: 64
   segmentOverlap: 1.2
   seamFogWidth: 2.1
@@ -358,7 +361,7 @@ MonoBehaviour:
   maxStageX: 55.6
   minStageY: -2.55
   maxStageY: 5
-  visualScale: 0.65
+  visualScale: 0.38
   hurtLockDuration: 0.48
   maxHealth: 120
   maxMana: 100
@@ -524,7 +527,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: -1.65, z: 0}
-  m_LocalScale: {x: 0.65, y: 0.65, z: 0.65}
+  m_LocalScale: {x: 0.38, y: 0.38, z: 0.38}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
@@ -627,12 +630,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   target: {fileID: 0}
-  offset: {x: 2.4, y: 1.25, z: -10}
-  smoothTime: 0.18
-  minX: -7.6
-  maxX: 54
-  minY: -0.2
-  maxY: 0.55
+  offset: {x: 0.15, y: 1.45, z: -10}
+  smoothTime: 0.24
+  minX: -10.8
+  maxX: 10.8
+  minY: -5
+  maxY: 4.75
 --- !u!81 &1724479172
 AudioListener:
   m_ObjectHideFlags: 0
@@ -676,7 +679,7 @@ Camera:
   far clip plane: 1000
   field of view: 60
   orthographic: 1
-  orthographic size: 3.8
+  orthographic size: 5.35
   m_Depth: 0
   m_CullingMask:
     serializedVersion: 2

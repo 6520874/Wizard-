@@ -16,8 +16,8 @@ namespace WitcherGame
         [SerializeField] private bool fitToCamera = false;
         [SerializeField] private float worldWidth = 64f;
         [SerializeField] private Vector2 worldCenter = new Vector2(24f, -0.35f);
-        [SerializeField] private float preferredWorldWidth = 26f;
-        [SerializeField] private Vector2 preferredWorldCenter = Vector2.zero;
+        [SerializeField] private float preferredWorldWidth = 24f;
+        [SerializeField] private Vector2 preferredWorldCenter = new Vector2(0f, -0.35f);
         [SerializeField] private float segmentWorldWidth = 64f;
         [SerializeField] private float segmentOverlap = 1.2f;
         [SerializeField] private float seamFogWidth = 2.1f;
@@ -148,7 +148,7 @@ namespace WitcherGame
                 return;
             }
 
-            texture.filterMode = FilterMode.Point;
+            texture.filterMode = isUsingPreferredMap ? FilterMode.Bilinear : FilterMode.Point;
             texture.wrapMode = TextureWrapMode.Clamp;
             targetRenderer.sprite = Sprite.Create(
                 texture,

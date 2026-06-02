@@ -237,6 +237,15 @@ namespace WitcherGame
             verticalMoveSpeed += Mathf.Max(0.05f, verticalAmount);
         }
 
+        public void ConfigureExplorationView(float scale, float horizontalSpeed, float verticalSpeed)
+        {
+            visualScale = Mathf.Clamp(scale, 0.18f, 1.2f);
+            moveSpeed = Mathf.Max(0.1f, horizontalSpeed);
+            verticalMoveSpeed = Mathf.Max(0.1f, verticalSpeed);
+            transform.localScale = Vector3.one * visualScale;
+            UpdateDepthSorting();
+        }
+
         public void ConfigureStage(float minX, float maxX, float minY, float maxY)
         {
             minStageX = minX;

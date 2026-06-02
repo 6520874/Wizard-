@@ -31,6 +31,12 @@ namespace WitcherGame
             maxY = stageMaxY;
         }
 
+        public void ConfigureView(Vector3 viewOffset, float followSmoothTime)
+        {
+            offset = viewOffset;
+            smoothTime = Mathf.Max(0.01f, followSmoothTime);
+        }
+
         public void AddShake(float strength, float duration)
         {
             shakeStrength = Mathf.Max(shakeStrength, strength);
