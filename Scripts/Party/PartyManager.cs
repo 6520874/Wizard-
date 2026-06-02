@@ -146,6 +146,7 @@ namespace WitcherGame
 
             if (allMembers.Count > 0)
             {
+                RemoveHiddenMainPartyMembers();
                 return;
             }
 
@@ -165,7 +166,7 @@ namespace WitcherGame
             yennefer.CurrentEquipment.Accessory1 = sampleEquipment[EquipmentSlot.Accessory1][1];
             yennefer.CurrentEquipment.RelicCore = sampleEquipment[EquipmentSlot.RelicCore][1];
 
-            PartyMember triss = new PartyMember("特莉丝", 1, 102, 126, 11, 6, 22, 14, 0.06f, true);
+            PartyMember triss = new PartyMember("特莉丝", 1, 102, 126, 11, 6, 22, 14, 0.06f, false);
             triss.LearnSkill("火焰术", "火焰 / 单体", 14, "向目标投出压缩火球。");
             triss.LearnSkill("灼热结界", "火焰 / 防护", 22, "以火焰结界保护队伍并反制近身敌人。");
             triss.CurrentEquipment.Weapon = sampleEquipment[EquipmentSlot.Weapon][2];
@@ -180,7 +181,20 @@ namespace WitcherGame
 
             activeParty.Add(hunter);
             activeParty.Add(yennefer);
-            activeParty.Add(triss);
+            RemoveHiddenMainPartyMembers();
+        }
+
+        private void RemoveHiddenMainPartyMembers()
+        {
+            for (int i = activeParty.Count - 1; i >= 0; i--)
+            {
+                PartyMember member = activeParty[i];
+                if (member != null && member.Name == "特莉丝")
+                {
+                    member.IsJoined = false;
+                    activeParty.RemoveAt(i);
+                }
+            }
         }
 
         private void BuildSampleEquipment()
