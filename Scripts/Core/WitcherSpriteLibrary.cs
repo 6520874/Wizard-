@@ -48,12 +48,13 @@ namespace WitcherGame
             switch (animation)
             {
                 case GeraltAnimation.Run:
-                case GeraltAnimation.RunDown:
                 case GeraltAnimation.RunUp:
                 case GeraltAnimation.FlameSign:
                 case GeraltAnimation.ShieldSign:
                 case GeraltAnimation.PurpleSign:
                     return 9;
+                case GeraltAnimation.RunDown:
+                    return 6;
                 case GeraltAnimation.Jump:
                     return 5;
                 case GeraltAnimation.Slash:
