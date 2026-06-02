@@ -134,6 +134,7 @@ namespace WitcherGame
             if (camera != null)
             {
                 camera.backgroundColor = Color.Lerp(new Color32(4, 5, 6, 255), room.BackgroundTint, 0.18f);
+                WitcherDayNightCycle.EnsureOn(camera, room.BackgroundTint);
                 if (background != null && background.TryGetComponent(out WitcherRuntimeBackground runtimeBackground) && runtimeBackground.IsUsingPreferredMap)
                 {
                     WitcherIsometricAtmosphere.EnsureOn(camera);
