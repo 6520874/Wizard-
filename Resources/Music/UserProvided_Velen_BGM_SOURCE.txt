@@ -1,0 +1,8 @@
+Source file:
+/Users/jichonggula/Movies/JianyingPro/User Data/Projects/com.lveditor.draft/0603/audio/original_sound_IOS_ALBUM@0E280FFD-BB3E-48AB-A627-6C6C12DF2883_L0_001@1780418812000.mov
+
+Converted for Unity playback:
+Assets/Resources/Music/UserProvided_Velen_BGM.ogg
+
+Note:
+This track was provided by the project owner and replaces the temporary CC0 placeholder music.

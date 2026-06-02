@@ -58,6 +58,7 @@ namespace WitcherGame
         {
             player = player == null ? FindObjectOfType<GeraltController>() : player;
             hud = FindObjectOfType<WitcherHud>();
+            WitcherMusicPlayer.CreateIfMissing();
             EnterRoom(0, false);
         }
 
