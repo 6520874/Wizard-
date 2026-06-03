@@ -16,6 +16,8 @@ namespace WitcherGame
         private Image dim;
         private Image topBlade;
         private Image bottomBlade;
+        private Image topFade;
+        private Image bottomFade;
         private Image redSweep;
         private Image blueSweep;
         private Text titleText;
@@ -54,6 +56,8 @@ namespace WitcherGame
             SetAlpha(dim, 0f);
             SetAlpha(topBlade, 0f);
             SetAlpha(bottomBlade, 0f);
+            SetAlpha(topFade, 0f);
+            SetAlpha(bottomFade, 0f);
             SetAlpha(redSweep, 0f);
             SetAlpha(blueSweep, 0f);
             SetTextAlpha(titleText, 0f);
@@ -64,19 +68,27 @@ namespace WitcherGame
 
             RectTransform topRect = topBlade.rectTransform;
             RectTransform bottomRect = bottomBlade.rectTransform;
+            RectTransform topFadeRect = topFade.rectTransform;
+            RectTransform bottomFadeRect = bottomFade.rectTransform;
             RectTransform redRect = redSweep.rectTransform;
             RectTransform blueRect = blueSweep.rectTransform;
-            Vector2 topHome = new Vector2(0f, 130f);
-            Vector2 bottomHome = new Vector2(0f, -130f);
+            Vector2 topHome = Vector2.zero;
+            Vector2 bottomHome = Vector2.zero;
+            Vector2 topFadeHome = new Vector2(0f, -156f);
+            Vector2 bottomFadeHome = new Vector2(0f, 156f);
 
-            yield return Animate(0.28f, t =>
+            yield return Animate(0.34f, t =>
             {
                 float eased = EaseOutCubic(t);
-                SetAlpha(dim, Mathf.Lerp(0f, 0.62f, eased));
-                SetAlpha(topBlade, Mathf.Lerp(0f, 0.92f, eased));
-                SetAlpha(bottomBlade, Mathf.Lerp(0f, 0.92f, eased));
-                topRect.anchoredPosition = Vector2.Lerp(new Vector2(-980f, 130f), topHome, eased);
-                bottomRect.anchoredPosition = Vector2.Lerp(new Vector2(980f, -130f), bottomHome, eased);
+                SetAlpha(dim, Mathf.Lerp(0f, 0.42f, eased));
+                SetAlpha(topBlade, eased);
+                SetAlpha(bottomBlade, eased);
+                SetAlpha(topFade, Mathf.Lerp(0f, 0.76f, eased));
+                SetAlpha(bottomFade, Mathf.Lerp(0f, 0.76f, eased));
+                topRect.anchoredPosition = Vector2.Lerp(new Vector2(0f, 176f), topHome, eased);
+                bottomRect.anchoredPosition = Vector2.Lerp(new Vector2(0f, -176f), bottomHome, eased);
+                topFadeRect.anchoredPosition = Vector2.Lerp(new Vector2(0f, 12f), topFadeHome, eased);
+                bottomFadeRect.anchoredPosition = Vector2.Lerp(new Vector2(0f, -12f), bottomFadeHome, eased);
             });
 
             yield return Animate(0.46f, t =>
@@ -84,18 +96,20 @@ namespace WitcherGame
                 float eased = EaseInOut(t);
                 SetTextAlpha(titleText, Mathf.Clamp01(Mathf.Sin(t * Mathf.PI) * 1.25f));
                 SetTextAlpha(subtitleText, Mathf.Clamp01((t - 0.18f) / 0.55f));
-                SetAlpha(redSweep, Mathf.Sin(t * Mathf.PI) * 0.72f);
-                SetAlpha(blueSweep, Mathf.Sin(t * Mathf.PI) * 0.72f);
-                redRect.anchoredPosition = Vector2.Lerp(new Vector2(-760f, -38f), new Vector2(760f, -38f), eased);
-                blueRect.anchoredPosition = Vector2.Lerp(new Vector2(760f, 42f), new Vector2(-760f, 42f), eased);
+                SetAlpha(redSweep, Mathf.Sin(t * Mathf.PI) * 0.56f);
+                SetAlpha(blueSweep, Mathf.Sin(t * Mathf.PI) * 0.48f);
+                redRect.anchoredPosition = Vector2.Lerp(new Vector2(-620f, -82f), new Vector2(620f, -82f), eased);
+                blueRect.anchoredPosition = Vector2.Lerp(new Vector2(620f, 82f), new Vector2(-620f, 82f), eased);
             });
 
             yield return Animate(0.18f, t =>
             {
                 float eased = EaseInOut(t);
-                SetAlpha(dim, Mathf.Lerp(0.62f, 1f, eased));
-                SetAlpha(topBlade, Mathf.Lerp(0.92f, 1f, eased));
-                SetAlpha(bottomBlade, Mathf.Lerp(0.92f, 1f, eased));
+                SetAlpha(dim, Mathf.Lerp(0.42f, 0.82f, eased));
+                SetAlpha(topBlade, 1f);
+                SetAlpha(bottomBlade, 1f);
+                SetAlpha(topFade, Mathf.Lerp(0.76f, 1f, eased));
+                SetAlpha(bottomFade, Mathf.Lerp(0.76f, 1f, eased));
                 SetTextAlpha(titleText, Mathf.Lerp(0.72f, 0f, eased));
                 SetTextAlpha(subtitleText, Mathf.Lerp(1f, 0f, eased));
             });
@@ -106,11 +120,15 @@ namespace WitcherGame
             yield return Animate(0.34f, t =>
             {
                 float eased = EaseOutCubic(t);
-                SetAlpha(dim, Mathf.Lerp(1f, 0f, eased));
+                SetAlpha(dim, Mathf.Lerp(0.82f, 0f, eased));
                 SetAlpha(topBlade, Mathf.Lerp(1f, 0f, eased));
                 SetAlpha(bottomBlade, Mathf.Lerp(1f, 0f, eased));
-                topRect.anchoredPosition = Vector2.Lerp(topHome, new Vector2(980f, 130f), eased);
-                bottomRect.anchoredPosition = Vector2.Lerp(bottomHome, new Vector2(-980f, -130f), eased);
+                SetAlpha(topFade, Mathf.Lerp(1f, 0f, eased));
+                SetAlpha(bottomFade, Mathf.Lerp(1f, 0f, eased));
+                topRect.anchoredPosition = Vector2.Lerp(topHome, new Vector2(0f, 176f), eased);
+                bottomRect.anchoredPosition = Vector2.Lerp(bottomHome, new Vector2(0f, -176f), eased);
+                topFadeRect.anchoredPosition = Vector2.Lerp(topFadeHome, new Vector2(0f, 12f), eased);
+                bottomFadeRect.anchoredPosition = Vector2.Lerp(bottomFadeHome, new Vector2(0f, -12f), eased);
             });
 
             HideImmediate();
@@ -136,10 +154,12 @@ namespace WitcherGame
             StretchToParent(root.GetComponent<RectTransform>());
             dim = CreateImage("Battle Transition Dim", root.transform, new Vector2(2000f, 1200f), Vector2.zero, new Color32(0, 0, 0, 0), new Vector2(0.5f, 0.5f));
             dim.raycastTarget = true;
-            topBlade = CreateImage("Battle Transition Top Blade", root.transform, new Vector2(1250f, 82f), new Vector2(0f, 130f), new Color32(6, 11, 18, 0), new Vector2(0.5f, 0.5f));
-            bottomBlade = CreateImage("Battle Transition Bottom Blade", root.transform, new Vector2(1250f, 82f), new Vector2(0f, -130f), new Color32(12, 7, 8, 0), new Vector2(0.5f, 0.5f));
-            redSweep = CreateImage("Battle Transition Red Sweep", root.transform, new Vector2(420f, 8f), new Vector2(-760f, -38f), new Color32(211, 32, 33, 0), new Vector2(0.5f, 0.5f));
-            blueSweep = CreateImage("Battle Transition Blue Sweep", root.transform, new Vector2(420f, 8f), new Vector2(760f, 42f), new Color32(70, 171, 255, 0), new Vector2(0.5f, 0.5f));
+            topBlade = CreateImage("Battle Transition Top Letterbox", root.transform, new Vector2(2400f, 156f), Vector2.zero, new Color32(0, 0, 0, 0), new Vector2(0.5f, 1f));
+            bottomBlade = CreateImage("Battle Transition Bottom Letterbox", root.transform, new Vector2(2400f, 156f), Vector2.zero, new Color32(0, 0, 0, 0), new Vector2(0.5f, 0f));
+            topFade = CreateImage("Battle Transition Top Soft Edge", root.transform, new Vector2(2400f, 34f), new Vector2(0f, -156f), new Color32(0, 0, 0, 0), new Vector2(0.5f, 1f));
+            bottomFade = CreateImage("Battle Transition Bottom Soft Edge", root.transform, new Vector2(2400f, 34f), new Vector2(0f, 156f), new Color32(0, 0, 0, 0), new Vector2(0.5f, 0f));
+            redSweep = CreateImage("Battle Transition Red Sweep", root.transform, new Vector2(320f, 5f), new Vector2(-620f, -82f), new Color32(178, 23, 25, 0), new Vector2(0.5f, 0.5f));
+            blueSweep = CreateImage("Battle Transition Blue Sweep", root.transform, new Vector2(320f, 5f), new Vector2(620f, 82f), new Color32(50, 130, 218, 0), new Vector2(0.5f, 0.5f));
 
             titleText = CreateText("Battle Transition Title", root.transform, "遭遇战", 46, TextAnchor.MiddleCenter, new Vector2(0f, 18f), new Vector2(420f, 66f), new Color32(255, 224, 138, 0));
             AddOutline(titleText, new Color32(0, 0, 0, 220), new Vector2(2f, -2f));
