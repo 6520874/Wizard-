@@ -8,6 +8,13 @@ namespace WitcherGame
     {
         private const string ControllerName = "Equipment UI Controller";
         private static EquipmentUIController instance;
+        private static readonly Color32 MenuPanelColor = new Color32(8, 24, 15, 202);
+        private static readonly Color32 MenuPanelStrongColor = new Color32(5, 15, 10, 226);
+        private static readonly Color32 MenuBorderColor = new Color32(235, 244, 232, 238);
+        private static readonly Color32 MenuRuleColor = new Color32(230, 238, 222, 150);
+        private static readonly Color32 MenuTextColor = new Color32(246, 248, 239, 255);
+        private static readonly Color32 MenuMutedTextColor = new Color32(203, 214, 198, 255);
+        private static readonly Color32 MenuSelectedTextColor = new Color32(255, 226, 136, 255);
 
         [SerializeField] private GeraltController player;
 
@@ -172,7 +179,7 @@ namespace WitcherGame
                 bool isSelectedMember = i == selectedMemberIndex;
                 PartyMember member = members[i];
                 memberTexts[i].text = isSelectedMember ? $"> {member.Name}  Lv {member.Level}" : $"  {member.Name}  Lv {member.Level}";
-                memberTexts[i].color = isSelectedMember ? new Color32(255, 214, 139, 255) : new Color32(218, 215, 198, 255);
+                memberTexts[i].color = isSelectedMember ? MenuSelectedTextColor : MenuTextColor;
             }
 
             PartyMember selectedMember = party.GetActiveMember(selectedMemberIndex);
@@ -191,7 +198,7 @@ namespace WitcherGame
                 string slotName = GetSlotDisplayName(slot);
                 string itemName = item == null ? "空" : item.Name;
                 slotTexts[i].text = selectedSlot ? $"< {slotName} >  {itemName}" : $"{slotName}  {itemName}";
-                slotTexts[i].color = selectedSlot ? new Color32(255, 201, 117, 255) : new Color32(220, 218, 203, 255);
+                slotTexts[i].color = selectedSlot ? MenuSelectedTextColor : MenuTextColor;
             }
 
             statsText.text =
@@ -240,24 +247,30 @@ namespace WitcherGame
             rootRect.offsetMin = Vector2.zero;
             rootRect.offsetMax = Vector2.zero;
 
-            GameObject dim = GothicUiFactory.CreatePanel("Equipment Dim", root.transform, new Vector2(2400f, 1400f), Vector2.zero, new Vector2(0.5f, 0.5f), new Color32(0, 0, 0, 112));
+            GameObject dim = GothicUiFactory.CreatePanel("Equipment Dim", root.transform, new Vector2(2400f, 1400f), Vector2.zero, new Vector2(0.5f, 0.5f), new Color32(0, 0, 0, 92));
             dim.transform.SetAsFirstSibling();
 
-            GameObject leftPanel = GothicUiFactory.CreatePanel("Equipment Party Panel", root.transform, new Vector2(324f, 422f), new Vector2(54f, -62f), new Vector2(0f, 1f), new Color32(5, 7, 10, 232));
-            GothicUiFactory.AddOutline(leftPanel, new Color32(105, 82, 49, 255), new Vector2(2f, -2f));
-            GothicUiFactory.CreateText("Equipment Party Title", leftPanel.transform, "队伍", 28, TextAnchor.MiddleCenter, new Vector2(30f, -18f), new Vector2(264f, 36f), new Color32(238, 205, 130, 255));
-            GothicUiFactory.CreatePanel("Equipment Party Rule", leftPanel.transform, new Vector2(260f, 2f), new Vector2(32f, -62f), new Vector2(0f, 1f), new Color32(128, 20, 28, 210));
+            GameObject leftPanel = GothicUiFactory.CreatePanel("Equipment Party Panel", root.transform, new Vector2(324f, 422f), new Vector2(54f, -62f), new Vector2(0f, 1f), MenuPanelColor);
+            GothicUiFactory.AddOutline(leftPanel, MenuBorderColor, new Vector2(2f, -2f));
+            GothicUiFactory.AddOutline(leftPanel, new Color32(0, 0, 0, 230), new Vector2(4f, -4f));
+            Text partyTitle = GothicUiFactory.CreateText("Equipment Party Title", leftPanel.transform, "队伍", 28, TextAnchor.MiddleCenter, new Vector2(30f, -18f), new Vector2(264f, 36f), MenuTextColor);
+            AddMenuTextOutline(partyTitle, new Vector2(2f, -2f));
+            GothicUiFactory.CreatePanel("Equipment Party Rule", leftPanel.transform, new Vector2(260f, 2f), new Vector2(32f, -62f), new Vector2(0f, 1f), MenuRuleColor);
             for (int i = 0; i < 4; i++)
             {
-                memberTexts.Add(GothicUiFactory.CreateText($"Party Member {i + 1}", leftPanel.transform, string.Empty, 23, TextAnchor.MiddleLeft, new Vector2(34f, -92f - i * 52f), new Vector2(254f, 34f), new Color32(218, 215, 198, 255)));
+                Text memberText = GothicUiFactory.CreateText($"Party Member {i + 1}", leftPanel.transform, string.Empty, 23, TextAnchor.MiddleLeft, new Vector2(34f, -92f - i * 52f), new Vector2(254f, 34f), MenuTextColor);
+                AddMenuTextOutline(memberText, new Vector2(2f, -2f));
+                memberTexts.Add(memberText);
             }
 
-            GameObject rightPanel = GothicUiFactory.CreatePanel("Equipment Detail Panel", root.transform, new Vector2(690f, 422f), new Vector2(404f, -62f), new Vector2(0f, 1f), new Color32(5, 8, 12, 234));
-            GothicUiFactory.AddOutline(rightPanel, new Color32(105, 82, 49, 255), new Vector2(2f, -2f));
-            titleText = GothicUiFactory.CreateText("Equipment Detail Title", rightPanel.transform, "装备", 28, TextAnchor.MiddleLeft, new Vector2(32f, -18f), new Vector2(330f, 36f), new Color32(238, 205, 130, 255));
-            GothicUiFactory.CreatePanel("Equipment Detail Rule", rightPanel.transform, new Vector2(626f, 2f), new Vector2(32f, -62f), new Vector2(0f, 1f), new Color32(128, 20, 28, 210));
-            GameObject portraitFrame = GothicUiFactory.CreatePanel("Equipment Portrait Frame", rightPanel.transform, new Vector2(116f, 132f), new Vector2(36f, -88f), new Vector2(0f, 1f), new Color32(8, 10, 13, 244));
-            GothicUiFactory.AddOutline(portraitFrame, new Color32(90, 72, 47, 255), new Vector2(1f, -1f));
+            GameObject rightPanel = GothicUiFactory.CreatePanel("Equipment Detail Panel", root.transform, new Vector2(690f, 422f), new Vector2(404f, -62f), new Vector2(0f, 1f), MenuPanelColor);
+            GothicUiFactory.AddOutline(rightPanel, MenuBorderColor, new Vector2(2f, -2f));
+            GothicUiFactory.AddOutline(rightPanel, new Color32(0, 0, 0, 230), new Vector2(4f, -4f));
+            titleText = GothicUiFactory.CreateText("Equipment Detail Title", rightPanel.transform, "装备", 28, TextAnchor.MiddleLeft, new Vector2(32f, -18f), new Vector2(330f, 36f), MenuTextColor);
+            AddMenuTextOutline(titleText, new Vector2(2f, -2f));
+            GothicUiFactory.CreatePanel("Equipment Detail Rule", rightPanel.transform, new Vector2(626f, 2f), new Vector2(32f, -62f), new Vector2(0f, 1f), MenuRuleColor);
+            GameObject portraitFrame = GothicUiFactory.CreatePanel("Equipment Portrait Frame", rightPanel.transform, new Vector2(116f, 132f), new Vector2(36f, -88f), new Vector2(0f, 1f), MenuPanelStrongColor);
+            GothicUiFactory.AddOutline(portraitFrame, MenuBorderColor, new Vector2(1f, -1f));
             GameObject portraitObject = new GameObject("Equipment Portrait");
             portraitObject.transform.SetParent(portraitFrame.transform, false);
             RectTransform portraitRect = portraitObject.AddComponent<RectTransform>();
@@ -272,11 +285,20 @@ namespace WitcherGame
 
             for (int i = 0; i < slotOrder.Length; i++)
             {
-                slotTexts.Add(GothicUiFactory.CreateText($"Equipment Slot {i + 1}", rightPanel.transform, string.Empty, 22, TextAnchor.MiddleLeft, new Vector2(176f, -92f - i * 42f), new Vector2(250f, 32f), new Color32(220, 218, 203, 255)));
+                Text slotText = GothicUiFactory.CreateText($"Equipment Slot {i + 1}", rightPanel.transform, string.Empty, 22, TextAnchor.MiddleLeft, new Vector2(176f, -92f - i * 42f), new Vector2(250f, 32f), MenuTextColor);
+                AddMenuTextOutline(slotText, new Vector2(2f, -2f));
+                slotTexts.Add(slotText);
             }
 
-            statsText = GothicUiFactory.CreateText("Equipment Stats", rightPanel.transform, string.Empty, 21, TextAnchor.UpperLeft, new Vector2(466f, -92f), new Vector2(178f, 236f), new Color32(224, 223, 208, 255));
-            helpText = GothicUiFactory.CreateText("Equipment Help", rightPanel.transform, string.Empty, 15, TextAnchor.MiddleLeft, new Vector2(36f, -368f), new Vector2(620f, 26f), new Color32(153, 164, 162, 255));
+            statsText = GothicUiFactory.CreateText("Equipment Stats", rightPanel.transform, string.Empty, 21, TextAnchor.UpperLeft, new Vector2(466f, -92f), new Vector2(178f, 236f), MenuTextColor);
+            AddMenuTextOutline(statsText, new Vector2(2f, -2f));
+            helpText = GothicUiFactory.CreateText("Equipment Help", rightPanel.transform, string.Empty, 15, TextAnchor.MiddleLeft, new Vector2(36f, -368f), new Vector2(620f, 26f), MenuMutedTextColor);
+            AddMenuTextOutline(helpText, new Vector2(1f, -1f));
+        }
+
+        private static void AddMenuTextOutline(Text text, Vector2 distance)
+        {
+            GothicUiFactory.AddOutline(text.gameObject, new Color32(0, 0, 0, 245), distance);
         }
     }
 }

@@ -11,6 +11,14 @@ namespace WitcherGame
     public class TurnBasedBattleHud : MonoBehaviour
     {
         private const string HudName = "Turn Based Battle HUD";
+        private static readonly Color32 JrpgPanelColor = new Color32(8, 24, 15, 202);
+        private static readonly Color32 JrpgPanelStrongColor = new Color32(5, 15, 10, 230);
+        private static readonly Color32 JrpgBorderColor = new Color32(235, 244, 232, 238);
+        private static readonly Color32 JrpgRuleColor = new Color32(230, 238, 222, 146);
+        private static readonly Color32 JrpgTextColor = new Color32(246, 248, 239, 255);
+        private static readonly Color32 JrpgMutedTextColor = new Color32(205, 216, 201, 255);
+        private static readonly Color32 JrpgSelectedColor = new Color32(52, 75, 40, 246);
+        private static readonly Color32 JrpgGoldColor = new Color32(255, 226, 136, 255);
 
         private readonly List<Text> enemyRows = new List<Text>();
         private readonly List<EnemyVisualSlot> enemySlots = new List<EnemyVisualSlot>();
@@ -212,8 +220,8 @@ namespace WitcherGame
             {
                 bool selected = i == selectedIndex;
                 commandButtonImages[i].color = selected
-                    ? new Color32(34, 77, 116, 246)
-                    : new Color32(12, 14, 18, 214);
+                    ? JrpgSelectedColor
+                    : JrpgPanelStrongColor;
                 commandButtonImages[i].rectTransform.localScale = selected ? new Vector3(1.045f, 1.045f, 1f) : Vector3.one;
             }
         }
@@ -574,16 +582,16 @@ namespace WitcherGame
             AddOutline(playerDamageText, new Color32(0, 0, 0, 255), new Vector2(3f, -3f));
             SetPlayerFacingScale(-1f);
 
-            Image playerPanel = CreateImage("Player Battle Plate", root.transform, new Vector2(246f, 118f), new Vector2(22f, -78f), new Color32(7, 11, 17, 218));
-            playerPanel.sprite = WitcherSpriteLibrary.GetSolidSprite(new Color32(7, 11, 17, 238));
-            AddOutline(playerPanel, new Color32(93, 145, 207, 255), new Vector2(2f, -2f));
+            Image playerPanel = CreateImage("Player Battle Plate", root.transform, new Vector2(246f, 118f), new Vector2(22f, -78f), JrpgPanelColor);
+            playerPanel.sprite = WitcherSpriteLibrary.GetSolidSprite(JrpgPanelColor);
+            AddOutline(playerPanel, JrpgBorderColor, new Vector2(2f, -2f));
 
             Text playerName = CreateText("Player Battle Name", playerPanel.transform, "猎魔人", 24, TextAnchor.MiddleLeft, new Vector2(18f, -12f), new Vector2(176f, 28f));
-            playerName.color = new Color32(255, 218, 138, 255);
-            AddOutline(playerName, Color.black, new Vector2(1f, -1f));
+            playerName.color = JrpgTextColor;
+            AddOutline(playerName, Color.black, new Vector2(2f, -2f));
 
             Text bpText = CreateText("Player Battle BP", playerPanel.transform, "回合", 15, TextAnchor.MiddleRight, new Vector2(132f, -16f), new Vector2(88f, 24f));
-            bpText.color = new Color32(225, 238, 255, 255);
+            bpText.color = JrpgMutedTextColor;
             AddOutline(bpText, Color.black, new Vector2(1f, -1f));
 
             Image playerHealthBack = CreateImage("Player Battle HP Back", playerPanel.transform, new Vector2(198f, 13f), new Vector2(20f, -50f), new Color32(42, 5, 8, 245));
@@ -597,8 +605,8 @@ namespace WitcherGame
             playerManaFill.rectTransform.pivot = new Vector2(0f, 0.5f);
 
             playerText = CreateText("Battle Player Stats", playerPanel.transform, "HP 100/100    MP 100/100", 15, TextAnchor.MiddleLeft, new Vector2(18f, -94f), new Vector2(220f, 20f));
-            playerText.color = new Color32(226, 241, 238, 255);
-            AddOutline(playerText, Color.black, new Vector2(1f, -1f));
+            playerText.color = JrpgTextColor;
+            AddOutline(playerText, Color.black, new Vector2(2f, -2f));
             playerPanel.gameObject.SetActive(false);
 
             enemySlots.Clear();
@@ -645,18 +653,18 @@ namespace WitcherGame
                 healthFill.sprite = WitcherSpriteLibrary.GetSolidSprite(new Color32(226, 34, 43, 255));
                 healthFill.color = new Color32(226, 34, 43, 255);
                 healthFill.raycastTarget = false;
-                Image nameplateBack = CreateCenteredImage($"Battle Enemy Nameplate {i + 1}", root.transform, new Vector2(164f, 64f), slotPosition + new Vector2(0f, 126f), new Color32(8, 10, 13, 208));
-                nameplateBack.sprite = WitcherSpriteLibrary.GetSolidSprite(new Color32(8, 10, 13, 226));
+                Image nameplateBack = CreateCenteredImage($"Battle Enemy Nameplate {i + 1}", root.transform, new Vector2(164f, 64f), slotPosition + new Vector2(0f, 126f), JrpgPanelColor);
+                nameplateBack.sprite = WitcherSpriteLibrary.GetSolidSprite(JrpgPanelColor);
                 nameplateBack.raycastTarget = false;
                 nameplateBack.gameObject.SetActive(false);
-                AddOutline(nameplateBack, new Color32(74, 110, 155, 255), new Vector2(2f, -2f));
+                AddOutline(nameplateBack, JrpgBorderColor, new Vector2(2f, -2f));
 
                 Text row = CreateText($"Enemy Stage Label {i + 1}", nameplateBack.transform, string.Empty, 14, TextAnchor.MiddleCenter, Vector2.zero, new Vector2(154f, 58f));
                 row.rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
                 row.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
                 row.rectTransform.pivot = new Vector2(0.5f, 0.5f);
-                row.color = new Color32(233, 238, 229, 255);
-                AddOutline(row, Color.black, new Vector2(1f, -1f));
+                row.color = JrpgTextColor;
+                AddOutline(row, Color.black, new Vector2(2f, -2f));
                 enemyRows.Add(row);
 
                 enemySlots.Add(new EnemyVisualSlot
@@ -684,33 +692,33 @@ namespace WitcherGame
             flameImpactEffect.raycastTarget = false;
             flameImpactEffect.gameObject.SetActive(false);
 
-            Image commandPanel = CreateImage("Command Panel", root.transform, new Vector2(432f, 122f), new Vector2(224f, -394f), new Color32(4, 9, 15, 172));
-            commandPanel.sprite = WitcherSpriteLibrary.GetSolidSprite(new Color32(4, 9, 15, 172));
-            AddOutline(commandPanel, new Color32(91, 137, 160, 160), new Vector2(1f, -1f));
+            Image commandPanel = CreateImage("Command Panel", root.transform, new Vector2(432f, 122f), new Vector2(224f, -394f), JrpgPanelColor);
+            commandPanel.sprite = WitcherSpriteLibrary.GetSolidSprite(JrpgPanelColor);
+            AddOutline(commandPanel, JrpgBorderColor, new Vector2(2f, -2f));
 
-            Image commandInnerGlow = CreateImage("Command Panel Inner Glow", commandPanel.transform, new Vector2(418f, 108f), new Vector2(7f, -7f), new Color32(17, 28, 38, 38));
-            commandInnerGlow.sprite = WitcherSpriteLibrary.GetSolidSprite(new Color32(17, 28, 38, 62));
+            Image commandInnerGlow = CreateImage("Command Panel Inner Glow", commandPanel.transform, new Vector2(418f, 108f), new Vector2(7f, -7f), new Color32(21, 47, 28, 50));
+            commandInnerGlow.sprite = WitcherSpriteLibrary.GetSolidSprite(new Color32(21, 47, 28, 50));
             commandInnerGlow.raycastTarget = false;
 
-            Image commandTopRule = CreateImage("Command Panel Top Rule", commandPanel.transform, new Vector2(408f, 1f), new Vector2(12f, -44f), new Color32(118, 151, 186, 104));
-            commandTopRule.sprite = WitcherSpriteLibrary.GetSolidSprite(new Color32(118, 151, 186, 160));
+            Image commandTopRule = CreateImage("Command Panel Top Rule", commandPanel.transform, new Vector2(408f, 1f), new Vector2(12f, -44f), JrpgRuleColor);
+            commandTopRule.sprite = WitcherSpriteLibrary.GetSolidSprite(JrpgRuleColor);
             commandTopRule.raycastTarget = false;
 
-            Image commandGoldRule = CreateImage("Command Panel Gold Rule", commandPanel.transform, new Vector2(82f, 1f), new Vector2(22f, -42f), new Color32(255, 195, 92, 134));
-            commandGoldRule.sprite = WitcherSpriteLibrary.GetSolidSprite(new Color32(255, 195, 92, 190));
+            Image commandGoldRule = CreateImage("Command Panel Gold Rule", commandPanel.transform, new Vector2(82f, 1f), new Vector2(22f, -42f), new Color32(255, 226, 136, 170));
+            commandGoldRule.sprite = WitcherSpriteLibrary.GetSolidSprite(new Color32(255, 226, 136, 170));
             commandGoldRule.raycastTarget = false;
 
             Text commandTitle = CreateText("Battle Command Title", commandPanel.transform, "行动", 20, TextAnchor.MiddleLeft, new Vector2(22f, -12f), new Vector2(86f, 28f));
-            commandTitle.color = new Color32(255, 214, 132, 255);
-            AddOutline(commandTitle, Color.black, new Vector2(1f, -1f));
+            commandTitle.color = JrpgTextColor;
+            AddOutline(commandTitle, Color.black, new Vector2(2f, -2f));
 
             potionText = CreateText("Battle Potion Count", commandPanel.transform, "药剂 x3", 14, TextAnchor.MiddleRight, new Vector2(322f, -14f), new Vector2(86f, 24f));
-            potionText.color = new Color32(183, 219, 255, 255);
+            potionText.color = JrpgMutedTextColor;
             AddOutline(potionText, Color.black, new Vector2(1f, -1f));
 
             messageText = CreateText("Battle Message", commandPanel.transform, "选择行动。", 14, TextAnchor.UpperLeft, new Vector2(104f, -18f), new Vector2(210f, 32f));
-            messageText.color = new Color32(255, 246, 214, 255);
-            AddOutline(messageText, Color.black, new Vector2(1f, -1f));
+            messageText.color = JrpgTextColor;
+            AddOutline(messageText, Color.black, new Vector2(2f, -2f));
 
             commandButtons.Clear();
             commandButtonImages.Clear();
@@ -727,14 +735,14 @@ namespace WitcherGame
 
         private void BuildVictoryRewardPanel(Transform parent)
         {
-            Image panel = CreateCenteredImage("Battle Victory Reward Panel", parent, new Vector2(356f, 128f), new Vector2(0f, 36f), new Color32(5, 7, 10, 226));
-            panel.sprite = WitcherSpriteLibrary.GetSolidSprite(new Color32(5, 7, 10, 226));
+            Image panel = CreateCenteredImage("Battle Victory Reward Panel", parent, new Vector2(356f, 128f), new Vector2(0f, 36f), JrpgPanelStrongColor);
+            panel.sprite = WitcherSpriteLibrary.GetSolidSprite(JrpgPanelStrongColor);
             panel.raycastTarget = false;
-            AddOutline(panel, new Color32(198, 154, 76, 255), new Vector2(3f, -3f));
+            AddOutline(panel, JrpgBorderColor, new Vector2(3f, -3f));
             victoryRewardPanel = panel.gameObject;
 
-            Image inner = CreateImage("Battle Victory Reward Inner", panel.transform, new Vector2(336f, 106f), new Vector2(10f, -10f), new Color32(24, 18, 13, 156));
-            inner.sprite = WitcherSpriteLibrary.GetSolidSprite(new Color32(24, 18, 13, 156));
+            Image inner = CreateImage("Battle Victory Reward Inner", panel.transform, new Vector2(336f, 106f), new Vector2(10f, -10f), JrpgPanelColor);
+            inner.sprite = WitcherSpriteLibrary.GetSolidSprite(JrpgPanelColor);
             inner.raycastTarget = false;
 
             Image topRule = CreateImage("Battle Victory Reward Gold Rule", panel.transform, new Vector2(292f, 2f), new Vector2(32f, -42f), new Color32(255, 204, 101, 180));
@@ -742,7 +750,7 @@ namespace WitcherGame
             topRule.raycastTarget = false;
 
             victoryRewardText = CreateText("Battle Victory Reward Text", panel.transform, "战斗胜利", 18, TextAnchor.MiddleCenter, new Vector2(12f, -12f), new Vector2(332f, 100f));
-            victoryRewardText.color = new Color32(255, 231, 170, 255);
+            victoryRewardText.color = JrpgTextColor;
             AddOutline(victoryRewardText, Color.black, new Vector2(2f, -2f));
             victoryRewardPanel.SetActive(false);
         }
@@ -1925,29 +1933,29 @@ namespace WitcherGame
             Vector2 buttonSize = new Vector2(190f, 25f);
             GameObject buttonObject = CreateUiObject(label + " Button", parent, buttonSize, position, new Vector2(0f, 1f));
             Image image = buttonObject.AddComponent<Image>();
-            image.sprite = WitcherSpriteLibrary.GetSolidSprite(new Color32(12, 14, 18, 210));
-            image.color = new Color32(12, 14, 18, 210);
+            image.sprite = WitcherSpriteLibrary.GetSolidSprite(JrpgPanelStrongColor);
+            image.color = JrpgPanelStrongColor;
             image.type = Image.Type.Simple;
-            AddOutline(image, new Color32(90, 97, 118, 210), new Vector2(1f, -1f));
+            AddOutline(image, JrpgBorderColor, new Vector2(1f, -1f));
 
-            Image accent = CreateImage(label + " Accent", buttonObject.transform, new Vector2(4f, 20f), new Vector2(0f, -4f), action == TurnBattleAction.FlameSign ? new Color32(255, 134, 62, 220) : new Color32(64, 154, 255, 210));
+            Image accent = CreateImage(label + " Accent", buttonObject.transform, new Vector2(4f, 20f), new Vector2(0f, -4f), action == TurnBattleAction.FlameSign ? JrpgGoldColor : JrpgRuleColor);
             accent.sprite = WitcherSpriteLibrary.GetSolidSprite(accent.color);
             accent.raycastTarget = false;
 
-            Image keyBack = CreateImage(label + " Key", buttonObject.transform, new Vector2(30f, 24f), new Vector2(3f, -2f), new Color32(22, 31, 44, 230));
-            keyBack.sprite = WitcherSpriteLibrary.GetSolidSprite(new Color32(22, 31, 44, 230));
-            AddOutline(keyBack, new Color32(96, 150, 216, 220), new Vector2(1f, -1f));
+            Image keyBack = CreateImage(label + " Key", buttonObject.transform, new Vector2(30f, 24f), new Vector2(3f, -2f), JrpgSelectedColor);
+            keyBack.sprite = WitcherSpriteLibrary.GetSolidSprite(JrpgSelectedColor);
+            AddOutline(keyBack, JrpgBorderColor, new Vector2(1f, -1f));
 
             Text keyText = CreateText(label + " Key Text", keyBack.transform, label.Substring(0, 1), 15, TextAnchor.MiddleCenter, Vector2.zero, new Vector2(30f, 24f));
-            keyText.color = new Color32(238, 247, 255, 255);
-            AddOutline(keyText, Color.black, new Vector2(1f, -1f));
+            keyText.color = JrpgTextColor;
+            AddOutline(keyText, Color.black, new Vector2(2f, -2f));
 
             Text nameText = CreateText(label + " Name", buttonObject.transform, GetCommandDisplayName(action), 15, TextAnchor.MiddleLeft, new Vector2(42f, -2f), new Vector2(86f, 22f));
-            nameText.color = action == TurnBattleAction.FlameSign ? new Color32(255, 179, 105, 255) : new Color32(226, 236, 244, 255);
-            AddOutline(nameText, Color.black, new Vector2(1f, -1f));
+            nameText.color = action == TurnBattleAction.FlameSign ? JrpgGoldColor : JrpgTextColor;
+            AddOutline(nameText, Color.black, new Vector2(2f, -2f));
 
             Text costText = CreateText(label + " Cost", buttonObject.transform, GetCommandCostLabel(action), 13, TextAnchor.MiddleRight, new Vector2(126f, -2f), new Vector2(56f, 22f));
-            costText.color = new Color32(190, 204, 220, 255);
+            costText.color = JrpgMutedTextColor;
             AddOutline(costText, Color.black, new Vector2(1f, -1f));
 
             Button button = buttonObject.AddComponent<Button>();
@@ -1955,8 +1963,8 @@ namespace WitcherGame
             button.onClick.AddListener(() => manager.SelectAction(action));
             ColorBlock colors = button.colors;
             colors.normalColor = new Color32(255, 255, 255, 255);
-            colors.highlightedColor = new Color32(108, 132, 255, 255);
-            colors.pressedColor = new Color32(255, 178, 86, 255);
+            colors.highlightedColor = new Color32(118, 148, 82, 255);
+            colors.pressedColor = new Color32(255, 226, 136, 255);
             colors.disabledColor = new Color32(78, 78, 78, 118);
             button.colors = colors;
             commandButtons.Add(button);
@@ -1966,17 +1974,17 @@ namespace WitcherGame
         private void BuildSkillPanel(Transform parent)
         {
             skillButtons.Clear();
-            Image panelImage = CreateImage("Battle Skill Panel", parent, new Vector2(398f, 112f), new Vector2(18f, -4f), new Color32(4, 7, 12, 224));
-            panelImage.sprite = WitcherSpriteLibrary.GetSolidSprite(new Color32(4, 7, 12, 224));
-            AddOutline(panelImage, new Color32(86, 136, 182, 190), new Vector2(1f, -1f));
+            Image panelImage = CreateImage("Battle Skill Panel", parent, new Vector2(398f, 112f), new Vector2(18f, -4f), JrpgPanelStrongColor);
+            panelImage.sprite = WitcherSpriteLibrary.GetSolidSprite(JrpgPanelStrongColor);
+            AddOutline(panelImage, JrpgBorderColor, new Vector2(2f, -2f));
             skillPanel = panelImage.gameObject;
 
             Text title = CreateText("Battle Skill Panel Title", skillPanel.transform, "猎魔技能", 17, TextAnchor.MiddleLeft, new Vector2(12f, -8f), new Vector2(112f, 24f));
-            title.color = new Color32(255, 218, 138, 255);
-            AddOutline(title, Color.black, new Vector2(1f, -1f));
+            title.color = JrpgTextColor;
+            AddOutline(title, Color.black, new Vector2(2f, -2f));
 
             Text hint = CreateText("Battle Skill Panel Hint", skillPanel.transform, "Esc 返回", 13, TextAnchor.MiddleRight, new Vector2(300f, -10f), new Vector2(78f, 20f));
-            hint.color = new Color32(180, 202, 224, 255);
+            hint.color = JrpgMutedTextColor;
             AddOutline(hint, Color.black, new Vector2(1f, -1f));
 
             AddSkillButton(skillPanel.transform, "1 连续斩杀", "三连银剑", "MP 12", BattleSkillId.ExecuteSlash, new Vector2(12f, -34f));
@@ -1990,20 +1998,20 @@ namespace WitcherGame
         {
             GameObject buttonObject = CreateUiObject(title + " Skill Button", parent, new Vector2(178f, 30f), position, new Vector2(0f, 1f));
             Image image = buttonObject.AddComponent<Image>();
-            image.sprite = WitcherSpriteLibrary.GetSolidSprite(new Color32(12, 18, 28, 220));
-            image.color = new Color32(12, 18, 28, 220);
-            AddOutline(image, new Color32(59, 88, 125, 220), new Vector2(1f, -1f));
+            image.sprite = WitcherSpriteLibrary.GetSolidSprite(JrpgPanelColor);
+            image.color = JrpgPanelColor;
+            AddOutline(image, JrpgBorderColor, new Vector2(1f, -1f));
 
             Text titleText = CreateText(title + " Title", buttonObject.transform, title, 13, TextAnchor.MiddleLeft, new Vector2(8f, -3f), new Vector2(72f, 20f));
-            titleText.color = skillId == BattleSkillId.FlameSign ? new Color32(255, 178, 92, 255) : new Color32(230, 238, 246, 255);
-            AddOutline(titleText, Color.black, new Vector2(1f, -1f));
+            titleText.color = skillId == BattleSkillId.FlameSign ? JrpgGoldColor : JrpgTextColor;
+            AddOutline(titleText, Color.black, new Vector2(2f, -2f));
 
             Text descriptionText = CreateText(title + " Desc", buttonObject.transform, description, 11, TextAnchor.MiddleLeft, new Vector2(82f, -3f), new Vector2(52f, 20f));
-            descriptionText.color = new Color32(183, 205, 222, 255);
+            descriptionText.color = JrpgMutedTextColor;
             AddOutline(descriptionText, Color.black, new Vector2(1f, -1f));
 
             Text costText = CreateText(title + " Cost", buttonObject.transform, cost, 11, TextAnchor.MiddleRight, new Vector2(132f, -3f), new Vector2(38f, 20f));
-            costText.color = new Color32(141, 197, 255, 255);
+            costText.color = JrpgGoldColor;
             AddOutline(costText, Color.black, new Vector2(1f, -1f));
 
             Button button = buttonObject.AddComponent<Button>();
@@ -2011,8 +2019,8 @@ namespace WitcherGame
             button.onClick.AddListener(() => manager.SelectSkill(skillId));
             ColorBlock colors = button.colors;
             colors.normalColor = Color.white;
-            colors.highlightedColor = new Color32(116, 145, 255, 255);
-            colors.pressedColor = new Color32(255, 178, 86, 255);
+            colors.highlightedColor = new Color32(118, 148, 82, 255);
+            colors.pressedColor = new Color32(255, 226, 136, 255);
             colors.disabledColor = new Color32(78, 78, 78, 118);
             button.colors = colors;
             skillButtons.Add(button);

@@ -397,12 +397,12 @@ namespace WitcherGame
             rect.anchoredPosition = new Vector2(-96f, -28f);
 
             Image back = gameObject.AddComponent<Image>();
-            back.sprite = WitcherSpriteLibrary.GetSolidSprite(new Color32(2, 9, 15, 118));
-            back.color = new Color32(2, 9, 15, 118);
+            back.sprite = WitcherSpriteLibrary.GetSolidSprite(BattleHudStyle.PanelColor);
+            back.color = BattleHudStyle.PanelColor;
             back.raycastTarget = false;
-            BattleHudStyle.AddOutline(back, new Color32(73, 117, 145, 120), new Vector2(1f, -1f));
+            BattleHudStyle.AddOutline(back, BattleHudStyle.BorderColor, new Vector2(1f, -1f));
 
-            Image rail = BattleHudStyle.CreateImage("Turn Rail", transform, new Vector2(704f, 2f), new Vector2(28f, -35f), new Color32(116, 163, 190, 92), new Vector2(0f, 1f));
+            Image rail = BattleHudStyle.CreateImage("Turn Rail", transform, new Vector2(704f, 2f), new Vector2(28f, -35f), BattleHudStyle.RuleColor, new Vector2(0f, 1f));
             rail.raycastTarget = false;
 
             for (int i = 0; i < 8; i++)
@@ -455,33 +455,31 @@ namespace WitcherGame
             Rect = gameObject.AddComponent<RectTransform>();
             Rect.sizeDelta = new Vector2(42f, 42f);
             frame = gameObject.AddComponent<Image>();
-            frame.sprite = WitcherSpriteLibrary.GetSolidSprite(new Color32(17, 34, 51, 224));
-            frame.color = new Color32(17, 34, 51, 224);
+            frame.sprite = WitcherSpriteLibrary.GetSolidSprite(BattleHudStyle.PanelStrongColor);
+            frame.color = BattleHudStyle.PanelStrongColor;
             frame.rectTransform.localEulerAngles = new Vector3(0f, 0f, 45f);
-            BattleHudStyle.AddOutline(frame, new Color32(102, 184, 226, 230), new Vector2(1f, -1f));
+            BattleHudStyle.AddOutline(frame, BattleHudStyle.BorderColor, new Vector2(1f, -1f));
 
             portrait = BattleHudStyle.CreateImage("Portrait", transform, new Vector2(38f, 38f), Vector2.zero, Color.white, new Vector2(0.5f, 0.5f));
             portrait.rectTransform.localEulerAngles = new Vector3(0f, 0f, -45f);
             portrait.preserveAspect = true;
             portrait.raycastTarget = false;
 
-            label = BattleHudStyle.CreateText("Label", transform, "?", 16, TextAnchor.MiddleCenter, Vector2.zero, new Vector2(42f, 42f), new Color32(230, 242, 248, 255));
+            label = BattleHudStyle.CreateText("Label", transform, "?", 16, TextAnchor.MiddleCenter, Vector2.zero, new Vector2(42f, 42f), BattleHudStyle.TextColor);
             label.rectTransform.localEulerAngles = new Vector3(0f, 0f, -45f);
-            BattleHudStyle.AddOutline(label, Color.black, new Vector2(1f, -1f));
+            BattleHudStyle.AddOutline(label, Color.black, new Vector2(2f, -2f));
         }
 
         public void Refresh(BattleUnit unit, bool isCurrent)
         {
             UnitId = unit.Id;
             current = isCurrent;
-            frame.color = unit.IsPlayer
-                ? new Color32(18, 81, 128, isCurrent ? (byte)255 : (byte)174)
-                : new Color32(88, 28, 48, isCurrent ? (byte)255 : (byte)160);
+            frame.color = isCurrent ? BattleHudStyle.SelectedColor : BattleHudStyle.PanelStrongColor;
             portrait.sprite = unit.Portrait;
             portrait.color = unit.Portrait == null ? new Color32(255, 255, 255, 0) : new Color32(255, 255, 255, isCurrent ? (byte)255 : (byte)150);
             label.text = string.IsNullOrEmpty(unit.Name) ? "?" : unit.Name.Substring(0, 1);
             label.color = unit.Portrait == null
-                ? (isCurrent ? new Color32(255, 232, 155, 255) : new Color32(194, 210, 224, 210))
+                ? (isCurrent ? BattleHudStyle.GoldColor : BattleHudStyle.MutedTextColor)
                 : new Color32(255, 255, 255, 0);
             Rect.localScale = isCurrent ? Vector3.one * 1.15f : Vector3.one;
         }
@@ -519,8 +517,8 @@ namespace WitcherGame
             rect.anchoredPosition = new Vector2(-60f, 18f);
 
             Image back = gameObject.AddComponent<Image>();
-            back.sprite = WitcherSpriteLibrary.GetSolidSprite(new Color32(4, 12, 20, 92));
-            back.color = new Color32(4, 12, 20, 92);
+            back.sprite = WitcherSpriteLibrary.GetSolidSprite(new Color32(8, 24, 15, 92));
+            back.color = new Color32(8, 24, 15, 92);
             back.raycastTarget = false;
 
             for (int i = 0; i < 4; i++)
@@ -581,18 +579,21 @@ namespace WitcherGame
             Rect = gameObject.AddComponent<RectTransform>();
             Rect.sizeDelta = new Vector2(254f, 96f);
             frame = gameObject.AddComponent<Image>();
-            frame.sprite = WitcherSpriteLibrary.GetSolidSprite(new Color32(4, 10, 16, 178));
-            frame.color = new Color32(4, 10, 16, 178);
-            BattleHudStyle.AddOutline(frame, new Color32(70, 116, 143, 152), new Vector2(1f, -1f));
+            frame.sprite = WitcherSpriteLibrary.GetSolidSprite(BattleHudStyle.PanelColor);
+            frame.color = BattleHudStyle.PanelColor;
+            BattleHudStyle.AddOutline(frame, BattleHudStyle.BorderColor, new Vector2(1f, -1f));
 
             portrait = BattleHudStyle.CreateImage("Portrait", transform, new Vector2(54f, 54f), new Vector2(12f, -18f), Color.white, new Vector2(0f, 1f));
             portrait.preserveAspect = true;
             portrait.raycastTarget = false;
-            BattleHudStyle.AddOutline(portrait, new Color32(95, 154, 184, 180), new Vector2(1f, -1f));
+            BattleHudStyle.AddOutline(portrait, BattleHudStyle.BorderColor, new Vector2(1f, -1f));
 
-            nameText = BattleHudStyle.CreateText("Name", transform, "猎魔人", 18, TextAnchor.MiddleLeft, new Vector2(76f, -10f), new Vector2(150f, 24f), new Color32(232, 241, 244, 255));
-            hpText = BattleHudStyle.CreateText("HP", transform, "HP 0 / 0", 15, TextAnchor.MiddleLeft, new Vector2(76f, -38f), new Vector2(156f, 20f), new Color32(232, 241, 244, 255));
-            spText = BattleHudStyle.CreateText("SP", transform, "SP 0 / 0", 14, TextAnchor.MiddleLeft, new Vector2(76f, -64f), new Vector2(156f, 20f), new Color32(200, 225, 238, 255));
+            nameText = BattleHudStyle.CreateText("Name", transform, "猎魔人", 18, TextAnchor.MiddleLeft, new Vector2(76f, -10f), new Vector2(150f, 24f), BattleHudStyle.TextColor);
+            hpText = BattleHudStyle.CreateText("HP", transform, "HP 0 / 0", 15, TextAnchor.MiddleLeft, new Vector2(76f, -38f), new Vector2(156f, 20f), BattleHudStyle.TextColor);
+            spText = BattleHudStyle.CreateText("SP", transform, "SP 0 / 0", 14, TextAnchor.MiddleLeft, new Vector2(76f, -64f), new Vector2(156f, 20f), BattleHudStyle.MutedTextColor);
+            BattleHudStyle.AddOutline(nameText, Color.black, new Vector2(2f, -2f));
+            BattleHudStyle.AddOutline(hpText, Color.black, new Vector2(1f, -1f));
+            BattleHudStyle.AddOutline(spText, Color.black, new Vector2(1f, -1f));
 
             Image hpBack = BattleHudStyle.CreateImage("HP Back", transform, new Vector2(168f, 7f), new Vector2(76f, -58f), new Color32(5, 7, 10, 230), new Vector2(0f, 1f));
             hpFill = BattleHudStyle.CreateImage("HP Fill", hpBack.transform, new Vector2(168f, 7f), Vector2.zero, new Color32(93, 168, 116, 240), new Vector2(0f, 1f));
@@ -614,13 +615,13 @@ namespace WitcherGame
             spText.text = $"SP {unit.CurrentSp} / {unit.MaxSp}";
             Color aliveColor = unit.IsAlive ? Color.white : new Color32(120, 125, 128, 190);
             portrait.color = aliveColor;
-            nameText.color = unit.IsAlive ? new Color32(232, 241, 244, 255) : new Color32(128, 134, 138, 210);
+            nameText.color = unit.IsAlive ? BattleHudStyle.TextColor : new Color32(128, 134, 138, 210);
         }
 
         public void SetHighlighted(bool value)
         {
             highlighted = value;
-            frame.color = highlighted ? new Color32(12, 44, 72, 212) : new Color32(4, 10, 16, 178);
+            frame.color = highlighted ? BattleHudStyle.SelectedColor : BattleHudStyle.PanelColor;
         }
 
         private void Update()
@@ -632,7 +633,7 @@ namespace WitcherGame
             if (highlighted)
             {
                 float glow = 0.55f + Mathf.Sin(Time.unscaledTime * 5f) * 0.25f;
-                frame.color = Color.Lerp(new Color32(9, 24, 38, 212), new Color32(26, 92, 132, 230), glow);
+                frame.color = Color.Lerp(BattleHudStyle.PanelColor, BattleHudStyle.SelectedColor, glow);
             }
         }
 
@@ -702,13 +703,15 @@ namespace WitcherGame
             rect.sizeDelta = new Vector2(196f, 34f);
 
             frame = gameObject.AddComponent<Image>();
-            frame.sprite = WitcherSpriteLibrary.GetSolidSprite(new Color32(3, 8, 12, 166));
-            frame.color = new Color32(3, 8, 12, 166);
+            frame.sprite = WitcherSpriteLibrary.GetSolidSprite(BattleHudStyle.PanelColor);
+            frame.color = BattleHudStyle.PanelColor;
             frame.raycastTarget = false;
-            BattleHudStyle.AddOutline(frame, new Color32(73, 118, 142, 142), new Vector2(1f, -1f));
+            BattleHudStyle.AddOutline(frame, BattleHudStyle.BorderColor, new Vector2(1f, -1f));
 
-            shieldText = BattleHudStyle.CreateText("Shield", transform, "5", 18, TextAnchor.MiddleCenter, new Vector2(8f, -4f), new Vector2(28f, 26f), new Color32(206, 228, 255, 255));
-            weaknessText = BattleHudStyle.CreateText("Weakness", transform, "弱点", 14, TextAnchor.MiddleLeft, new Vector2(42f, -6f), new Vector2(44f, 24f), new Color32(211, 224, 232, 255));
+            shieldText = BattleHudStyle.CreateText("Shield", transform, "5", 18, TextAnchor.MiddleCenter, new Vector2(8f, -4f), new Vector2(28f, 26f), BattleHudStyle.TextColor);
+            weaknessText = BattleHudStyle.CreateText("Weakness", transform, "弱点", 14, TextAnchor.MiddleLeft, new Vector2(42f, -6f), new Vector2(44f, 24f), BattleHudStyle.TextColor);
+            BattleHudStyle.AddOutline(shieldText, Color.black, new Vector2(1f, -1f));
+            BattleHudStyle.AddOutline(weaknessText, Color.black, new Vector2(1f, -1f));
 
             for (int i = 0; i < 5; i++)
             {
@@ -722,12 +725,13 @@ namespace WitcherGame
                 cellRect.anchoredPosition = new Vector2(84f + i * 21f, -7f);
 
                 Image cellBack = cellRoot.AddComponent<Image>();
-                cellBack.sprite = WitcherSpriteLibrary.GetSolidSprite(new Color32(8, 14, 20, 214));
-                cellBack.color = new Color32(8, 14, 20, 214);
+                cellBack.sprite = WitcherSpriteLibrary.GetSolidSprite(BattleHudStyle.PanelStrongColor);
+                cellBack.color = BattleHudStyle.PanelStrongColor;
                 cellBack.raycastTarget = false;
-                BattleHudStyle.AddOutline(cellBack, new Color32(82, 116, 136, 128), new Vector2(1f, -1f));
+                BattleHudStyle.AddOutline(cellBack, BattleHudStyle.BorderColor, new Vector2(1f, -1f));
 
-                Text cell = BattleHudStyle.CreateText("Glyph", cellRoot.transform, "?", 13, TextAnchor.MiddleCenter, Vector2.zero, new Vector2(18f, 20f), new Color32(226, 238, 244, 255));
+                Text cell = BattleHudStyle.CreateText("Glyph", cellRoot.transform, "?", 13, TextAnchor.MiddleCenter, Vector2.zero, new Vector2(18f, 20f), BattleHudStyle.TextColor);
+                BattleHudStyle.AddOutline(cell, Color.black, new Vector2(1f, -1f));
                 weaknessCells.Add(cell);
             }
         }
@@ -758,7 +762,7 @@ namespace WitcherGame
                 bool hasWeakness = unit.Weaknesses != null && i < unit.Weaknesses.Length;
                 bool discovered = unit.WeaknessDiscovered != null && i < unit.WeaknessDiscovered.Length && unit.WeaknessDiscovered[i];
                 weaknessCells[i].text = hasWeakness && discovered ? unit.Weaknesses[i] : "?";
-                weaknessCells[i].color = discovered ? new Color32(255, 231, 165, 255) : new Color32(145, 159, 170, 235);
+                weaknessCells[i].color = discovered ? BattleHudStyle.GoldColor : BattleHudStyle.MutedTextColor;
             }
         }
 
@@ -769,11 +773,11 @@ namespace WitcherGame
             {
                 timer += Time.unscaledDeltaTime;
                 float pulse = Mathf.Sin(timer * 36f) * 0.5f + 0.5f;
-                frame.color = Color.Lerp(new Color32(3, 8, 12, 166), new Color32(160, 224, 255, 226), pulse);
+                frame.color = Color.Lerp(BattleHudStyle.PanelColor, BattleHudStyle.SelectedColor, pulse);
                 yield return null;
             }
 
-            frame.color = new Color32(3, 8, 12, 166);
+            frame.color = BattleHudStyle.PanelColor;
         }
     }
 
@@ -795,13 +799,13 @@ namespace WitcherGame
             rect.anchoredPosition = new Vector2(-42f, -112f);
 
             Image back = gameObject.AddComponent<Image>();
-            back.sprite = WitcherSpriteLibrary.GetSolidSprite(new Color32(5, 20, 34, 172));
-            back.color = new Color32(5, 20, 34, 172);
+            back.sprite = WitcherSpriteLibrary.GetSolidSprite(BattleHudStyle.PanelColor);
+            back.color = BattleHudStyle.PanelColor;
             back.raycastTarget = false;
-            BattleHudStyle.AddOutline(back, new Color32(119, 181, 210, 170), new Vector2(1f, -1f));
+            BattleHudStyle.AddOutline(back, BattleHudStyle.BorderColor, new Vector2(1f, -1f));
 
-            text = BattleHudStyle.CreateText("Skill Name", transform, "", 22, TextAnchor.MiddleCenter, Vector2.zero, new Vector2(256f, 42f), new Color32(232, 246, 255, 255));
-            BattleHudStyle.AddOutline(text, Color.black, new Vector2(1f, -1f));
+            text = BattleHudStyle.CreateText("Skill Name", transform, "", 22, TextAnchor.MiddleCenter, Vector2.zero, new Vector2(256f, 42f), BattleHudStyle.TextColor);
+            BattleHudStyle.AddOutline(text, Color.black, new Vector2(2f, -2f));
 
             canvasGroup = gameObject.AddComponent<CanvasGroup>();
             canvasGroup.alpha = 0f;
@@ -849,6 +853,15 @@ namespace WitcherGame
     // 中文说明：HD-2D HUD 使用的轻量 UI 工厂和运行时图形生成器。
     internal static class BattleHudStyle
     {
+        public static readonly Color32 PanelColor = new Color32(8, 24, 15, 202);
+        public static readonly Color32 PanelStrongColor = new Color32(5, 15, 10, 230);
+        public static readonly Color32 BorderColor = new Color32(235, 244, 232, 238);
+        public static readonly Color32 RuleColor = new Color32(230, 238, 222, 146);
+        public static readonly Color32 TextColor = new Color32(246, 248, 239, 255);
+        public static readonly Color32 MutedTextColor = new Color32(205, 216, 201, 255);
+        public static readonly Color32 SelectedColor = new Color32(52, 75, 40, 246);
+        public static readonly Color32 GoldColor = new Color32(255, 226, 136, 255);
+
         public static T CreateBehaviour<T>(string name, Transform parent) where T : MonoBehaviour
         {
             GameObject child = new GameObject(name);
