@@ -16,6 +16,7 @@ namespace WitcherGame
 
         public IReadOnlyList<PartyMember> AllMembers => allMembers;
         public IReadOnlyList<PartyMember> ActiveParty => activeParty;
+        public System.Action PartyChanged;
 
         public static PartyManager Instance => instance == null ? CreateIfMissing() : instance;
 
@@ -59,6 +60,7 @@ namespace WitcherGame
 
             member.IsJoined = true;
             activeParty.Add(member);
+            PartyChanged?.Invoke();
             return true;
         }
 
@@ -70,7 +72,13 @@ namespace WitcherGame
             }
 
             member.IsJoined = false;
-            return activeParty.Remove(member);
+            bool removed = activeParty.Remove(member);
+            if (removed)
+            {
+                PartyChanged?.Invoke();
+            }
+
+            return removed;
         }
 
         public bool SwitchMember(int partyIndex, PartyMember replacement)
@@ -88,7 +96,33 @@ namespace WitcherGame
                 allMembers.Add(replacement);
             }
 
+            PartyChanged?.Invoke();
             return true;
+        }
+
+        public PartyMember FindMember(string memberName)
+        {
+            EnsureDefaults();
+            for (int i = 0; i < allMembers.Count; i++)
+            {
+                if (allMembers[i] != null && allMembers[i].Name == memberName)
+                {
+                    return allMembers[i];
+                }
+            }
+
+            return null;
+        }
+
+        public bool ToggleMember(string memberName)
+        {
+            PartyMember member = FindMember(memberName);
+            if (member == null || member.Name == "猎魔人")
+            {
+                return false;
+            }
+
+            return activeParty.Contains(member) ? RemoveMember(member) : AddMember(member);
         }
 
         public PartyMember GetActiveMember(int index)
@@ -134,6 +168,8 @@ namespace WitcherGame
             monster.LearnSkill("血焰", "火焰 / 伤害", 18, "以恶魔血火灼烧单个怪物。");
             monster.LearnSkill("魅惑低语", "控制 / 弱化", 14, "短暂扰乱敌人的攻击欲望。");
             monster.LearnSkill("恶魔召唤", "召唤 / 爆发", 28, "召出低阶恶魔影子撕裂敌群。");
+            monster.LearnSkill("血契吸取", "血魔法 / 回复", 20, "撕开血契，从敌人生命里抽回自身血量。");
+            monster.LearnSkill("地狱烙印", "诅咒 / 持续伤害", 24, "给目标刻下恶魔烙印，持续灼烧其灵魂。");
             allMembers.Add(monster);
         }
 
@@ -182,6 +218,7 @@ namespace WitcherGame
             activeParty.Add(hunter);
             activeParty.Add(yennefer);
             RemoveHiddenMainPartyMembers();
+            PartyChanged?.Invoke();
         }
 
         private void RemoveHiddenMainPartyMembers()

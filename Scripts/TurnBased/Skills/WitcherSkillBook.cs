@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace WitcherGame
 {
     // 中文说明：集中创建当前猎魔人和怪物可用的默认技能定义。
@@ -152,6 +154,86 @@ namespace WitcherGame
                 BattleSkillAnimationKind.Cast,
                 "猎魔人进入专注状态。",
                 new StatusSkillEffect(() => new BattleStatusEffect(BattleStatusKind.AttackUp, "专注", 3, attackBonus: 6)));
+        }
+
+        public static IReadOnlyList<SkillDefinition> GetEnemySkills(TurnBasedEnemyState enemy)
+        {
+            List<SkillDefinition> skills = new List<SkillDefinition>();
+            if (enemy == null)
+            {
+                skills.Add(CreateCorruptedBite());
+                return skills;
+            }
+
+            switch (enemy.VisualKind)
+            {
+                case TurnBasedEnemyVisualKind.BloodWraith:
+                    skills.Add(CreateBloodDrain());
+                    skills.Add(CreatePlagueHowl());
+                    skills.Add(CreateCorruptedBite());
+                    break;
+                case TurnBasedEnemyVisualKind.BlackMoonKnight:
+                    skills.Add(CreateMoonbreaker());
+                    skills.Add(CreatePlagueHowl());
+                    skills.Add(CreateBloodDrain());
+                    break;
+                default:
+                    skills.Add(CreateCorruptedBite());
+                    skills.Add(CreatePlagueHowl());
+                    break;
+            }
+
+            return skills;
+        }
+
+        public static SkillDefinition CreateCorruptedBite()
+        {
+            return new SkillDefinition(
+                BattleSkillId.CorruptedBite,
+                "腐毒撕咬",
+                0,
+                BattleSkillTargetKind.Self,
+                BattleSkillAnimationKind.Slash,
+                "怪物扑咬猎魔人，污血渗入伤口！",
+                new DamageSkillEffect(3, 1f, 0.45f),
+                new StatusSkillEffect(() => new BattleStatusEffect(BattleStatusKind.Corruption, "腐毒", 2, incomingDamageMultiplier: 1.08f, damageOverTime: 4)));
+        }
+
+        public static SkillDefinition CreatePlagueHowl()
+        {
+            return new SkillDefinition(
+                BattleSkillId.PlagueHowl,
+                "瘟疫嚎叫",
+                0,
+                BattleSkillTargetKind.Self,
+                BattleSkillAnimationKind.Cast,
+                "怪物发出刺耳嚎叫，猎魔人的攻势被压住了！",
+                new DamageSkillEffect(0, 0.45f, 0.25f),
+                new StatusSkillEffect(() => new BattleStatusEffect(BattleStatusKind.Fear, "恐惧", 2, attackBonus: -4, defenseBonus: -2)));
+        }
+
+        public static SkillDefinition CreateBloodDrain()
+        {
+            return new SkillDefinition(
+                BattleSkillId.BloodDrain,
+                "吸血咒吻",
+                0,
+                BattleSkillTargetKind.Self,
+                BattleSkillAnimationKind.Cast,
+                "血影缠住猎魔人，怪物从伤口里夺回生命！",
+                new DamageSkillEffect(7, 0.85f, 0.35f));
+        }
+
+        public static SkillDefinition CreateMoonbreaker()
+        {
+            return new SkillDefinition(
+                BattleSkillId.Moonbreaker,
+                "黑月断斩",
+                0,
+                BattleSkillTargetKind.Self,
+                BattleSkillAnimationKind.Slash,
+                "月夜骑士拖出黑月般的剑痕！",
+                new DamageSkillEffect(14, 1.15f, 0.55f, 2, BattleDamageType.Pure));
         }
     }
 }

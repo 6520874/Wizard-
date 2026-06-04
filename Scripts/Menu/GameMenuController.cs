@@ -85,6 +85,10 @@ namespace WitcherGame
             {
                 commands[selectedIndex].Execute?.Invoke();
             }
+            else if (IsPartyCommandSelected() && Input.GetKeyDown(KeyCode.J))
+            {
+                TogglePartyMember("叶奈法");
+            }
             else if (Input.GetKeyDown(KeyCode.Escape))
             {
                 Close();
@@ -208,14 +212,36 @@ namespace WitcherGame
         private void ShowParty()
         {
             PartyManager party = PartyManager.CreateIfMissing();
-            string text = "当前队伍";
-            foreach (PartyMember member in party.ActiveParty)
+            string text = "队伍管理";
+            foreach (PartyMember member in party.AllMembers)
             {
-                text += $"\n- {member.Name} Lv {member.Level}";
+                if (member.Name == "特莉丝")
+                {
+                    continue;
+                }
+
+                string state = member.IsJoined ? "已入队" : "待命";
+                string locked = member.Name == "猎魔人" ? " 固定" : string.Empty;
+                text += $"\n- {member.Name} Lv {member.Level}  {state}{locked}";
             }
 
-            text += "\n\n怪物伙伴位已预留：后续可通过剧情或战斗收服加入。";
+            text += "\n\nJ 切换叶奈法加入 / 移除。入队后她会跟在猎魔人身后。";
+            text += "\n莉莉丝保留为怪物伙伴位，后续可通过剧情或战斗收服。";
             ShowDetail(text);
+        }
+
+        private void TogglePartyMember(string memberName)
+        {
+            PartyManager party = PartyManager.CreateIfMissing();
+            if (party.ToggleMember(memberName))
+            {
+                ShowParty();
+            }
+        }
+
+        private bool IsPartyCommandSelected()
+        {
+            return selectedIndex >= 0 && selectedIndex < commands.Count && commands[selectedIndex].Label == "队伍";
         }
 
         private void PlayPartyTalk()

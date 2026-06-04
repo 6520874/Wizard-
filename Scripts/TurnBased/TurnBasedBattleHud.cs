@@ -358,6 +358,39 @@ namespace WitcherGame
             yield return PlayEnemyFrames(slot, enemy.AttackFrames, enemy.Sprite, 0.085f, true, false);
         }
 
+        public IEnumerator PlayEnemySkillEffect(BattleSkillId skillId, int enemyIndex)
+        {
+            if (root == null)
+            {
+                yield break;
+            }
+
+            Color32 color = GetEnemySkillColor(skillId);
+            Image flash = CreateImage("Enemy Skill Flash", root.transform, new Vector2(1220f, 220f), new Vector2(-110f, -116f), color);
+            flash.transform.SetAsLastSibling();
+            flash.raycastTarget = false;
+            flash.rectTransform.localRotation = Quaternion.Euler(0f, 0f, GetEnemySkillAngle(skillId));
+
+            if (TryGetSlot(enemyIndex, out EnemyVisualSlot slot))
+            {
+                slot.GroundGlow.color = color;
+                slot.GroundGlow.gameObject.SetActive(true);
+            }
+
+            for (int i = 0; i < 10; i++)
+            {
+                float t = i / 9f;
+                Color c = color;
+                c.a = Mathf.Lerp(0.42f, 0f, t);
+                flash.color = c;
+                flash.rectTransform.anchoredPosition = new Vector2(Mathf.Lerp(-260f, 80f, t), -116f + Mathf.Sin(t * Mathf.PI) * 18f);
+                flash.rectTransform.localScale = new Vector3(1f + t * 0.16f, 1f - t * 0.22f, 1f);
+                yield return new WaitForSeconds(0.026f);
+            }
+
+            Destroy(flash.gameObject);
+        }
+
         public IEnumerator PlayEnemyHurt(int enemyIndex, float startDelay = 0f, int damage = 0)
         {
             if (startDelay > 0f)
@@ -1478,6 +1511,36 @@ namespace WitcherGame
                     return new Color32(136, 205, 255, 204);
                 default:
                     return new Color32(255, 118, 32, 210);
+            }
+        }
+
+        private static Color32 GetEnemySkillColor(BattleSkillId skillId)
+        {
+            switch (skillId)
+            {
+                case BattleSkillId.PlagueHowl:
+                    return new Color32(120, 210, 76, 160);
+                case BattleSkillId.BloodDrain:
+                    return new Color32(210, 28, 62, 168);
+                case BattleSkillId.Moonbreaker:
+                    return new Color32(116, 154, 255, 176);
+                default:
+                    return new Color32(130, 54, 32, 148);
+            }
+        }
+
+        private static float GetEnemySkillAngle(BattleSkillId skillId)
+        {
+            switch (skillId)
+            {
+                case BattleSkillId.PlagueHowl:
+                    return 0f;
+                case BattleSkillId.BloodDrain:
+                    return -8f;
+                case BattleSkillId.Moonbreaker:
+                    return -14f;
+                default:
+                    return 6f;
             }
         }
 

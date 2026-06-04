@@ -59,6 +59,7 @@ namespace WitcherGame
             QuestManager.CreateIfMissing();
             menuController = menuController == null ? GameMenuController.CreateIfMissing(player) : menuController;
             equipmentUIController = equipmentUIController == null ? EquipmentUIController.CreateIfMissing(player) : equipmentUIController;
+            PartyFollowManager.CreateIfMissing(player);
             RefreshPlayerControl();
         }
 

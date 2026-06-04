@@ -559,13 +559,24 @@ namespace WitcherGame
             }
 
             TurnBasedEnemyState enemy = enemies[enemyIndex];
-            int rawDamage = Mathf.Max(1, enemy.Attack + Random.Range(-2, 3) - GetPlayerDefense());
-            int damage = CalculatePlayerIncomingDamage(rawDamage);
-            battleHud.SetMessage($"敌人回合：{enemy.Name} 发起攻击，造成 {damage} 点伤害！");
+            SkillDefinition skill = ChooseEnemySkill(enemy, enemyIndex);
+            BattleSkillUnit caster = CreateEnemySkillUnit(enemyIndex);
+            BattleSkillUnit target = CreatePlayerTargetSkillUnit();
+            SkillResult result = SkillExecutor.Execute(skill, caster, new[] { target });
+            SkillTargetResult playerResult = GetPlayerTargetResult(result);
+            int damage = playerResult == null ? 0 : playerResult.Damage;
+
+            battleHud.SetMessage($"{enemy.Name} 使用 {skill.DisplayName}！");
+            battleHud.ShowSkillName(skill.DisplayName);
             yield return battleHud.PlayEnemyAttack(enemyIndex);
-            player.TakeTurnBasedDamage(damage, player.transform.position.x + 1f);
-            yield return battleHud.PlayPlayerHurt(damage);
-            ConsumePlayerStatusTurns();
+            yield return battleHud.PlayEnemySkillEffect(skill.Id, enemyIndex);
+            ApplyEnemySkillResult(enemyIndex, target, result);
+            if (damage > 0)
+            {
+                yield return battleHud.PlayPlayerHurt(damage);
+            }
+
+            yield return ConsumePlayerStatusTurnsWithFeedback();
             battleHud.Refresh(enemies, player, potionCount);
             yield return Wait(0.24f);
         }
@@ -759,6 +770,19 @@ namespace WitcherGame
             return unit;
         }
 
+        private BattleSkillUnit CreatePlayerTargetSkillUnit()
+        {
+            BattleSkillUnit unit = BattleSkillUnit.CreatePlayer("猎魔人", player.MaxHealth, player.MaxMana, GetPlayerAttack(), GetPlayerDefense());
+            unit.SetHealth(player.CurrentHealth);
+            unit.SetMana(player.CurrentMana);
+            for (int i = 0; i < playerStatuses.Count; i++)
+            {
+                unit.AddStatusInstance(playerStatuses[i]);
+            }
+
+            return unit;
+        }
+
         private List<BattleSkillUnit> CreateSkillTargets(SkillDefinition skill, BattleSkillUnit caster)
         {
             List<BattleSkillUnit> targets = new List<BattleSkillUnit>();
@@ -856,17 +880,6 @@ namespace WitcherGame
             return GetFirstLivingEnemyIndex();
         }
 
-        private int CalculatePlayerIncomingDamage(int rawDamage)
-        {
-            int damage = Mathf.Max(1, rawDamage);
-            for (int i = 0; i < playerStatuses.Count; i++)
-            {
-                damage = Mathf.Max(1, Mathf.CeilToInt(damage * playerStatuses[i].IncomingDamageMultiplier));
-            }
-
-            return damage;
-        }
-
         private int GetPlayerAttack()
         {
             playerInventory = playerInventory == null && player != null ? PlayerInventory.CreateIfMissing(player) : playerInventory;
@@ -879,16 +892,84 @@ namespace WitcherGame
             return playerDefense + (playerInventory == null ? 0 : playerInventory.DefenseBonus);
         }
 
-        private void ConsumePlayerStatusTurns()
+        private IEnumerator ConsumePlayerStatusTurnsWithFeedback()
         {
             for (int i = playerStatuses.Count - 1; i >= 0; i--)
             {
-                playerStatuses[i].ConsumeTurn();
-                if (playerStatuses[i].Expired)
+                BattleStatusEffect status = playerStatuses[i];
+                if (status.DamageOverTime > 0 && player != null && player.IsAlive)
+                {
+                    player.TakeTurnBasedDamage(status.DamageOverTime, player.transform.position.x + 1f);
+                    battleHud.SetMessage($"{status.DisplayName} 侵蚀猎魔人，造成 {status.DamageOverTime} 点伤害。");
+                    yield return battleHud.PlayPlayerHurt(status.DamageOverTime);
+                }
+
+                status.ConsumeTurn();
+                if (status.Expired)
                 {
                     playerStatuses.RemoveAt(i);
                 }
             }
+        }
+
+        private SkillDefinition ChooseEnemySkill(TurnBasedEnemyState enemy, int enemyIndex)
+        {
+            IReadOnlyList<SkillDefinition> skills = WitcherSkillBook.GetEnemySkills(enemy);
+            if (skills.Count == 0)
+            {
+                return WitcherSkillBook.CreateCorruptedBite();
+            }
+
+            if (enemy.VisualKind == TurnBasedEnemyVisualKind.BlackMoonKnight && turnNumber % 3 == 0)
+            {
+                return WitcherSkillBook.CreateMoonbreaker();
+            }
+
+            int seed = Mathf.Abs((turnNumber * 37) + enemyIndex * 17 + enemy.Health);
+            return skills[seed % skills.Count];
+        }
+
+        private void ApplyEnemySkillResult(int enemyIndex, BattleSkillUnit target, SkillResult result)
+        {
+            if (target != null)
+            {
+                playerStatuses.Clear();
+                for (int i = 0; i < target.Statuses.Count; i++)
+                {
+                    playerStatuses.Add(target.Statuses[i]);
+                }
+            }
+
+            SkillTargetResult playerResult = GetPlayerTargetResult(result);
+            if (playerResult != null && playerResult.Damage > 0)
+            {
+                player.TakeTurnBasedDamage(playerResult.Damage, player.transform.position.x + 1f);
+            }
+
+            if (result.Skill.Id == BattleSkillId.BloodDrain && enemyIndex >= 0 && enemyIndex < enemies.Count && playerResult != null)
+            {
+                int healed = Mathf.Max(4, Mathf.CeilToInt(playerResult.Damage * 0.45f));
+                enemies[enemyIndex].Health = Mathf.Clamp(enemies[enemyIndex].Health + healed, 0, enemies[enemyIndex].MaxHealth);
+                battleHud.SetMessage($"{enemies[enemyIndex].Name} 吸回 {healed} 点生命。");
+            }
+        }
+
+        private static SkillTargetResult GetPlayerTargetResult(SkillResult result)
+        {
+            if (result == null)
+            {
+                return null;
+            }
+
+            for (int i = 0; i < result.TargetResults.Count; i++)
+            {
+                if (result.TargetResults[i].IsPlayerTarget)
+                {
+                    return result.TargetResults[i];
+                }
+            }
+
+            return null;
         }
 
         public List<TurnBattleTimelineEntry> GetTimelinePreview(int count)

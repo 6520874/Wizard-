@@ -11,7 +11,11 @@ namespace WitcherGame
         Fireball,
         ThunderSign,
         ArcaneBurst,
-        HunterFocus
+        HunterFocus,
+        CorruptedBite,
+        PlagueHowl,
+        BloodDrain,
+        Moonbreaker
     }
 
     public enum BattleSkillTargetKind
@@ -47,6 +51,8 @@ namespace WitcherGame
         AttackUp,
         DefenseUp,
         Burning,
-        Shield
+        Shield,
+        Corruption,
+        Fear
     }
 }
