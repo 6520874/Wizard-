@@ -25,6 +25,9 @@ namespace WitcherGame
         private readonly List<Button> commandButtons = new List<Button>();
         private readonly List<Image> commandButtonImages = new List<Image>();
         private readonly List<Button> skillButtons = new List<Button>();
+        private readonly List<Text> skillTitleTexts = new List<Text>();
+        private readonly List<Text> skillDescriptionTexts = new List<Text>();
+        private readonly List<Text> skillCostTexts = new List<Text>();
         private readonly List<Image> timelineGems = new List<Image>();
         private readonly List<Text> timelineGemLabels = new List<Text>();
         private readonly List<PartyVisualSlot> partyVisualSlots = new List<PartyVisualSlot>();
@@ -226,7 +229,7 @@ namespace WitcherGame
             }
         }
 
-        public void ShowSkillMenu()
+        public void ShowSkillMenu(string actorName, IReadOnlyList<SkillDefinition> skills)
         {
             if (skillPanel == null)
             {
@@ -234,8 +237,35 @@ namespace WitcherGame
             }
 
             skillPanel.SetActive(true);
-            SetSkillButtonsEnabled(true);
-            SetMessage("选择猎魔技能。  1连击  2火焰  3闪电  4专注");
+            for (int i = 0; i < skillButtons.Count; i++)
+            {
+                bool hasSkill = skills != null && i < skills.Count && skills[i] != null;
+                skillButtons[i].gameObject.SetActive(hasSkill);
+                skillButtons[i].interactable = hasSkill;
+                if (!hasSkill)
+                {
+                    continue;
+                }
+
+                SkillDefinition skill = skills[i];
+                if (i < skillTitleTexts.Count)
+                {
+                    skillTitleTexts[i].text = $"{i + 1} {skill.DisplayName}";
+                    skillTitleTexts[i].color = GetSkillNameColor(skill.Id);
+                }
+
+                if (i < skillDescriptionTexts.Count)
+                {
+                    skillDescriptionTexts[i].text = GetSkillShortDescription(skill);
+                }
+
+                if (i < skillCostTexts.Count)
+                {
+                    skillCostTexts[i].text = skill.ManaCost > 0 ? $"MP {skill.ManaCost}" : "无消耗";
+                }
+            }
+
+            SetMessage($"{actorName}：选择技能。");
         }
 
         public void HideSkillMenu()
@@ -250,7 +280,7 @@ namespace WitcherGame
         {
             for (int i = 0; i < skillButtons.Count; i++)
             {
-                skillButtons[i].interactable = enabled;
+                skillButtons[i].interactable = enabled && skillButtons[i].gameObject.activeSelf;
             }
         }
 
@@ -515,6 +545,54 @@ namespace WitcherGame
             }
 
             yield return PlayPlayerFrames(GetPlayerFrames(GeraltAnimation.Hurt), 0.09f, new Vector2(22f, 0f), true);
+        }
+
+        public IEnumerator PlayPartyMemberSkill(PartyMember member, SkillDefinition skill, int targetEnemyIndex)
+        {
+            if (!TryGetPartySlot(member, out PartyVisualSlot slot) || slot.Image == null)
+            {
+                yield return PlaySkillEffect(skill.Id, targetEnemyIndex);
+                yield break;
+            }
+
+            PartyAnimationKind animation = skill.AnimationKind == BattleSkillAnimationKind.Slash
+                ? PartyAnimationKind.Attack
+                : PartyAnimationKind.Cast;
+            if (skill.Id == BattleSkillId.YenneferObsidianStorm || skill.Id == BattleSkillId.YenneferAegis)
+            {
+                animation = PartyAnimationKind.Special;
+            }
+
+            Sprite[] frames = PartyAnimationLibrary.GetFrames(member, animation);
+            if (frames.Length == 0)
+            {
+                frames = PartyAnimationLibrary.GetFrames(member, PartyAnimationKind.Idle);
+            }
+
+            RectTransform rect = slot.Image.rectTransform;
+            Vector2 home = rect.anchoredPosition;
+            Vector2 motion = GetPartySkillMotion(slot, targetEnemyIndex);
+            for (int i = 0; i < Mathf.Max(1, frames.Length); i++)
+            {
+                if (frames.Length > 0 && frames[i] != null)
+                {
+                    slot.Image.sprite = frames[i];
+                }
+
+                float t = frames.Length <= 1 ? 1f : (float)i / (frames.Length - 1);
+                float pulse = Mathf.Sin(t * Mathf.PI);
+                rect.anchoredPosition = home + motion * pulse;
+                rect.localScale = new Vector3(-1f - pulse * 0.05f, 1f + pulse * 0.05f, 1f);
+                slot.Image.color = skill.AnimationKind == BattleSkillAnimationKind.Defend && i % 2 == 0
+                    ? new Color32(226, 204, 255, 255)
+                    : Color.white;
+                yield return new WaitForSeconds(0.07f);
+            }
+
+            rect.anchoredPosition = home;
+            rect.localScale = new Vector3(-1f, 1f, 1f);
+            slot.Image.color = new Color32(255, 255, 255, 218);
+            slot.Image.sprite = PartyAnimationLibrary.GetIdlePreview(member);
         }
 
         private void BuildHud()
@@ -935,7 +1013,7 @@ namespace WitcherGame
         {
             if (entry.IsPlayer)
             {
-                return "猎";
+                return string.IsNullOrEmpty(entry.PartyMemberName) ? "猎" : entry.PartyMemberName.Substring(0, 1);
             }
 
             if (!string.IsNullOrEmpty(entry.Name))
@@ -950,6 +1028,12 @@ namespace WitcherGame
         {
             if (entry.IsPlayer)
             {
+                if (entry.PartyMemberName == "叶奈法")
+                {
+                    PartyMember member = PartyManager.CreateIfMissing().FindMember("叶奈法");
+                    return PartyAnimationLibrary.GetIdlePreview(member);
+                }
+
                 return GetPlayerIdleFrame();
             }
 
@@ -1401,7 +1485,7 @@ namespace WitcherGame
 
         private Rect GetSkillTargetRect(BattleSkillId skillId, int targetEnemyIndex)
         {
-            if (skillId == BattleSkillId.HunterFocus)
+            if (skillId == BattleSkillId.HunterFocus || skillId == BattleSkillId.YenneferAegis)
             {
                 Vector2 playerCenter = playerFigureHomePosition + new Vector2(0f, -8f);
                 return Rect.MinMaxRect(playerCenter.x - 86f, playerCenter.y - 94f, playerCenter.x + 86f, playerCenter.y + 94f);
@@ -1432,9 +1516,14 @@ namespace WitcherGame
                 case BattleSkillId.ExecuteSlash:
                     return new Vector2(targetRect.center.x + 8f, targetRect.center.y - 4f);
                 case BattleSkillId.ThunderSign:
+                case BattleSkillId.YenneferArcaneBolt:
                     return new Vector2(targetRect.center.x, targetRect.center.y - 8f);
                 case BattleSkillId.HunterFocus:
+                case BattleSkillId.YenneferAegis:
                     return new Vector2(targetRect.center.x, targetRect.center.y + 10f);
+                case BattleSkillId.YenneferCursePulse:
+                case BattleSkillId.YenneferObsidianStorm:
+                    return new Vector2(targetRect.center.x + 8f, targetRect.center.y - 10f);
                 default:
                     return targetRect.center;
             }
@@ -1449,9 +1538,15 @@ namespace WitcherGame
                 case BattleSkillId.ExecuteSlash:
                     return new Vector2(240f, 190f);
                 case BattleSkillId.ThunderSign:
+                case BattleSkillId.YenneferArcaneBolt:
                     return new Vector2(230f, 230f);
                 case BattleSkillId.HunterFocus:
+                case BattleSkillId.YenneferAegis:
                     return new Vector2(250f, 250f);
+                case BattleSkillId.YenneferCursePulse:
+                    return new Vector2(Mathf.Clamp(targetRect.width + 220f, 320f, 560f), 210f);
+                case BattleSkillId.YenneferObsidianStorm:
+                    return new Vector2(Mathf.Clamp(targetRect.width + 360f, 420f, 680f), 260f);
                 default:
                     return new Vector2(220f, 180f);
             }
@@ -1478,9 +1573,13 @@ namespace WitcherGame
                 case BattleSkillId.FlameSign:
                     return 0.072f;
                 case BattleSkillId.ThunderSign:
+                case BattleSkillId.YenneferArcaneBolt:
                     return 0.082f;
                 case BattleSkillId.HunterFocus:
+                case BattleSkillId.YenneferAegis:
                     return 0.09f;
+                case BattleSkillId.YenneferObsidianStorm:
+                    return 0.064f;
                 default:
                     return 0.074f;
             }
@@ -1491,9 +1590,15 @@ namespace WitcherGame
             switch (skillId)
             {
                 case BattleSkillId.ThunderSign:
+                case BattleSkillId.YenneferArcaneBolt:
                     return WitcherSpriteLibrary.GetSolidSprite(new Color32(66, 145, 255, 230));
                 case BattleSkillId.HunterFocus:
                     return WitcherSpriteLibrary.GetSolidSprite(new Color32(255, 220, 88, 210));
+                case BattleSkillId.YenneferAegis:
+                    return WitcherSpriteLibrary.GetSolidSprite(new Color32(174, 111, 255, 210));
+                case BattleSkillId.YenneferCursePulse:
+                case BattleSkillId.YenneferObsidianStorm:
+                    return WitcherSpriteLibrary.GetSolidSprite(new Color32(136, 82, 255, 220));
                 default:
                     return WitcherSpriteLibrary.GetSolidSprite(new Color32(255, 86, 20, 230));
             }
@@ -1507,6 +1612,14 @@ namespace WitcherGame
                     return new Color32(84, 154, 255, 220);
                 case BattleSkillId.HunterFocus:
                     return new Color32(255, 213, 84, 214);
+                case BattleSkillId.YenneferArcaneBolt:
+                    return new Color32(161, 118, 255, 220);
+                case BattleSkillId.YenneferCursePulse:
+                    return new Color32(132, 72, 255, 218);
+                case BattleSkillId.YenneferAegis:
+                    return new Color32(204, 154, 255, 214);
+                case BattleSkillId.YenneferObsidianStorm:
+                    return new Color32(96, 144, 255, 225);
                 case BattleSkillId.ExecuteSlash:
                     return new Color32(136, 205, 255, 204);
                 default:
@@ -1608,9 +1721,14 @@ namespace WitcherGame
                 case BattleSkillId.FlameSign:
                     return "FlameSignSheet.png";
                 case BattleSkillId.ThunderSign:
+                case BattleSkillId.YenneferArcaneBolt:
+                case BattleSkillId.YenneferObsidianStorm:
                     return "ThunderSignSheet.png";
                 case BattleSkillId.HunterFocus:
+                case BattleSkillId.YenneferAegis:
                     return "HunterFocusSheet.png";
+                case BattleSkillId.YenneferCursePulse:
+                    return "HunterFlameBeamSheet.png";
                 default:
                     return "HunterFlameBeamSheet.png";
             }
@@ -1781,6 +1899,7 @@ namespace WitcherGame
                 slot.IdleIndex = 0;
                 slot.IdleTimer = 0f;
                 slot.Image.sprite = PartyAnimationLibrary.GetIdlePreview(member);
+                slot.Image.rectTransform.localScale = new Vector3(-1f, 1f, 1f);
                 slot.Image.gameObject.SetActive(slot.Image.sprite != null);
                 visualIndex++;
             }
@@ -1796,8 +1915,36 @@ namespace WitcherGame
         {
             return member == null
                 || member.Name == "猎魔人"
-                || member.Name == "叶奈法"
                 || member.Name == "莉莉丝";
+        }
+
+        private bool TryGetPartySlot(PartyMember member, out PartyVisualSlot slot)
+        {
+            for (int i = 0; i < partyVisualSlots.Count; i++)
+            {
+                if (partyVisualSlots[i].Member == member && partyVisualSlots[i].Image != null && partyVisualSlots[i].Image.gameObject.activeSelf)
+                {
+                    slot = partyVisualSlots[i];
+                    return true;
+                }
+            }
+
+            slot = null;
+            return false;
+        }
+
+        private Vector2 GetPartySkillMotion(PartyVisualSlot slot, int targetEnemyIndex)
+        {
+            if (slot?.Image == null || !TryGetSlot(targetEnemyIndex, out EnemyVisualSlot enemySlot))
+            {
+                return new Vector2(-38f, 0f);
+            }
+
+            Vector2 destination = enemySlot.HomePosition + new Vector2(116f, -2f);
+            Vector2 motion = destination - slot.Image.rectTransform.anchoredPosition;
+            motion.x = Mathf.Clamp(motion.x, -260f, -34f);
+            motion.y = Mathf.Clamp(motion.y, -18f, 26f);
+            return motion;
         }
 
         private void UpdatePartyIdleFigures()
@@ -2037,12 +2184,15 @@ namespace WitcherGame
         private void BuildSkillPanel(Transform parent)
         {
             skillButtons.Clear();
+            skillTitleTexts.Clear();
+            skillDescriptionTexts.Clear();
+            skillCostTexts.Clear();
             Image panelImage = CreateImage("Battle Skill Panel", parent, new Vector2(398f, 112f), new Vector2(18f, -4f), JrpgPanelStrongColor);
             panelImage.sprite = WitcherSpriteLibrary.GetSolidSprite(JrpgPanelStrongColor);
             AddOutline(panelImage, JrpgBorderColor, new Vector2(2f, -2f));
             skillPanel = panelImage.gameObject;
 
-            Text title = CreateText("Battle Skill Panel Title", skillPanel.transform, "猎魔技能", 17, TextAnchor.MiddleLeft, new Vector2(12f, -8f), new Vector2(112f, 24f));
+            Text title = CreateText("Battle Skill Panel Title", skillPanel.transform, "角色技能", 17, TextAnchor.MiddleLeft, new Vector2(12f, -8f), new Vector2(112f, 24f));
             title.color = JrpgTextColor;
             AddOutline(title, Color.black, new Vector2(2f, -2f));
 
@@ -2050,36 +2200,40 @@ namespace WitcherGame
             hint.color = JrpgMutedTextColor;
             AddOutline(hint, Color.black, new Vector2(1f, -1f));
 
-            AddSkillButton(skillPanel.transform, "1 连续斩杀", "三连银剑", "MP 12", BattleSkillId.ExecuteSlash, new Vector2(12f, -34f));
-            AddSkillButton(skillPanel.transform, "2 火焰法印", "群体火焰", "MP 18", BattleSkillId.FlameSign, new Vector2(204f, -34f));
-            AddSkillButton(skillPanel.transform, "3 雷霆法印", "双段闪电", "MP 20", BattleSkillId.ThunderSign, new Vector2(12f, -72f));
-            AddSkillButton(skillPanel.transform, "4 猎魔专注", "攻击提升", "MP 10", BattleSkillId.HunterFocus, new Vector2(204f, -72f));
+            AddSkillButton(skillPanel.transform, 0, new Vector2(12f, -34f));
+            AddSkillButton(skillPanel.transform, 1, new Vector2(204f, -34f));
+            AddSkillButton(skillPanel.transform, 2, new Vector2(12f, -72f));
+            AddSkillButton(skillPanel.transform, 3, new Vector2(204f, -72f));
             skillPanel.SetActive(false);
         }
 
-        private void AddSkillButton(Transform parent, string title, string description, string cost, BattleSkillId skillId, Vector2 position)
+        private void AddSkillButton(Transform parent, int slotIndex, Vector2 position)
         {
-            GameObject buttonObject = CreateUiObject(title + " Skill Button", parent, new Vector2(178f, 30f), position, new Vector2(0f, 1f));
+            GameObject buttonObject = CreateUiObject($"Skill Slot {slotIndex + 1} Button", parent, new Vector2(178f, 30f), position, new Vector2(0f, 1f));
             Image image = buttonObject.AddComponent<Image>();
             image.sprite = WitcherSpriteLibrary.GetSolidSprite(JrpgPanelColor);
             image.color = JrpgPanelColor;
             AddOutline(image, JrpgBorderColor, new Vector2(1f, -1f));
 
-            Text titleText = CreateText(title + " Title", buttonObject.transform, title, 13, TextAnchor.MiddleLeft, new Vector2(8f, -3f), new Vector2(72f, 20f));
-            titleText.color = skillId == BattleSkillId.FlameSign ? JrpgGoldColor : JrpgTextColor;
+            Text titleText = CreateText($"Skill Slot {slotIndex + 1} Title", buttonObject.transform, string.Empty, 13, TextAnchor.MiddleLeft, new Vector2(8f, -3f), new Vector2(76f, 20f));
+            titleText.color = JrpgTextColor;
             AddOutline(titleText, Color.black, new Vector2(2f, -2f));
+            skillTitleTexts.Add(titleText);
 
-            Text descriptionText = CreateText(title + " Desc", buttonObject.transform, description, 11, TextAnchor.MiddleLeft, new Vector2(82f, -3f), new Vector2(52f, 20f));
+            Text descriptionText = CreateText($"Skill Slot {slotIndex + 1} Desc", buttonObject.transform, string.Empty, 11, TextAnchor.MiddleLeft, new Vector2(84f, -3f), new Vector2(52f, 20f));
             descriptionText.color = JrpgMutedTextColor;
             AddOutline(descriptionText, Color.black, new Vector2(1f, -1f));
+            skillDescriptionTexts.Add(descriptionText);
 
-            Text costText = CreateText(title + " Cost", buttonObject.transform, cost, 11, TextAnchor.MiddleRight, new Vector2(132f, -3f), new Vector2(38f, 20f));
+            Text costText = CreateText($"Skill Slot {slotIndex + 1} Cost", buttonObject.transform, string.Empty, 11, TextAnchor.MiddleRight, new Vector2(130f, -3f), new Vector2(42f, 20f));
             costText.color = JrpgGoldColor;
             AddOutline(costText, Color.black, new Vector2(1f, -1f));
+            skillCostTexts.Add(costText);
 
             Button button = buttonObject.AddComponent<Button>();
             button.targetGraphic = image;
-            button.onClick.AddListener(() => manager.SelectSkill(skillId));
+            int capturedSlot = slotIndex;
+            button.onClick.AddListener(() => manager.SelectSkillSlot(capturedSlot));
             ColorBlock colors = button.colors;
             colors.normalColor = Color.white;
             colors.highlightedColor = new Color32(118, 148, 82, 255);
@@ -2087,6 +2241,47 @@ namespace WitcherGame
             colors.disabledColor = new Color32(78, 78, 78, 118);
             button.colors = colors;
             skillButtons.Add(button);
+        }
+
+        private static Color32 GetSkillNameColor(BattleSkillId skillId)
+        {
+            switch (skillId)
+            {
+                case BattleSkillId.FlameSign:
+                    return JrpgGoldColor;
+                case BattleSkillId.YenneferArcaneBolt:
+                case BattleSkillId.YenneferCursePulse:
+                case BattleSkillId.YenneferAegis:
+                case BattleSkillId.YenneferObsidianStorm:
+                    return new Color32(205, 168, 255, 255);
+                default:
+                    return JrpgTextColor;
+            }
+        }
+
+        private static string GetSkillShortDescription(SkillDefinition skill)
+        {
+            switch (skill.Id)
+            {
+                case BattleSkillId.ExecuteSlash:
+                    return "三连银剑";
+                case BattleSkillId.FlameSign:
+                    return "群体火焰";
+                case BattleSkillId.ThunderSign:
+                    return "双段闪电";
+                case BattleSkillId.HunterFocus:
+                    return "攻击提升";
+                case BattleSkillId.YenneferArcaneBolt:
+                    return "奥术单体";
+                case BattleSkillId.YenneferCursePulse:
+                    return "群体削弱";
+                case BattleSkillId.YenneferAegis:
+                    return "前排护盾";
+                case BattleSkillId.YenneferObsidianStorm:
+                    return "奥术群体";
+                default:
+                    return skill.TargetKind == BattleSkillTargetKind.AllLivingEnemies ? "群体" : "单体";
+            }
         }
 
         private static string GetCommandDisplayName(TurnBattleAction action)

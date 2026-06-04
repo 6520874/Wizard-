@@ -32,6 +32,14 @@ namespace WitcherGame
                     return CreateThunderSign();
                 case BattleSkillId.HunterFocus:
                     return CreateHunterFocus();
+                case BattleSkillId.YenneferArcaneBolt:
+                    return CreateYenneferArcaneBolt();
+                case BattleSkillId.YenneferCursePulse:
+                    return CreateYenneferCursePulse();
+                case BattleSkillId.YenneferAegis:
+                    return CreateYenneferAegis();
+                case BattleSkillId.YenneferObsidianStorm:
+                    return CreateYenneferObsidianStorm();
                 case BattleSkillId.Fireball:
                     return CreateFireball();
                 case BattleSkillId.ArcaneBurst:
@@ -41,6 +49,25 @@ namespace WitcherGame
                 default:
                     return CreateBasicAttack();
             }
+        }
+
+        public static IReadOnlyList<SkillDefinition> GetFriendlySkills(PartyMember member)
+        {
+            List<SkillDefinition> skills = new List<SkillDefinition>();
+            if (member != null && member.Name == "叶奈法")
+            {
+                skills.Add(CreateYenneferArcaneBolt());
+                skills.Add(CreateYenneferCursePulse());
+                skills.Add(CreateYenneferAegis());
+                skills.Add(CreateYenneferObsidianStorm());
+                return skills;
+            }
+
+            skills.Add(CreateExecuteSlash());
+            skills.Add(CreateFlameSign());
+            skills.Add(CreateThunderSign());
+            skills.Add(CreateHunterFocus());
+            return skills;
         }
 
         public static SkillDefinition CreateBasicAttack()
@@ -154,6 +181,55 @@ namespace WitcherGame
                 BattleSkillAnimationKind.Cast,
                 "猎魔人进入专注状态。",
                 new StatusSkillEffect(() => new BattleStatusEffect(BattleStatusKind.AttackUp, "专注", 3, attackBonus: 6)));
+        }
+
+        public static SkillDefinition CreateYenneferArcaneBolt()
+        {
+            return new SkillDefinition(
+                BattleSkillId.YenneferArcaneBolt,
+                "紫晶箭",
+                12,
+                BattleSkillTargetKind.FirstLivingEnemy,
+                BattleSkillAnimationKind.Cast,
+                "叶奈法凝出紫晶箭，贯穿首个敌人！",
+                new DamageSkillEffect(24, 0f, 0.25f, 1, BattleDamageType.Arcane));
+        }
+
+        public static SkillDefinition CreateYenneferCursePulse()
+        {
+            return new SkillDefinition(
+                BattleSkillId.YenneferCursePulse,
+                "诅咒脉冲",
+                18,
+                BattleSkillTargetKind.AllLivingEnemies,
+                BattleSkillAnimationKind.Cast,
+                "叶奈法释放诅咒脉冲，削弱敌群防御！",
+                new DamageSkillEffect(14, 0f, 0.22f, 1, BattleDamageType.Arcane),
+                new StatusSkillEffect(() => new BattleStatusEffect(BattleStatusKind.Fear, "诅咒", 2, defenseBonus: -3)));
+        }
+
+        public static SkillDefinition CreateYenneferAegis()
+        {
+            return new SkillDefinition(
+                BattleSkillId.YenneferAegis,
+                "紫晶护盾",
+                16,
+                BattleSkillTargetKind.Self,
+                BattleSkillAnimationKind.Defend,
+                "叶奈法为前排展开紫晶护盾。",
+                new StatusSkillEffect(() => new BattleStatusEffect(BattleStatusKind.Shield, "紫晶护盾", 3, incomingDamageMultiplier: 0.7f, shieldAmount: 24)));
+        }
+
+        public static SkillDefinition CreateYenneferObsidianStorm()
+        {
+            return new SkillDefinition(
+                BattleSkillId.YenneferObsidianStorm,
+                "黑曜风暴",
+                28,
+                BattleSkillTargetKind.AllLivingEnemies,
+                BattleSkillAnimationKind.Cast,
+                "叶奈法召来黑曜碎光，席卷敌群！",
+                new DamageSkillEffect(30, 0f, 0.2f, 1, BattleDamageType.Arcane));
         }
 
         public static IReadOnlyList<SkillDefinition> GetEnemySkills(TurnBasedEnemyState enemy)

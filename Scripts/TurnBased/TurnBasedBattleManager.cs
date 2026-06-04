@@ -19,6 +19,7 @@ namespace WitcherGame
         public string Name;
         public bool IsPlayer;
         public int EnemyIndex;
+        public string PartyMemberName;
         public float Readiness;
     }
 
@@ -40,6 +41,7 @@ namespace WitcherGame
         public Sprite[] AttackFrames;
         public Sprite[] HurtFrames;
         public GameObject SourceObject;
+        public readonly List<BattleStatusEffect> Statuses = new List<BattleStatusEffect>();
 
         public bool IsAlive => Health > 0;
     }
@@ -71,6 +73,7 @@ namespace WitcherGame
         private readonly List<BattleTurnUnit> turnUnits = new List<BattleTurnUnit>();
         private readonly List<CameraRenderState> pausedRenderCameras = new List<CameraRenderState>();
         private readonly List<BattleStatusEffect> playerStatuses = new List<BattleStatusEffect>();
+        private readonly List<SkillDefinition> currentSkillSlots = new List<SkillDefinition>();
         private GeraltController player;
         private GeraltAnimator playerAnimator;
         private PlayerInventory playerInventory;
@@ -81,7 +84,6 @@ namespace WitcherGame
         private bool battleActive;
         private bool resolvingTurn;
         private bool worldRenderingPaused;
-        private bool nextTurnIsPlayer;
         private bool battleEndSequenceStarted;
         private int potionCount;
         private int turnNumber;
@@ -103,6 +105,7 @@ namespace WitcherGame
         {
             public bool IsPlayer;
             public int EnemyIndex;
+            public PartyMember Member;
             public int Speed;
             public float ActionValue;
         }
@@ -153,19 +156,19 @@ namespace WitcherGame
             {
                 if (Input.GetKeyDown(KeyCode.Alpha1))
                 {
-                    SelectSkill(BattleSkillId.ExecuteSlash);
+                    SelectSkillSlot(0);
                 }
                 else if (Input.GetKeyDown(KeyCode.Alpha2))
                 {
-                    SelectSkill(BattleSkillId.FlameSign);
+                    SelectSkillSlot(1);
                 }
                 else if (Input.GetKeyDown(KeyCode.Alpha3))
                 {
-                    SelectSkill(BattleSkillId.ThunderSign);
+                    SelectSkillSlot(2);
                 }
                 else if (Input.GetKeyDown(KeyCode.Alpha4))
                 {
-                    SelectSkill(BattleSkillId.HunterFocus);
+                    SelectSkillSlot(3);
                 }
                 else if (Input.GetKeyDown(KeyCode.Escape) || Input.GetKeyDown(KeyCode.Backspace))
                 {
@@ -232,7 +235,6 @@ namespace WitcherGame
             currentEncounter.PrepareForBattle();
             battleActive = true;
             resolvingTurn = true;
-            nextTurnIsPlayer = true;
             battleEndSequenceStarted = false;
             selectedCommandIndex = 0;
             playerStatuses.Clear();
@@ -278,7 +280,7 @@ namespace WitcherGame
 
             if (action == TurnBattleAction.FlameSign)
             {
-                battleHud.ShowSkillMenu();
+                ShowActiveSkillMenu();
                 return;
             }
 
@@ -298,13 +300,43 @@ namespace WitcherGame
                 return;
             }
 
-            if (player != null && player.CurrentMana < skill.ManaCost)
+            if (!ActiveFriendlyHasMana(skill.ManaCost))
             {
                 battleHud.SetMessage($"魔力不足，无法释放{skill.DisplayName}。");
                 return;
             }
 
             StartCoroutine(ResolveSelectedSkill(skill));
+        }
+
+        public void SelectSkillSlot(int slotIndex)
+        {
+            if (!battleActive || resolvingTurn || slotIndex < 0 || slotIndex >= currentSkillSlots.Count)
+            {
+                return;
+            }
+
+            SkillDefinition skill = currentSkillSlots[slotIndex];
+            if (skill == null)
+            {
+                return;
+            }
+
+            if (!ActiveFriendlyHasMana(skill.ManaCost))
+            {
+                battleHud.SetMessage($"魔力不足，无法释放{skill.DisplayName}。");
+                return;
+            }
+
+            StartCoroutine(ResolveSelectedSkill(skill));
+        }
+
+        private void ShowActiveSkillMenu()
+        {
+            currentSkillSlots.Clear();
+            PartyMember member = GetActiveFriendlyMember();
+            currentSkillSlots.AddRange(WitcherSkillBook.GetFriendlySkills(member));
+            battleHud.ShowSkillMenu(GetFriendlyDisplayName(member), currentSkillSlots);
         }
 
         private void MoveSelectedCommand(int delta)
@@ -333,17 +365,17 @@ namespace WitcherGame
             switch (action)
             {
                 case TurnBattleAction.Attack:
-                    yield return PlayerUseSkill(WitcherSkillBook.GetPlayerSkill(action));
+                    yield return FriendlyUseSkill(GetDefaultAttackSkill(GetActiveFriendlyMember()));
                     break;
                 case TurnBattleAction.Defend:
-                    yield return PlayerUseSkill(WitcherSkillBook.GetPlayerSkill(action));
+                    yield return FriendlyUseSkill(GetDefaultDefendSkill(GetActiveFriendlyMember()));
                     break;
                 case TurnBattleAction.Item:
                     playerTurnConsumed = CanUsePotion();
                     if (playerTurnConsumed)
                     {
                         potionCount--;
-                        yield return PlayerUseSkill(WitcherSkillBook.CreatePotion(potionHealAmount));
+                        yield return FriendlyUseSkill(WitcherSkillBook.CreatePotion(potionHealAmount));
                     }
                     else
                     {
@@ -373,7 +405,7 @@ namespace WitcherGame
                 yield break;
             }
 
-            nextTurnIsPlayer = false;
+            turnNumber++;
             yield return DispatchNextTurn(0.18f);
         }
 
@@ -383,32 +415,33 @@ namespace WitcherGame
             battleHud.SetCommandsEnabled(false);
             battleHud.HideSkillMenu();
 
-            yield return PlayerUseSkill(skill);
+            yield return FriendlyUseSkill(skill);
             battleHud.Refresh(enemies, player, potionCount);
             if (CheckBattleEnded())
             {
                 yield break;
             }
 
-            nextTurnIsPlayer = false;
+            turnNumber++;
             yield return DispatchNextTurn(0.18f);
         }
 
-        private IEnumerator PlayerUseSkill(SkillDefinition skill)
+        private IEnumerator FriendlyUseSkill(SkillDefinition skill)
         {
             if (skill == null)
             {
                 yield break;
             }
 
-            BattleSkillUnit caster = CreatePlayerSkillUnit();
-            List<BattleSkillUnit> targets = CreateSkillTargets(skill, caster);
+            PartyMember activeMember = GetActiveFriendlyMember();
+            BattleSkillUnit caster = CreateFriendlySkillUnit(activeMember);
+            List<BattleSkillUnit> targets = CreateFriendlySkillTargets(skill, caster, activeMember);
             if (targets.Count == 0 && skill.TargetKind != BattleSkillTargetKind.Self)
             {
                 yield break;
             }
 
-            if (skill.ManaCost > 0 && (player == null || !player.TrySpendMana(skill.ManaCost)))
+            if (skill.ManaCost > 0 && !TrySpendActiveFriendlyMana(activeMember, skill.ManaCost))
             {
                 battleHud.SetMessage($"魔力不足，无法释放{skill.DisplayName}。");
                 yield return Wait(0.55f);
@@ -421,38 +454,69 @@ namespace WitcherGame
             switch (skill.AnimationKind)
             {
                 case BattleSkillAnimationKind.Slash:
-                    playerAnimator?.PlaySkillAnimation(GetGeraltAnimationForSkill(skill));
-                    if (skill.Id == BattleSkillId.ExecuteSlash)
+                    if (IsHunter(activeMember))
                     {
-                        yield return battleHud.PlayPlayerComboSlash(GetFirstTargetEnemyIndex(result), 3);
-                        yield return battleHud.PlaySkillEffect(skill.Id, GetFirstTargetEnemyIndex(result));
+                        playerAnimator?.PlaySkillAnimation(GetGeraltAnimationForSkill(skill));
+                        if (skill.Id == BattleSkillId.ExecuteSlash)
+                        {
+                            yield return battleHud.PlayPlayerComboSlash(GetFirstTargetEnemyIndex(result), 3);
+                            yield return battleHud.PlaySkillEffect(skill.Id, GetFirstTargetEnemyIndex(result));
+                        }
+                        else
+                        {
+                            yield return battleHud.PlayPlayerAttack(GetFirstTargetEnemyIndex(result));
+                        }
                     }
                     else
                     {
-                        yield return battleHud.PlayPlayerAttack(GetFirstTargetEnemyIndex(result));
+                        yield return battleHud.PlayPartyMemberSkill(activeMember, skill, GetFirstTargetEnemyIndex(result));
                     }
                     break;
                 case BattleSkillAnimationKind.Flame:
-                    playerAnimator?.PlaySkillAnimation(GetGeraltAnimationForSkill(skill));
-                    yield return battleHud.PlayPlayerSkill(skill.Id, skill.AnimationKind);
-                    WitcherCombatFeedback.HeavyEnemyHit(player.transform.position + Vector3.right * 1.8f);
+                    if (IsHunter(activeMember))
+                    {
+                        playerAnimator?.PlaySkillAnimation(GetGeraltAnimationForSkill(skill));
+                        yield return battleHud.PlayPlayerSkill(skill.Id, skill.AnimationKind);
+                        WitcherCombatFeedback.HeavyEnemyHit(player.transform.position + Vector3.right * 1.8f);
+                    }
+                    else
+                    {
+                        yield return battleHud.PlayPartyMemberSkill(activeMember, skill, GetFirstTargetEnemyIndex(result));
+                    }
+
                     yield return battleHud.PlaySkillEffect(skill.Id, GetFirstTargetEnemyIndex(result));
                     break;
                 case BattleSkillAnimationKind.Cast:
-                    playerAnimator?.PlaySkillAnimation(GetGeraltAnimationForSkill(skill));
-                    yield return battleHud.PlayPlayerSkill(skill.Id, skill.AnimationKind);
+                    if (IsHunter(activeMember))
+                    {
+                        playerAnimator?.PlaySkillAnimation(GetGeraltAnimationForSkill(skill));
+                        yield return battleHud.PlayPlayerSkill(skill.Id, skill.AnimationKind);
+                    }
+                    else
+                    {
+                        yield return battleHud.PlayPartyMemberSkill(activeMember, skill, GetFirstTargetEnemyIndex(result));
+                    }
+
                     yield return battleHud.PlaySkillEffect(skill.Id, GetFirstTargetEnemyIndex(result));
                     break;
                 case BattleSkillAnimationKind.Defend:
-                    playerAnimator?.PlaySkillAnimation(GetGeraltAnimationForSkill(skill));
-                    yield return battleHud.PlayPlayerSkill(skill.Id, skill.AnimationKind);
+                    if (IsHunter(activeMember))
+                    {
+                        playerAnimator?.PlaySkillAnimation(GetGeraltAnimationForSkill(skill));
+                        yield return battleHud.PlayPlayerSkill(skill.Id, skill.AnimationKind);
+                    }
+                    else
+                    {
+                        yield return battleHud.PlayPartyMemberSkill(activeMember, skill, GetFirstTargetEnemyIndex(result));
+                    }
+
                     break;
                 case BattleSkillAnimationKind.Item:
                     yield return Wait(0.55f);
                     break;
             }
 
-            ApplyPlayerSkillResult(caster, result);
+            ApplyFriendlySkillResult(caster, targets, result);
             yield return PlaySkillResultFeedback(result);
             battleHud.Refresh(enemies, player, potionCount);
         }
@@ -520,7 +584,7 @@ namespace WitcherGame
                 yield break;
             }
 
-            activeTurnUnit = nextTurnIsPlayer ? GetPlayerTurnUnit() : GetFirstLivingEnemyTurnUnit();
+            activeTurnUnit = TakeNextTurnUnit();
             if (activeTurnUnit == null)
             {
                 resolvingTurn = false;
@@ -533,9 +597,10 @@ namespace WitcherGame
             {
                 resolvingTurn = false;
                 selectedCommandIndex = 0;
+                currentSkillSlots.Clear();
                 battleHud.SetCommandsEnabled(true);
                 battleHud.SetSelectedCommand(selectedCommandIndex);
-                battleHud.SetMessage("玩家回合：选择攻击、技能、道具或防御。");
+                battleHud.SetMessage($"{GetTurnUnitName(activeTurnUnit)} 回合：选择攻击、技能、道具或防御。");
                 yield break;
             }
 
@@ -545,7 +610,6 @@ namespace WitcherGame
                 yield break;
             }
 
-            nextTurnIsPlayer = true;
             turnNumber++;
             yield return DispatchNextTurn(0.18f);
         }
@@ -577,6 +641,7 @@ namespace WitcherGame
             }
 
             yield return ConsumePlayerStatusTurnsWithFeedback();
+            ConsumeEnemyStatusTurns(enemyIndex);
             battleHud.Refresh(enemies, player, potionCount);
             yield return Wait(0.24f);
         }
@@ -662,7 +727,6 @@ namespace WitcherGame
             ResumeWorldRendering();
             battleActive = false;
             resolvingTurn = false;
-            nextTurnIsPlayer = true;
             battleEndSequenceStarted = false;
             playerStatuses.Clear();
             currentEncounter = null;
@@ -749,16 +813,19 @@ namespace WitcherGame
             return -1;
         }
 
-        private BattleSkillUnit CreatePlayerSkillUnit()
+        private BattleSkillUnit CreateFriendlySkillUnit(PartyMember member)
         {
-            BattleSkillUnit unit = BattleSkillUnit.CreatePlayer("猎魔人", player.MaxHealth, player.MaxMana, GetPlayerAttack(), GetPlayerDefense());
-            unit.SetHealth(player.CurrentHealth);
-            unit.SetMana(player.CurrentMana);
-            for (int i = 0; i < playerStatuses.Count; i++)
+            if (IsHunter(member))
             {
-                unit.AddStatusInstance(playerStatuses[i]);
+                return CreatePlayerTargetSkillUnit();
             }
 
+            int maxHp = Mathf.Max(1, member.TotalMaxHP);
+            int maxMp = Mathf.Max(0, member.TotalMaxMP);
+            int attack = member.Name == "叶奈法" ? member.TotalMagic : member.TotalAttack;
+            BattleSkillUnit unit = BattleSkillUnit.CreatePlayer(member.Name, maxHp, maxMp, attack, member.TotalDefense);
+            unit.SetHealth(Mathf.Clamp(member.HP, 0, maxHp));
+            unit.SetMana(Mathf.Clamp(member.MP, 0, maxMp));
             return unit;
         }
 
@@ -767,6 +834,11 @@ namespace WitcherGame
             TurnBasedEnemyState enemy = enemies[index];
             BattleSkillUnit unit = BattleSkillUnit.CreateEnemy(enemy.Name, index, enemy.MaxHealth, enemy.Attack, enemy.Defense);
             unit.SetHealth(enemy.Health);
+            for (int i = 0; i < enemy.Statuses.Count; i++)
+            {
+                unit.AddStatusInstance(enemy.Statuses[i]);
+            }
+
             return unit;
         }
 
@@ -783,13 +855,13 @@ namespace WitcherGame
             return unit;
         }
 
-        private List<BattleSkillUnit> CreateSkillTargets(SkillDefinition skill, BattleSkillUnit caster)
+        private List<BattleSkillUnit> CreateFriendlySkillTargets(SkillDefinition skill, BattleSkillUnit caster, PartyMember member)
         {
             List<BattleSkillUnit> targets = new List<BattleSkillUnit>();
             switch (skill.TargetKind)
             {
                 case BattleSkillTargetKind.Self:
-                    targets.Add(caster);
+                    targets.Add(IsHunter(member) ? caster : CreatePlayerTargetSkillUnit());
                     break;
                 case BattleSkillTargetKind.AllLivingEnemies:
                     for (int i = 0; i < enemies.Count; i++)
@@ -812,9 +884,9 @@ namespace WitcherGame
             return targets;
         }
 
-        private void ApplyPlayerSkillResult(BattleSkillUnit caster, SkillResult result)
+        private void ApplyFriendlySkillResult(BattleSkillUnit caster, List<BattleSkillUnit> targets, SkillResult result)
         {
-            if (caster != null)
+            if (caster != null && IsHunter(GetActiveFriendlyMember()))
             {
                 playerStatuses.Clear();
                 for (int i = 0; i < caster.Statuses.Count; i++)
@@ -828,6 +900,16 @@ namespace WitcherGame
                 SkillTargetResult targetResult = result.TargetResults[i];
                 if (targetResult.IsPlayerTarget)
                 {
+                    BattleSkillUnit playerTarget = FindPlayerTarget(targets);
+                    if (playerTarget != null)
+                    {
+                        playerStatuses.Clear();
+                        for (int statusIndex = 0; statusIndex < playerTarget.Statuses.Count; statusIndex++)
+                        {
+                            playerStatuses.Add(playerTarget.Statuses[statusIndex]);
+                        }
+                    }
+
                     if (targetResult.Healing > 0)
                     {
                         player.RestoreHealth(targetResult.Healing);
@@ -844,8 +926,60 @@ namespace WitcherGame
                 if (targetResult.EnemyIndex >= 0 && targetResult.EnemyIndex < enemies.Count)
                 {
                     enemies[targetResult.EnemyIndex].Health = Mathf.Clamp(targetResult.FinalHealth, 0, enemies[targetResult.EnemyIndex].MaxHealth);
+                    BattleSkillUnit enemyTarget = FindEnemyTarget(targets, targetResult.EnemyIndex);
+                    if (enemyTarget != null)
+                    {
+                        enemies[targetResult.EnemyIndex].Statuses.Clear();
+                        for (int statusIndex = 0; statusIndex < enemyTarget.Statuses.Count; statusIndex++)
+                        {
+                            enemies[targetResult.EnemyIndex].Statuses.Add(enemyTarget.Statuses[statusIndex]);
+                        }
+                    }
                 }
             }
+
+            if (caster != null && !IsHunter(GetActiveFriendlyMember()))
+            {
+                PartyMember member = GetActiveFriendlyMember();
+                member.HP = Mathf.Clamp(caster.Health, 0, member.TotalMaxHP);
+                member.MP = Mathf.Clamp(caster.Mana, 0, member.TotalMaxMP);
+            }
+        }
+
+        private static BattleSkillUnit FindPlayerTarget(List<BattleSkillUnit> targets)
+        {
+            if (targets == null)
+            {
+                return null;
+            }
+
+            for (int i = 0; i < targets.Count; i++)
+            {
+                if (targets[i] != null && targets[i].IsPlayer)
+                {
+                    return targets[i];
+                }
+            }
+
+            return null;
+        }
+
+        private static BattleSkillUnit FindEnemyTarget(List<BattleSkillUnit> targets, int enemyIndex)
+        {
+            if (targets == null)
+            {
+                return null;
+            }
+
+            for (int i = 0; i < targets.Count; i++)
+            {
+                if (targets[i] != null && !targets[i].IsPlayer && targets[i].EnemyIndex == enemyIndex)
+                {
+                    return targets[i];
+                }
+            }
+
+            return null;
         }
 
         private IEnumerator PlaySkillResultFeedback(SkillResult result)
@@ -912,6 +1046,24 @@ namespace WitcherGame
             }
         }
 
+        private void ConsumeEnemyStatusTurns(int enemyIndex)
+        {
+            if (enemyIndex < 0 || enemyIndex >= enemies.Count)
+            {
+                return;
+            }
+
+            List<BattleStatusEffect> statuses = enemies[enemyIndex].Statuses;
+            for (int i = statuses.Count - 1; i >= 0; i--)
+            {
+                statuses[i].ConsumeTurn();
+                if (statuses[i].Expired)
+                {
+                    statuses.RemoveAt(i);
+                }
+            }
+        }
+
         private SkillDefinition ChooseEnemySkill(TurnBasedEnemyState enemy, int enemyIndex)
         {
             IReadOnlyList<SkillDefinition> skills = WitcherSkillBook.GetEnemySkills(enemy);
@@ -972,6 +1124,64 @@ namespace WitcherGame
             return null;
         }
 
+        private PartyMember GetActiveFriendlyMember()
+        {
+            if (activeTurnUnit != null && activeTurnUnit.Member != null)
+            {
+                return activeTurnUnit.Member;
+            }
+
+            return PartyManager.CreateIfMissing().GetActiveMember(0);
+        }
+
+        private static bool IsHunter(PartyMember member)
+        {
+            return member == null || member.Name == "猎魔人";
+        }
+
+        private static string GetFriendlyDisplayName(PartyMember member)
+        {
+            return IsHunter(member) ? "猎魔人" : member.Name;
+        }
+
+        private SkillDefinition GetDefaultAttackSkill(PartyMember member)
+        {
+            return IsHunter(member) ? WitcherSkillBook.CreateBasicAttack() : WitcherSkillBook.CreateYenneferArcaneBolt();
+        }
+
+        private SkillDefinition GetDefaultDefendSkill(PartyMember member)
+        {
+            return IsHunter(member) ? WitcherSkillBook.CreateDefend() : WitcherSkillBook.CreateYenneferAegis();
+        }
+
+        private bool ActiveFriendlyHasMana(int cost)
+        {
+            PartyMember member = GetActiveFriendlyMember();
+            if (IsHunter(member))
+            {
+                return player != null && player.CurrentMana >= Mathf.Max(0, cost);
+            }
+
+            return member.MP >= Mathf.Max(0, cost);
+        }
+
+        private bool TrySpendActiveFriendlyMana(PartyMember member, int amount)
+        {
+            int cost = Mathf.Max(0, amount);
+            if (IsHunter(member))
+            {
+                return player != null && player.TrySpendMana(cost);
+            }
+
+            if (member.MP < cost)
+            {
+                return false;
+            }
+
+            member.MP = Mathf.Max(0, member.MP - cost);
+            return true;
+        }
+
         public List<TurnBattleTimelineEntry> GetTimelinePreview(int count)
         {
             List<TurnBattleTimelineEntry> preview = new List<TurnBattleTimelineEntry>();
@@ -980,41 +1190,42 @@ namespace WitcherGame
                 return preview;
             }
 
-            BattleTurnUnit playerTurn = GetPlayerTurnUnit();
-            BattleTurnUnit enemyTurn = GetFirstLivingEnemyTurnUnit();
-            bool wantsPlayer = activeTurnUnit == null ? nextTurnIsPlayer : activeTurnUnit.IsPlayer;
-
-            for (int i = 0; i < count; i++)
+            if (activeTurnUnit != null && IsTurnUnitAlive(activeTurnUnit))
             {
-                BattleTurnUnit unit = wantsPlayer ? playerTurn : enemyTurn;
-                if (!IsTurnUnitAlive(unit))
+                preview.Add(CreateTimelineEntry(activeTurnUnit, 1f));
+            }
+
+            List<TimelineSimulationUnit> simulation = CreateTimelineSimulation();
+            for (int i = preview.Count; i < count; i++)
+            {
+                int readyIndex = FindReadySimulationUnit(simulation);
+                if (readyIndex < 0)
                 {
-                    unit = IsTurnUnitAlive(playerTurn) ? playerTurn : enemyTurn;
+                    for (int step = 0; step < 64 && readyIndex < 0; step++)
+                    {
+                        for (int unitIndex = 0; unitIndex < simulation.Count; unitIndex++)
+                        {
+                            TimelineSimulationUnit unit = simulation[unitIndex];
+                            unit.ActionValue += Mathf.Max(1, unit.Speed);
+                            simulation[unitIndex] = unit;
+                        }
+
+                        readyIndex = FindReadySimulationUnit(simulation);
+                    }
                 }
 
-                if (!IsTurnUnitAlive(unit))
+                if (readyIndex < 0)
                 {
                     break;
                 }
 
-                preview.Add(CreateTimelineEntry(unit, i == 0 ? 1f : 0.68f));
-                wantsPlayer = !unit.IsPlayer;
+                TimelineSimulationUnit readyUnit = simulation[readyIndex];
+                preview.Add(CreateTimelineEntry(readyUnit.Source, i == 0 ? 1f : 0.68f));
+                readyUnit.ActionValue -= TurnActionThreshold;
+                simulation[readyIndex] = readyUnit;
             }
 
             return preview;
-        }
-
-        private BattleTurnUnit GetPlayerTurnUnit()
-        {
-            for (int i = 0; i < turnUnits.Count; i++)
-            {
-                if (turnUnits[i].IsPlayer)
-                {
-                    return turnUnits[i];
-                }
-            }
-
-            return null;
         }
 
         private BattleTurnUnit GetFirstLivingEnemyTurnUnit()
@@ -1080,6 +1291,7 @@ namespace WitcherGame
                 Name = GetTurnUnitName(unit),
                 IsPlayer = unit != null && unit.IsPlayer,
                 EnemyIndex = unit == null ? -1 : unit.EnemyIndex,
+                PartyMemberName = unit?.Member == null ? string.Empty : unit.Member.Name,
                 Readiness = Mathf.Clamp01(readiness)
             };
         }
@@ -1093,7 +1305,7 @@ namespace WitcherGame
 
             if (unit.IsPlayer)
             {
-                return "猎魔人";
+                return GetFriendlyDisplayName(unit.Member);
             }
 
             return unit.EnemyIndex >= 0 && unit.EnemyIndex < enemies.Count ? enemies[unit.EnemyIndex].Name : "怪物";
@@ -1102,12 +1314,23 @@ namespace WitcherGame
         private void BuildTurnUnits()
         {
             turnUnits.Clear();
-            turnUnits.Add(new BattleTurnUnit
+            IReadOnlyList<PartyMember> activeMembers = PartyManager.CreateIfMissing().ActiveParty;
+            for (int i = 0; i < activeMembers.Count; i++)
             {
-                IsPlayer = true,
-                EnemyIndex = -1,
-                Speed = PlayerTurnSpeed
-            });
+                PartyMember member = activeMembers[i];
+                if (member == null || !member.IsJoined)
+                {
+                    continue;
+                }
+
+                turnUnits.Add(new BattleTurnUnit
+                {
+                    IsPlayer = true,
+                    EnemyIndex = -1,
+                    Member = member,
+                    Speed = GetFriendlyTurnSpeed(member)
+                });
+            }
 
             for (int i = 0; i < enemies.Count; i++)
             {
@@ -1174,7 +1397,7 @@ namespace WitcherGame
                 return false;
             }
 
-            return unit.IsPlayer ? player != null && player.IsAlive : IsLivingEnemyTurn(unit);
+            return unit.IsPlayer ? player != null && player.IsAlive && unit.Member != null && unit.Member.IsJoined : IsLivingEnemyTurn(unit);
         }
 
         private bool IsLivingEnemyTurn(BattleTurnUnit unit)
@@ -1206,6 +1429,16 @@ namespace WitcherGame
             }
 
             return Mathf.Max(56, baseSpeed - Mathf.Max(0, slotIndex) * 3);
+        }
+
+        private static int GetFriendlyTurnSpeed(PartyMember member)
+        {
+            if (member == null || member.Name == "猎魔人")
+            {
+                return PlayerTurnSpeed;
+            }
+
+            return Mathf.Clamp(member.TotalSpeed * 8, 72, 132);
         }
 
         private IEnumerator Wait(float seconds)

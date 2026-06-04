@@ -15,7 +15,11 @@ namespace WitcherGame
         CorruptedBite,
         PlagueHowl,
         BloodDrain,
-        Moonbreaker
+        Moonbreaker,
+        YenneferArcaneBolt,
+        YenneferCursePulse,
+        YenneferAegis,
+        YenneferObsidianStorm
     }
 
     public enum BattleSkillTargetKind
