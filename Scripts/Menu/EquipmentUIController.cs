@@ -96,6 +96,14 @@ namespace WitcherGame
             {
                 CycleSelectedEquipment();
             }
+            else if (Input.GetKeyDown(KeyCode.J))
+            {
+                ToggleSelectedMemberJoined();
+            }
+            else if (Input.GetKeyDown(KeyCode.Delete) || Input.GetKeyDown(KeyCode.Backspace))
+            {
+                RemoveSelectedMember();
+            }
             else if (Input.GetKeyDown(KeyCode.Escape))
             {
                 Close();
@@ -134,7 +142,7 @@ namespace WitcherGame
 
         private void MoveMember(int delta)
         {
-            IReadOnlyList<PartyMember> members = PartyManager.CreateIfMissing().ActiveParty;
+            IReadOnlyList<PartyMember> members = GetEditableMembers();
             if (members.Count == 0)
             {
                 return;
@@ -153,17 +161,57 @@ namespace WitcherGame
         private void CycleSelectedEquipment()
         {
             PartyManager party = PartyManager.CreateIfMissing();
-            PartyMember member = party.GetActiveMember(selectedMemberIndex);
+            IReadOnlyList<PartyMember> members = GetEditableMembers();
+            if (members.Count == 0)
+            {
+                return;
+            }
+
+            PartyMember member = members[Mathf.Clamp(selectedMemberIndex, 0, members.Count - 1)];
             EquipmentSlot slot = slotOrder[selectedSlotIndex];
             EquipmentItem current = member.CurrentEquipment.Get(slot);
             member.CurrentEquipment.Set(slot, party.GetNextSampleEquipment(slot, current));
             Refresh();
         }
 
+        private void ToggleSelectedMemberJoined()
+        {
+            PartyManager party = PartyManager.CreateIfMissing();
+            PartyMember member = GetSelectedEditableMember();
+            if (member == null || member.Name == "猎魔人")
+            {
+                Refresh();
+                return;
+            }
+
+            if (member.IsJoined)
+            {
+                party.RemoveMember(member);
+            }
+            else
+            {
+                party.AddMember(member);
+            }
+
+            Refresh();
+        }
+
+        private void RemoveSelectedMember()
+        {
+            PartyManager party = PartyManager.CreateIfMissing();
+            PartyMember member = GetSelectedEditableMember();
+            if (member != null && member.Name != "猎魔人" && member.IsJoined)
+            {
+                party.RemoveMember(member);
+            }
+
+            Refresh();
+        }
+
         private void Refresh()
         {
             PartyManager party = PartyManager.CreateIfMissing();
-            IReadOnlyList<PartyMember> members = party.ActiveParty;
+            IReadOnlyList<PartyMember> members = GetEditableMembers();
             selectedMemberIndex = Mathf.Clamp(selectedMemberIndex, 0, Mathf.Max(0, members.Count - 1));
             selectedSlotIndex = Mathf.Clamp(selectedSlotIndex, 0, slotOrder.Length - 1);
 
@@ -178,12 +226,25 @@ namespace WitcherGame
                 memberTexts[i].gameObject.SetActive(true);
                 bool isSelectedMember = i == selectedMemberIndex;
                 PartyMember member = members[i];
-                memberTexts[i].text = isSelectedMember ? $"> {member.Name}  Lv {member.Level}" : $"  {member.Name}  Lv {member.Level}";
-                memberTexts[i].color = isSelectedMember ? MenuSelectedTextColor : MenuTextColor;
+                string joinedState = member.IsJoined ? "入队" : "待命";
+                string locked = member.Name == "猎魔人" ? " 锁定" : string.Empty;
+                memberTexts[i].text = isSelectedMember
+                    ? $"> {member.Name}  {joinedState}{locked}"
+                    : $"  {member.Name}  {joinedState}{locked}";
+                memberTexts[i].color = isSelectedMember ? MenuSelectedTextColor : member.IsJoined ? MenuTextColor : MenuMutedTextColor;
             }
 
-            PartyMember selectedMember = party.GetActiveMember(selectedMemberIndex);
-            titleText.text = $"{selectedMember.Name} 装备";
+            PartyMember selectedMember = GetSelectedEditableMember();
+            if (selectedMember == null)
+            {
+                titleText.text = "队伍";
+                statsText.text = "暂无可编辑成员。";
+                helpText.text = "Esc 关闭";
+                return;
+            }
+
+            string memberState = selectedMember.IsJoined ? "已入队" : "待命";
+            titleText.text = $"{selectedMember.Name} 装备  {memberState}";
             if (portraitImage != null)
             {
                 portraitImage.sprite = PartyAnimationLibrary.GetIdlePreview(selectedMember);
@@ -209,7 +270,35 @@ namespace WitcherGame
                 $"魔力  {selectedMember.TotalMagic}\n" +
                 $"速度  {selectedMember.TotalSpeed}\n" +
                 $"暴击  {Mathf.RoundToInt(selectedMember.TotalCriticalRate * 100f)}%";
-            helpText.text = "↑↓ 选择成员    ←→ 选择装备槽    Enter 更换假数据装备    Esc 关闭";
+            helpText.text = "↑↓ 选择成员    ←→ 装备槽    Enter 更换装备    J 加入/剔除    Delete 踢出    Esc 关闭";
+        }
+
+        private PartyMember GetSelectedEditableMember()
+        {
+            IReadOnlyList<PartyMember> members = GetEditableMembers();
+            if (members.Count == 0)
+            {
+                return null;
+            }
+
+            return members[Mathf.Clamp(selectedMemberIndex, 0, members.Count - 1)];
+        }
+
+        private static IReadOnlyList<PartyMember> GetEditableMembers()
+        {
+            PartyManager party = PartyManager.CreateIfMissing();
+            List<PartyMember> members = new List<PartyMember>();
+            foreach (PartyMember member in party.AllMembers)
+            {
+                if (member == null || member.Name == "特莉丝")
+                {
+                    continue;
+                }
+
+                members.Add(member);
+            }
+
+            return members;
         }
 
         private static string GetSlotDisplayName(EquipmentSlot slot)
