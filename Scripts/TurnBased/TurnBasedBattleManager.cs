@@ -822,7 +822,7 @@ namespace WitcherGame
 
             int maxHp = Mathf.Max(1, member.TotalMaxHP);
             int maxMp = Mathf.Max(0, member.TotalMaxMP);
-            int attack = member.Name == "叶奈法" ? member.TotalMagic : member.TotalAttack;
+            int attack = member.Name == "特莉丝" ? member.TotalMagic : member.TotalAttack;
             BattleSkillUnit unit = BattleSkillUnit.CreatePlayer(member.Name, maxHp, maxMp, attack, member.TotalDefense);
             unit.SetHealth(Mathf.Clamp(member.HP, 0, maxHp));
             unit.SetMana(Mathf.Clamp(member.MP, 0, maxMp));
@@ -1146,12 +1146,12 @@ namespace WitcherGame
 
         private SkillDefinition GetDefaultAttackSkill(PartyMember member)
         {
-            return IsHunter(member) ? WitcherSkillBook.CreateBasicAttack() : WitcherSkillBook.CreateYenneferArcaneBolt();
+            return IsHunter(member) ? WitcherSkillBook.CreateBasicAttack() : WitcherSkillBook.CreateTrissFirebolt();
         }
 
         private SkillDefinition GetDefaultDefendSkill(PartyMember member)
         {
-            return IsHunter(member) ? WitcherSkillBook.CreateDefend() : WitcherSkillBook.CreateYenneferAegis();
+            return IsHunter(member) ? WitcherSkillBook.CreateDefend() : WitcherSkillBook.CreateTrissFlameWard();
         }
 
         private bool ActiveFriendlyHasMana(int cost)

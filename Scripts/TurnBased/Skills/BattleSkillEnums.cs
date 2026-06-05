@@ -16,10 +16,10 @@ namespace WitcherGame
         PlagueHowl,
         BloodDrain,
         Moonbreaker,
-        YenneferArcaneBolt,
-        YenneferCursePulse,
-        YenneferAegis,
-        YenneferObsidianStorm
+        TrissFirebolt,
+        TrissMeltingSigil,
+        TrissFlameWard,
+        TrissMeteorFlare
     }
 
     public enum BattleSkillTargetKind

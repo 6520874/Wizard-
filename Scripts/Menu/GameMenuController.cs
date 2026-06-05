@@ -87,7 +87,7 @@ namespace WitcherGame
             }
             else if (IsPartyCommandSelected() && Input.GetKeyDown(KeyCode.J))
             {
-                TogglePartyMember("叶奈法");
+                TogglePartyMember("特莉丝");
             }
             else if (Input.GetKeyDown(KeyCode.Escape))
             {
@@ -215,7 +215,7 @@ namespace WitcherGame
             string text = "队伍管理";
             foreach (PartyMember member in party.AllMembers)
             {
-                if (member.Name == "特莉丝")
+                if (member.Name == "叶奈法")
                 {
                     continue;
                 }
@@ -225,7 +225,7 @@ namespace WitcherGame
                 text += $"\n- {member.Name} Lv {member.Level}  {state}{locked}";
             }
 
-            text += "\n\nJ 切换叶奈法加入 / 移除。入队后她会跟在猎魔人身后。";
+            text += "\n\nJ 切换特莉丝加入 / 移除。入队后她会跟在猎魔人身后。";
             text += "\n莉莉丝保留为怪物伙伴位，后续可通过剧情或战斗收服。";
             ShowDetail(text);
         }
@@ -249,7 +249,7 @@ namespace WitcherGame
             root.SetActive(false);
             DialogueLine[] lines =
             {
-                new DialogueLine("叶奈法", "这里的魔力流动很混乱，有人故意扭曲了这片土地。"),
+                new DialogueLine("特莉丝", "这里残留着火焰都烧不干净的诅咒痕迹。"),
                 new DialogueLine("猎魔人", "先找到源头，再决定杀谁。")
             };
 

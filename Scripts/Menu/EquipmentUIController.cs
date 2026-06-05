@@ -290,7 +290,7 @@ namespace WitcherGame
             List<PartyMember> members = new List<PartyMember>();
             foreach (PartyMember member in party.AllMembers)
             {
-                if (member == null || member.Name == "特莉丝")
+                if (member == null || member.Name == "叶奈法")
                 {
                     continue;
                 }

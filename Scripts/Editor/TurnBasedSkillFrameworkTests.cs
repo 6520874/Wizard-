@@ -153,16 +153,16 @@ namespace WitcherGame.Tests
         }
 
         [Test]
-        public void PartyManager_DefaultParty_IncludesHunterAndYennefer()
+        public void PartyManager_DefaultParty_IncludesHunterAndTriss()
         {
             GameObject partyObject = new GameObject("Party Manager Test");
             PartyManager party = partyObject.AddComponent<PartyManager>();
 
             Assert.AreEqual(2, party.ActiveParty.Count);
             Assert.AreEqual("猎魔人", party.ActiveParty[0].Name);
-            Assert.AreEqual("叶奈法", party.ActiveParty[1].Name);
+            Assert.AreEqual("特莉丝", party.ActiveParty[1].Name);
             Assert.GreaterOrEqual(party.AllMembers.Count, 4);
-            Assert.IsTrue(party.AllMembers.Any(member => member.Name == "特莉丝" && !member.IsJoined));
+            Assert.IsTrue(party.AllMembers.Any(member => member.Name == "叶奈法" && !member.IsJoined));
             Assert.IsTrue(party.AllMembers.Any(member => member.Name == "莉莉丝" && !member.IsJoined));
             Assert.GreaterOrEqual(party.ActiveParty[1].SkillDetails.Count, 2);
             Object.DestroyImmediate(partyObject);

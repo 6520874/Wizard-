@@ -32,14 +32,14 @@ namespace WitcherGame
                     return CreateThunderSign();
                 case BattleSkillId.HunterFocus:
                     return CreateHunterFocus();
-                case BattleSkillId.YenneferArcaneBolt:
-                    return CreateYenneferArcaneBolt();
-                case BattleSkillId.YenneferCursePulse:
-                    return CreateYenneferCursePulse();
-                case BattleSkillId.YenneferAegis:
-                    return CreateYenneferAegis();
-                case BattleSkillId.YenneferObsidianStorm:
-                    return CreateYenneferObsidianStorm();
+                case BattleSkillId.TrissFirebolt:
+                    return CreateTrissFirebolt();
+                case BattleSkillId.TrissMeltingSigil:
+                    return CreateTrissMeltingSigil();
+                case BattleSkillId.TrissFlameWard:
+                    return CreateTrissFlameWard();
+                case BattleSkillId.TrissMeteorFlare:
+                    return CreateTrissMeteorFlare();
                 case BattleSkillId.Fireball:
                     return CreateFireball();
                 case BattleSkillId.ArcaneBurst:
@@ -54,12 +54,12 @@ namespace WitcherGame
         public static IReadOnlyList<SkillDefinition> GetFriendlySkills(PartyMember member)
         {
             List<SkillDefinition> skills = new List<SkillDefinition>();
-            if (member != null && member.Name == "叶奈法")
+            if (member != null && member.Name == "特莉丝")
             {
-                skills.Add(CreateYenneferArcaneBolt());
-                skills.Add(CreateYenneferCursePulse());
-                skills.Add(CreateYenneferAegis());
-                skills.Add(CreateYenneferObsidianStorm());
+                skills.Add(CreateTrissFirebolt());
+                skills.Add(CreateTrissMeltingSigil());
+                skills.Add(CreateTrissFlameWard());
+                skills.Add(CreateTrissMeteorFlare());
                 return skills;
             }
 
@@ -183,53 +183,53 @@ namespace WitcherGame
                 new StatusSkillEffect(() => new BattleStatusEffect(BattleStatusKind.AttackUp, "专注", 3, attackBonus: 6)));
         }
 
-        public static SkillDefinition CreateYenneferArcaneBolt()
+        public static SkillDefinition CreateTrissFirebolt()
         {
             return new SkillDefinition(
-                BattleSkillId.YenneferArcaneBolt,
-                "紫晶箭",
+                BattleSkillId.TrissFirebolt,
+                "火焰术",
                 12,
                 BattleSkillTargetKind.FirstLivingEnemy,
-                BattleSkillAnimationKind.Cast,
-                "叶奈法凝出紫晶箭，贯穿首个敌人！",
-                new DamageSkillEffect(24, 0f, 0.25f, 1, BattleDamageType.Arcane));
+                BattleSkillAnimationKind.Flame,
+                "特莉丝投出压缩火球，砸向首个敌人！",
+                new DamageSkillEffect(28, 0f, 0.25f, 1, BattleDamageType.Fire));
         }
 
-        public static SkillDefinition CreateYenneferCursePulse()
+        public static SkillDefinition CreateTrissMeltingSigil()
         {
             return new SkillDefinition(
-                BattleSkillId.YenneferCursePulse,
-                "诅咒脉冲",
+                BattleSkillId.TrissMeltingSigil,
+                "熔甲火印",
                 18,
                 BattleSkillTargetKind.AllLivingEnemies,
-                BattleSkillAnimationKind.Cast,
-                "叶奈法释放诅咒脉冲，削弱敌群防御！",
-                new DamageSkillEffect(14, 0f, 0.22f, 1, BattleDamageType.Arcane),
-                new StatusSkillEffect(() => new BattleStatusEffect(BattleStatusKind.Fear, "诅咒", 2, defenseBonus: -3)));
+                BattleSkillAnimationKind.Flame,
+                "特莉丝点燃敌群护甲的缝隙，降低怪物防御！",
+                new DamageSkillEffect(16, 0f, 0.2f, 1, BattleDamageType.Fire),
+                new StatusSkillEffect(() => new BattleStatusEffect(BattleStatusKind.Burning, "熔甲", 2, defenseBonus: -3)));
         }
 
-        public static SkillDefinition CreateYenneferAegis()
+        public static SkillDefinition CreateTrissFlameWard()
         {
             return new SkillDefinition(
-                BattleSkillId.YenneferAegis,
-                "紫晶护盾",
+                BattleSkillId.TrissFlameWard,
+                "灼热结界",
                 16,
                 BattleSkillTargetKind.Self,
                 BattleSkillAnimationKind.Defend,
-                "叶奈法为前排展开紫晶护盾。",
-                new StatusSkillEffect(() => new BattleStatusEffect(BattleStatusKind.Shield, "紫晶护盾", 3, incomingDamageMultiplier: 0.7f, shieldAmount: 24)));
+                "特莉丝在前排展开灼热结界。",
+                new StatusSkillEffect(() => new BattleStatusEffect(BattleStatusKind.Shield, "灼热结界", 3, incomingDamageMultiplier: 0.72f, shieldAmount: 22)));
         }
 
-        public static SkillDefinition CreateYenneferObsidianStorm()
+        public static SkillDefinition CreateTrissMeteorFlare()
         {
             return new SkillDefinition(
-                BattleSkillId.YenneferObsidianStorm,
-                "黑曜风暴",
+                BattleSkillId.TrissMeteorFlare,
+                "流星火雨",
                 28,
                 BattleSkillTargetKind.AllLivingEnemies,
-                BattleSkillAnimationKind.Cast,
-                "叶奈法召来黑曜碎光，席卷敌群！",
-                new DamageSkillEffect(30, 0f, 0.2f, 1, BattleDamageType.Arcane));
+                BattleSkillAnimationKind.Flame,
+                "特莉丝召下流星火雨，席卷敌群！",
+                new DamageSkillEffect(34, 0f, 0.18f, 1, BattleDamageType.Fire));
         }
 
         public static IReadOnlyList<SkillDefinition> GetEnemySkills(TurnBasedEnemyState enemy)
