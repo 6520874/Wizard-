@@ -87,7 +87,7 @@ namespace WitcherGame
             }
             else if (IsPartyCommandSelected() && Input.GetKeyDown(KeyCode.J))
             {
-                TogglePartyMember("特莉丝");
+                TogglePartyMember("叶奈法");
             }
             else if (Input.GetKeyDown(KeyCode.Escape))
             {
@@ -215,7 +215,7 @@ namespace WitcherGame
             string text = "队伍管理";
             foreach (PartyMember member in party.AllMembers)
             {
-                if (member.Name == "叶奈法")
+                if (member == null)
                 {
                     continue;
                 }
@@ -225,7 +225,7 @@ namespace WitcherGame
                 text += $"\n- {member.Name} Lv {member.Level}  {state}{locked}";
             }
 
-            text += "\n\nJ 切换特莉丝加入 / 移除。入队后她会跟在猎魔人身后。";
+            text += "\n\n默认队伍：猎魔人、特莉丝、叶奈法。J 切换叶奈法，D 界面可加入 / 剔除成员。";
             text += "\n莉莉丝保留为怪物伙伴位，后续可通过剧情或战斗收服。";
             ShowDetail(text);
         }

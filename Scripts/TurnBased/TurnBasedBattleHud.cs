@@ -558,7 +558,10 @@ namespace WitcherGame
             PartyAnimationKind animation = skill.AnimationKind == BattleSkillAnimationKind.Slash
                 ? PartyAnimationKind.Attack
                 : PartyAnimationKind.Cast;
-            if (skill.Id == BattleSkillId.TrissMeteorFlare || skill.Id == BattleSkillId.TrissFlameWard)
+            if (skill.Id == BattleSkillId.TrissMeteorFlare
+                || skill.Id == BattleSkillId.TrissFlameWard
+                || skill.Id == BattleSkillId.YenneferObsidianStorm
+                || skill.Id == BattleSkillId.YenneferAegis)
             {
                 animation = PartyAnimationKind.Special;
             }
@@ -1028,9 +1031,9 @@ namespace WitcherGame
         {
             if (entry.IsPlayer)
             {
-                if (entry.PartyMemberName == "特莉丝")
+                if (!string.IsNullOrEmpty(entry.PartyMemberName) && entry.PartyMemberName != "猎魔人")
                 {
-                    PartyMember member = PartyManager.CreateIfMissing().FindMember("特莉丝");
+                    PartyMember member = PartyManager.CreateIfMissing().FindMember(entry.PartyMemberName);
                     return PartyAnimationLibrary.GetIdlePreview(member);
                 }
 
@@ -1485,7 +1488,7 @@ namespace WitcherGame
 
         private Rect GetSkillTargetRect(BattleSkillId skillId, int targetEnemyIndex)
         {
-            if (skillId == BattleSkillId.HunterFocus || skillId == BattleSkillId.TrissFlameWard)
+            if (skillId == BattleSkillId.HunterFocus || skillId == BattleSkillId.TrissFlameWard || skillId == BattleSkillId.YenneferAegis)
             {
                 Vector2 playerCenter = playerFigureHomePosition + new Vector2(0f, -8f);
                 return Rect.MinMaxRect(playerCenter.x - 86f, playerCenter.y - 94f, playerCenter.x + 86f, playerCenter.y + 94f);
@@ -1517,12 +1520,16 @@ namespace WitcherGame
                     return new Vector2(targetRect.center.x + 8f, targetRect.center.y - 4f);
                 case BattleSkillId.ThunderSign:
                 case BattleSkillId.TrissFirebolt:
+                case BattleSkillId.YenneferArcaneBolt:
                     return new Vector2(targetRect.center.x, targetRect.center.y - 8f);
                 case BattleSkillId.HunterFocus:
                 case BattleSkillId.TrissFlameWard:
+                case BattleSkillId.YenneferAegis:
                     return new Vector2(targetRect.center.x, targetRect.center.y + 10f);
                 case BattleSkillId.TrissMeltingSigil:
                 case BattleSkillId.TrissMeteorFlare:
+                case BattleSkillId.YenneferCursePulse:
+                case BattleSkillId.YenneferObsidianStorm:
                     return new Vector2(targetRect.center.x + 8f, targetRect.center.y - 10f);
                 default:
                     return targetRect.center;
@@ -1539,13 +1546,17 @@ namespace WitcherGame
                     return new Vector2(240f, 190f);
                 case BattleSkillId.ThunderSign:
                 case BattleSkillId.TrissFirebolt:
+                case BattleSkillId.YenneferArcaneBolt:
                     return new Vector2(230f, 230f);
                 case BattleSkillId.HunterFocus:
                 case BattleSkillId.TrissFlameWard:
+                case BattleSkillId.YenneferAegis:
                     return new Vector2(250f, 250f);
                 case BattleSkillId.TrissMeltingSigil:
+                case BattleSkillId.YenneferCursePulse:
                     return new Vector2(Mathf.Clamp(targetRect.width + 220f, 320f, 560f), 210f);
                 case BattleSkillId.TrissMeteorFlare:
+                case BattleSkillId.YenneferObsidianStorm:
                     return new Vector2(Mathf.Clamp(targetRect.width + 360f, 420f, 680f), 260f);
                 default:
                     return new Vector2(220f, 180f);
@@ -1574,11 +1585,14 @@ namespace WitcherGame
                     return 0.072f;
                 case BattleSkillId.ThunderSign:
                 case BattleSkillId.TrissFirebolt:
+                case BattleSkillId.YenneferArcaneBolt:
                     return 0.082f;
                 case BattleSkillId.HunterFocus:
                 case BattleSkillId.TrissFlameWard:
+                case BattleSkillId.YenneferAegis:
                     return 0.09f;
                 case BattleSkillId.TrissMeteorFlare:
+                case BattleSkillId.YenneferObsidianStorm:
                     return 0.064f;
                 default:
                     return 0.074f;
@@ -1593,13 +1607,20 @@ namespace WitcherGame
                     return WitcherSpriteLibrary.GetSolidSprite(new Color32(66, 145, 255, 230));
                 case BattleSkillId.TrissFirebolt:
                     return WitcherSpriteLibrary.GetSolidSprite(new Color32(255, 102, 34, 230));
+                case BattleSkillId.YenneferArcaneBolt:
+                    return WitcherSpriteLibrary.GetSolidSprite(new Color32(155, 94, 255, 230));
                 case BattleSkillId.HunterFocus:
                     return WitcherSpriteLibrary.GetSolidSprite(new Color32(255, 220, 88, 210));
                 case BattleSkillId.TrissFlameWard:
                     return WitcherSpriteLibrary.GetSolidSprite(new Color32(255, 145, 48, 210));
+                case BattleSkillId.YenneferAegis:
+                    return WitcherSpriteLibrary.GetSolidSprite(new Color32(156, 114, 255, 210));
                 case BattleSkillId.TrissMeltingSigil:
                 case BattleSkillId.TrissMeteorFlare:
                     return WitcherSpriteLibrary.GetSolidSprite(new Color32(255, 76, 28, 220));
+                case BattleSkillId.YenneferCursePulse:
+                case BattleSkillId.YenneferObsidianStorm:
+                    return WitcherSpriteLibrary.GetSolidSprite(new Color32(118, 65, 218, 224));
                 default:
                     return WitcherSpriteLibrary.GetSolidSprite(new Color32(255, 86, 20, 230));
             }
@@ -1615,12 +1636,20 @@ namespace WitcherGame
                     return new Color32(255, 213, 84, 214);
                 case BattleSkillId.TrissFirebolt:
                     return new Color32(255, 125, 44, 220);
+                case BattleSkillId.YenneferArcaneBolt:
+                    return new Color32(170, 112, 255, 224);
                 case BattleSkillId.TrissMeltingSigil:
                     return new Color32(255, 82, 36, 218);
                 case BattleSkillId.TrissFlameWard:
                     return new Color32(255, 174, 76, 214);
                 case BattleSkillId.TrissMeteorFlare:
                     return new Color32(255, 58, 24, 225);
+                case BattleSkillId.YenneferCursePulse:
+                    return new Color32(124, 68, 226, 220);
+                case BattleSkillId.YenneferAegis:
+                    return new Color32(183, 139, 255, 214);
+                case BattleSkillId.YenneferObsidianStorm:
+                    return new Color32(96, 50, 190, 228);
                 case BattleSkillId.ExecuteSlash:
                     return new Color32(136, 205, 255, 204);
                 default:
@@ -1724,11 +1753,15 @@ namespace WitcherGame
                 case BattleSkillId.TrissMeteorFlare:
                     return "FlameSignSheet.png";
                 case BattleSkillId.ThunderSign:
+                case BattleSkillId.YenneferArcaneBolt:
+                case BattleSkillId.YenneferObsidianStorm:
                     return "ThunderSignSheet.png";
                 case BattleSkillId.HunterFocus:
                 case BattleSkillId.TrissFlameWard:
+                case BattleSkillId.YenneferAegis:
                     return "HunterFocusSheet.png";
                 case BattleSkillId.TrissMeltingSigil:
+                case BattleSkillId.YenneferCursePulse:
                     return "HunterFlameBeamSheet.png";
                 default:
                     return "HunterFlameBeamSheet.png";
@@ -2255,6 +2288,11 @@ namespace WitcherGame
                 case BattleSkillId.TrissFlameWard:
                 case BattleSkillId.TrissMeteorFlare:
                     return new Color32(255, 188, 112, 255);
+                case BattleSkillId.YenneferArcaneBolt:
+                case BattleSkillId.YenneferCursePulse:
+                case BattleSkillId.YenneferAegis:
+                case BattleSkillId.YenneferObsidianStorm:
+                    return new Color32(205, 170, 255, 255);
                 default:
                     return JrpgTextColor;
             }
@@ -2280,6 +2318,14 @@ namespace WitcherGame
                     return "前排护盾";
                 case BattleSkillId.TrissMeteorFlare:
                     return "火焰群体";
+                case BattleSkillId.YenneferArcaneBolt:
+                    return "奥术单体";
+                case BattleSkillId.YenneferCursePulse:
+                    return "群体削弱";
+                case BattleSkillId.YenneferAegis:
+                    return "前排护盾";
+                case BattleSkillId.YenneferObsidianStorm:
+                    return "奥术群体";
                 default:
                     return skill.TargetKind == BattleSkillTargetKind.AllLivingEnemies ? "群体" : "单体";
             }

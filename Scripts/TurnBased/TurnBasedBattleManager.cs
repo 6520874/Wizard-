@@ -822,7 +822,7 @@ namespace WitcherGame
 
             int maxHp = Mathf.Max(1, member.TotalMaxHP);
             int maxMp = Mathf.Max(0, member.TotalMaxMP);
-            int attack = member.Name == "特莉丝" ? member.TotalMagic : member.TotalAttack;
+            int attack = IsSorceress(member) ? member.TotalMagic : member.TotalAttack;
             BattleSkillUnit unit = BattleSkillUnit.CreatePlayer(member.Name, maxHp, maxMp, attack, member.TotalDefense);
             unit.SetHealth(Mathf.Clamp(member.HP, 0, maxHp));
             unit.SetMana(Mathf.Clamp(member.MP, 0, maxMp));
@@ -1139,6 +1139,11 @@ namespace WitcherGame
             return member == null || member.Name == "猎魔人";
         }
 
+        private static bool IsSorceress(PartyMember member)
+        {
+            return member != null && (member.Name == "特莉丝" || member.Name == "叶奈法");
+        }
+
         private static string GetFriendlyDisplayName(PartyMember member)
         {
             return IsHunter(member) ? "猎魔人" : member.Name;
@@ -1146,12 +1151,22 @@ namespace WitcherGame
 
         private SkillDefinition GetDefaultAttackSkill(PartyMember member)
         {
-            return IsHunter(member) ? WitcherSkillBook.CreateBasicAttack() : WitcherSkillBook.CreateTrissFirebolt();
+            if (IsHunter(member))
+            {
+                return WitcherSkillBook.CreateBasicAttack();
+            }
+
+            return member.Name == "叶奈法" ? WitcherSkillBook.CreateYenneferArcaneBolt() : WitcherSkillBook.CreateTrissFirebolt();
         }
 
         private SkillDefinition GetDefaultDefendSkill(PartyMember member)
         {
-            return IsHunter(member) ? WitcherSkillBook.CreateDefend() : WitcherSkillBook.CreateTrissFlameWard();
+            if (IsHunter(member))
+            {
+                return WitcherSkillBook.CreateDefend();
+            }
+
+            return member.Name == "叶奈法" ? WitcherSkillBook.CreateYenneferAegis() : WitcherSkillBook.CreateTrissFlameWard();
         }
 
         private bool ActiveFriendlyHasMana(int cost)

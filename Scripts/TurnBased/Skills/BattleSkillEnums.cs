@@ -19,7 +19,11 @@ namespace WitcherGame
         TrissFirebolt,
         TrissMeltingSigil,
         TrissFlameWard,
-        TrissMeteorFlare
+        TrissMeteorFlare,
+        YenneferArcaneBolt,
+        YenneferCursePulse,
+        YenneferAegis,
+        YenneferObsidianStorm
     }
 
     public enum BattleSkillTargetKind
