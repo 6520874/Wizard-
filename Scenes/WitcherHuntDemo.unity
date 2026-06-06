@@ -361,7 +361,7 @@ MonoBehaviour:
   maxStageX: 55.6
   minStageY: -2.55
   maxStageY: 5
-  visualScale: 0.45
+  visualScale: 0.56
   hurtLockDuration: 0.48
   maxHealth: 120
   maxMana: 100
