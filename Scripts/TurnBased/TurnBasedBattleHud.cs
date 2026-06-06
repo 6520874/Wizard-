@@ -671,17 +671,17 @@ namespace WitcherGame
 
             // HD-2D HUD owns the visible turn order; the legacy timeline stays disabled to avoid duplicated top UI.
 
-            Image playerGlow = CreateCenteredImage("Battle Player Ground Glow", root.transform, new Vector2(178f, 42f), new Vector2(304f, -108f), new Color32(42, 143, 255, 78));
+            Image playerGlow = CreateCenteredImage("Battle Player Ground Glow", root.transform, new Vector2(146f, 34f), new Vector2(304f, -108f), new Color32(42, 143, 255, 78));
             playerGlow.sprite = GetGroundGlowSprite();
             playerGlow.raycastTarget = false;
 
-            Image playerShadow = CreateCenteredImage("Battle Player Ground Shadow", root.transform, new Vector2(150f, 32f), new Vector2(304f, -116f), new Color32(0, 0, 0, 178));
+            Image playerShadow = CreateCenteredImage("Battle Player Ground Shadow", root.transform, new Vector2(124f, 28f), new Vector2(304f, -116f), new Color32(0, 0, 0, 178));
             playerShadow.sprite = GetGroundShadowSprite();
             playerShadow.raycastTarget = false;
 
             BuildPartySupportSlots();
 
-            playerFigure = CreateCenteredImage("Battle Player Figure", root.transform, new Vector2(132f, 156f), new Vector2(304f, -34f), Color.white);
+            playerFigure = CreateCenteredImage("Battle Player Figure", root.transform, new Vector2(88f, 116f), new Vector2(304f, -54f), Color.white);
             playerFigure.sprite = GetPlayerIdleFrame();
             playerFigureHomePosition = playerFigure.rectTransform.anchoredPosition;
             playerFigure.preserveAspect = true;
@@ -1895,9 +1895,9 @@ namespace WitcherGame
             partyVisualSlots.Clear();
             Vector2[] positions =
             {
-                new Vector2(194f, -54f),
-                new Vector2(250f, -54f),
-                new Vector2(360f, -54f)
+                new Vector2(184f, -54f),
+                new Vector2(244f, -54f),
+                new Vector2(364f, -54f)
             };
 
             for (int i = 0; i < positions.Length; i++)
