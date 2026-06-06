@@ -1948,8 +1948,7 @@ namespace WitcherGame
         private static bool ShouldHideBattleSupportMember(PartyMember member)
         {
             return member == null
-                || member.Name == "猎魔人"
-                || member.Name == "莉莉丝";
+                || member.Name == "猎魔人";
         }
 
         private bool TryGetPartySlot(PartyMember member, out PartyVisualSlot slot)

@@ -54,11 +54,6 @@ namespace WitcherGame
                 return "TrissPortrait";
             }
 
-            if (memberName == "莉莉丝")
-            {
-                return "LilithPortrait";
-            }
-
             return string.Empty;
         }
     }

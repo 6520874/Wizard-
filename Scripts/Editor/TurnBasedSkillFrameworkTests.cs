@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Linq;
 using NUnit.Framework;
 using UnityEngine;
 
@@ -162,8 +161,7 @@ namespace WitcherGame.Tests
             Assert.AreEqual("猎魔人", party.ActiveParty[0].Name);
             Assert.AreEqual("特莉丝", party.ActiveParty[1].Name);
             Assert.AreEqual("叶奈法", party.ActiveParty[2].Name);
-            Assert.GreaterOrEqual(party.AllMembers.Count, 4);
-            Assert.IsTrue(party.AllMembers.Any(member => member.Name == "莉莉丝" && !member.IsJoined));
+            Assert.AreEqual(3, party.AllMembers.Count);
             Assert.GreaterOrEqual(party.ActiveParty[1].SkillDetails.Count, 2);
             Assert.GreaterOrEqual(party.ActiveParty[2].SkillDetails.Count, 2);
             Object.DestroyImmediate(partyObject);

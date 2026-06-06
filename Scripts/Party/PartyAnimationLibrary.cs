@@ -9,6 +9,8 @@ namespace WitcherGame
     {
         Idle,
         Run,
+        Up,
+        DownWalk,
         Attack,
         Cast,
         Special,
@@ -38,7 +40,7 @@ namespace WitcherGame
                 return System.Array.Empty<Sprite>();
             }
 
-            string relativeFolder = Path.Combine("Art/Party", visualFolder, "Frames", animation.ToString());
+            string relativeFolder = Path.Combine("Art/Party", visualFolder, "Frames", GetFolderName(animation));
             string folderPath = Path.Combine(Application.dataPath, relativeFolder);
             string key = Directory.Exists(folderPath)
                 ? $"{relativeFolder}_{Directory.GetFiles(folderPath, "*.png").Length}_{Directory.GetLastWriteTimeUtc(folderPath).Ticks}"
@@ -79,6 +81,17 @@ namespace WitcherGame
             return CachedFrames[key];
         }
 
+        private static string GetFolderName(PartyAnimationKind animation)
+        {
+            switch (animation)
+            {
+                case PartyAnimationKind.DownWalk:
+                    return "DownWalk";
+                default:
+                    return animation.ToString();
+            }
+        }
+
         public static Sprite GetIdlePreview(PartyMember member)
         {
             Sprite[] frames = GetFrames(member, PartyAnimationKind.Idle);
@@ -95,11 +108,6 @@ namespace WitcherGame
             if (memberName == "特莉丝")
             {
                 return "Triss";
-            }
-
-            if (memberName == "莉莉丝")
-            {
-                return "Lilith";
             }
 
             return string.Empty;

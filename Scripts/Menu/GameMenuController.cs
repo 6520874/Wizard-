@@ -226,7 +226,6 @@ namespace WitcherGame
             }
 
             text += "\n\n默认队伍：猎魔人、特莉丝、叶奈法。J 切换叶奈法，D 界面可加入 / 剔除成员。";
-            text += "\n莉莉丝保留为怪物伙伴位，后续可通过剧情或战斗收服。";
             ShowDetail(text);
         }
 

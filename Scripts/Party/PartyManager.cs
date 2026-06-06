@@ -217,7 +217,6 @@ namespace WitcherGame
             allMembers.Add(hunter);
             allMembers.Add(yennefer);
             allMembers.Add(triss);
-            AddMonsterPartnerPlaceholder("莉莉丝");
 
             activeParty.Add(hunter);
             activeParty.Add(triss);
