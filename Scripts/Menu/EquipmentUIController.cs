@@ -76,19 +76,19 @@ namespace WitcherGame
                 return;
             }
 
-            if (Input.GetKeyDown(KeyCode.UpArrow) || Input.GetKeyDown(KeyCode.W))
+            if (Input.GetKeyDown(KeyCode.UpArrow))
             {
                 MoveMember(-1);
             }
-            else if (Input.GetKeyDown(KeyCode.DownArrow) || Input.GetKeyDown(KeyCode.S))
+            else if (Input.GetKeyDown(KeyCode.DownArrow) )
             {
                 MoveMember(1);
             }
-            else if (Input.GetKeyDown(KeyCode.LeftArrow) || Input.GetKeyDown(KeyCode.A))
+            else if (Input.GetKeyDown(KeyCode.LeftArrow) )
             {
                 MoveSlot(-1);
             }
-            else if (Input.GetKeyDown(KeyCode.RightArrow) || Input.GetKeyDown(KeyCode.D))
+            else if (Input.GetKeyDown(KeyCode.RightArrow) )
             {
                 MoveSlot(1);
             }
