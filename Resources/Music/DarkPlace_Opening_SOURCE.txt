@@ -1,0 +1,17 @@
+Track:
+Dark Place (loop)
+
+Author:
+SkyleTheFrench
+
+Source:
+https://opengameart.org/content/dark-place-loop
+
+Downloaded file:
+https://opengameart.org/sites/default/files/dark_place.ogg
+
+License:
+CC0. The OpenGameArt page states attribution is not required.
+
+Usage in this project:
+Opening narration music for the black-screen story intro.

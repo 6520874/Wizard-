@@ -12,6 +12,8 @@ namespace WitcherGame
     // 中文说明：播放开场旁白剧情，并在结束后进入后续村庄流程。
     public class OpeningStoryManager : MonoBehaviour
     {
+        private const string DefaultOpeningMusicPath = "Music/DarkPlace_Opening";
+
         [Header("Opening Narration")]
         [SerializeField] private bool playOnStart = true;
         [Tooltip("勾选后跳过黑屏旁白和村长对话，直接进入可操作状态。适合调试地图和回合制战斗。")]
@@ -28,6 +30,13 @@ namespace WitcherGame
             "有人说，是狼群。",
             "但猎魔人知道……真正会吃人的东西，往往披着人的皮。"
         };
+
+        [Header("Opening Music")]
+        [Tooltip("Resources 目录下的开场音乐路径，不需要扩展名。")]
+        [SerializeField] private string openingMusicResourcePath = DefaultOpeningMusicPath;
+        [SerializeField] private float openingMusicVolume = 0.42f;
+        [SerializeField] private float musicFadeInSeconds = 1.8f;
+        [SerializeField] private float musicFadeOutSeconds = 0.9f;
 
         [Header("Village Scene")]
         [Tooltip("Optional. Leave empty to stay in the current scene and immediately play the village NPC dialogue.")]
@@ -47,6 +56,8 @@ namespace WitcherGame
         private bool openingActive;
         private string currentFullText;
         private Coroutine typingRoutine;
+        private Coroutine musicRoutine;
+        private AudioSource openingMusicSource;
 
         private void Awake()
         {
@@ -99,6 +110,7 @@ namespace WitcherGame
             narrationIndex = 0;
             openingActive = true;
             openingPanel.SetActive(true);
+            PlayOpeningMusic();
             ShowNarrationLine(narrationLines[narrationIndex]);
         }
 
@@ -167,6 +179,7 @@ namespace WitcherGame
         {
             openingActive = false;
             openingPanel.SetActive(false);
+            FadeOutOpeningMusic();
             EnterVillageScene();
         }
 
@@ -213,6 +226,8 @@ namespace WitcherGame
                 openingPanel.SetActive(false);
             }
 
+            StopOpeningMusicImmediately();
+
             EnsureStoryManagers();
             DialogueManager activeDialogue = dialogueManager == null ? FindObjectOfType<DialogueManager>() : dialogueManager;
             if (activeDialogue != null)
@@ -224,6 +239,114 @@ namespace WitcherGame
             {
                 questManager.StartFirstMainQuest();
             }
+        }
+
+        private void PlayOpeningMusic()
+        {
+            AudioClip clip = Resources.Load<AudioClip>(openingMusicResourcePath);
+            if (clip == null)
+            {
+                Debug.LogWarning($"Opening music clip not found at Resources/{openingMusicResourcePath}");
+                return;
+            }
+
+            EnsureOpeningMusicSource();
+            if (openingMusicSource == null)
+            {
+                return;
+            }
+
+            if (musicRoutine != null)
+            {
+                StopCoroutine(musicRoutine);
+            }
+
+            openingMusicSource.clip = clip;
+            openingMusicSource.loop = true;
+            openingMusicSource.volume = 0f;
+            openingMusicSource.Play();
+            musicRoutine = StartCoroutine(FadeOpeningMusic(0f, openingMusicVolume, musicFadeInSeconds, false));
+        }
+
+        private void FadeOutOpeningMusic()
+        {
+            if (openingMusicSource == null)
+            {
+                return;
+            }
+
+            if (musicRoutine != null)
+            {
+                StopCoroutine(musicRoutine);
+            }
+
+            musicRoutine = StartCoroutine(FadeOpeningMusic(openingMusicSource.volume, 0f, musicFadeOutSeconds, true));
+        }
+
+        private void StopOpeningMusicImmediately()
+        {
+            if (musicRoutine != null)
+            {
+                StopCoroutine(musicRoutine);
+                musicRoutine = null;
+            }
+
+            if (openingMusicSource != null)
+            {
+                openingMusicSource.Stop();
+                openingMusicSource.clip = null;
+                openingMusicSource.volume = 0f;
+            }
+        }
+
+        private void EnsureOpeningMusicSource()
+        {
+            if (openingMusicSource != null)
+            {
+                return;
+            }
+
+            openingMusicSource = GetComponent<AudioSource>();
+            if (openingMusicSource == null)
+            {
+                openingMusicSource = gameObject.AddComponent<AudioSource>();
+            }
+
+            openingMusicSource.playOnAwake = false;
+            openingMusicSource.loop = true;
+            openingMusicSource.spatialBlend = 0f;
+            openingMusicSource.priority = 24;
+        }
+
+        private IEnumerator FadeOpeningMusic(float from, float to, float duration, bool stopWhenDone)
+        {
+            if (openingMusicSource == null)
+            {
+                yield break;
+            }
+
+            float elapsed = 0f;
+            float safeDuration = Mathf.Max(0.01f, duration);
+            while (elapsed < safeDuration && openingMusicSource != null)
+            {
+                elapsed += Time.unscaledDeltaTime;
+                openingMusicSource.volume = Mathf.Lerp(from, to, Mathf.Clamp01(elapsed / safeDuration));
+                yield return null;
+            }
+
+            if (openingMusicSource == null)
+            {
+                yield break;
+            }
+
+            openingMusicSource.volume = to;
+            if (stopWhenDone)
+            {
+                openingMusicSource.Stop();
+                openingMusicSource.clip = null;
+            }
+
+            musicRoutine = null;
         }
 
         private void EnsureStoryManagers()
