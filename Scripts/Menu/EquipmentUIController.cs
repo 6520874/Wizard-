@@ -76,23 +76,7 @@ namespace WitcherGame
                 return;
             }
 
-            if (Input.GetKeyDown(KeyCode.UpArrow))
-            {
-                MoveMember(-1);
-            }
-            else if (Input.GetKeyDown(KeyCode.DownArrow) )
-            {
-                MoveMember(1);
-            }
-            else if (Input.GetKeyDown(KeyCode.LeftArrow) )
-            {
-                MoveSlot(-1);
-            }
-            else if (Input.GetKeyDown(KeyCode.RightArrow) )
-            {
-                MoveSlot(1);
-            }
-            else if (Input.GetKeyDown(KeyCode.Return))
+            if (Input.GetKeyDown(KeyCode.Return))
             {
                 CycleSelectedEquipment();
             }
