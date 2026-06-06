@@ -1895,9 +1895,9 @@ namespace WitcherGame
             partyVisualSlots.Clear();
             Vector2[] positions =
             {
-                new Vector2(184f, -66f),
-                new Vector2(238f, -78f),
-                new Vector2(392f, -82f)
+                new Vector2(194f, -54f),
+                new Vector2(250f, -54f),
+                new Vector2(360f, -54f)
             };
 
             for (int i = 0; i < positions.Length; i++)
@@ -1982,30 +1982,8 @@ namespace WitcherGame
 
         private void UpdatePartyIdleFigures()
         {
-            for (int i = 0; i < partyVisualSlots.Count; i++)
-            {
-                PartyVisualSlot slot = partyVisualSlots[i];
-                if (slot.Member == null || !slot.Image.gameObject.activeSelf)
-                {
-                    continue;
-                }
-
-                Sprite[] frames = PartyAnimationLibrary.GetFrames(slot.Member, PartyAnimationKind.Idle);
-                if (frames.Length <= 1)
-                {
-                    continue;
-                }
-
-                slot.IdleTimer += Time.deltaTime;
-                if (slot.IdleTimer < 0.18f)
-                {
-                    continue;
-                }
-
-                slot.IdleTimer = 0f;
-                slot.IdleIndex = (slot.IdleIndex + 1) % frames.Length;
-                slot.Image.sprite = frames[slot.IdleIndex];
-            }
+            // 队友素材的 idle 帧裁切尺寸不完全一致，循环播放会像角色在变大缩小。
+            // 战斗待机阶段先固定使用预览站姿，技能释放时再播放动作序列帧。
         }
 
         private Sprite GetPlayerIdleFrame()
