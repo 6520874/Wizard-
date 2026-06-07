@@ -45,13 +45,9 @@ namespace WitcherGame
             runFrames = PartyAnimationLibrary.GetFrames(member, PartyAnimationKind.Run);
             upFrames = PartyAnimationLibrary.GetFrames(member, PartyAnimationKind.Up);
             downFrames = PartyAnimationLibrary.GetFrames(member, PartyAnimationKind.DownWalk);
-            currentFrames = idleFrames.Length > 0 ? idleFrames : runFrames;
             frameIndex = 0;
             frameTimer = 0f;
-            if (spriteRenderer != null && currentFrames.Length > 0)
-            {
-                spriteRenderer.sprite = currentFrames[0];
-            }
+            ResetToIdlePose();
         }
 
         public void MoveToward(Vector2 targetPosition, float deltaTime)
@@ -124,7 +120,7 @@ namespace WitcherGame
 
             if (idleFrames.Length > 0)
             {
-                currentFrames = idleFrames;
+                currentFrames = System.Array.Empty<Sprite>();
                 frameIndex = 0;
                 frameTimer = 0f;
                 if (spriteRenderer != null)
@@ -134,7 +130,14 @@ namespace WitcherGame
                 return;
             }
 
-            UseFrames(GetBestRunFallback());
+            Sprite[] fallbackFrames = GetBestRunFallback();
+            currentFrames = System.Array.Empty<Sprite>();
+            frameIndex = 0;
+            frameTimer = 0f;
+            if (spriteRenderer != null && fallbackFrames.Length > 0)
+            {
+                spriteRenderer.sprite = fallbackFrames[0];
+            }
         }
 
         private Sprite[] GetBestRunFallback()
