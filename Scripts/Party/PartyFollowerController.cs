@@ -20,7 +20,6 @@ namespace WitcherGame
         private int frameIndex;
         private float frameTimer;
         private float maxStageY = 5f;
-        private PartyAnimationKind lastMoveAnimation = PartyAnimationKind.Idle;
 
         public PartyMember Member => member;
 
@@ -49,7 +48,6 @@ namespace WitcherGame
             currentFrames = idleFrames.Length > 0 ? idleFrames : runFrames;
             frameIndex = 0;
             frameTimer = 0f;
-            lastMoveAnimation = PartyAnimationKind.Idle;
             if (spriteRenderer != null && currentFrames.Length > 0)
             {
                 spriteRenderer.sprite = currentFrames[0];
@@ -64,30 +62,31 @@ namespace WitcherGame
             if (moving)
             {
                 Vector2 nextPosition = Vector2.MoveTowards(currentPosition, targetPosition, moveSpeed * deltaTime);
+                Vector2 actualMovement = nextPosition - currentPosition;
                 transform.position = new Vector3(nextPosition.x, nextPosition.y, transform.position.z);
-                PartyAnimationKind moveAnimation = GetMovementAnimation(toTarget);
-                if (moveAnimation == PartyAnimationKind.Run && Mathf.Abs(toTarget.x) > 0.025f && spriteRenderer != null)
+                Vector2 animationDirection = actualMovement.sqrMagnitude > 0.000001f ? actualMovement : toTarget;
+                PartyAnimationKind moveAnimation = GetMovementAnimation(animationDirection);
+                if (moveAnimation == PartyAnimationKind.Run && Mathf.Abs(animationDirection.x) > 0.001f && spriteRenderer != null)
                 {
-                    spriteRenderer.flipX = toTarget.x < 0f;
+                    spriteRenderer.flipX = animationDirection.x < 0f;
                 }
                 else if (moveAnimation != PartyAnimationKind.Run && spriteRenderer != null)
                 {
                     spriteRenderer.flipX = false;
                 }
 
-                lastMoveAnimation = moveAnimation;
                 UseFrames(GetMovementFrames(moveAnimation));
             }
             else
             {
-                HoldLastDirectionFrame();
+                ResetToIdlePose();
             }
         }
 
         public void SnapTo(Vector2 position)
         {
             transform.position = new Vector3(position.x, position.y, transform.position.z);
-            UseFrames(idleFrames);
+            ResetToIdlePose();
             UpdateDepthSorting();
         }
 
@@ -116,18 +115,26 @@ namespace WitcherGame
             }
         }
 
-        private void HoldLastDirectionFrame()
+        private void ResetToIdlePose()
         {
-            Sprite[] directionalFrames = GetMovementFrames(lastMoveAnimation);
-            if (directionalFrames.Length > 0 && spriteRenderer != null)
+            if (spriteRenderer != null)
             {
-                spriteRenderer.sprite = directionalFrames[Mathf.Clamp(frameIndex, 0, directionalFrames.Length - 1)];
-                currentFrames = System.Array.Empty<Sprite>();
+                spriteRenderer.flipX = false;
+            }
+
+            if (idleFrames.Length > 0)
+            {
+                currentFrames = idleFrames;
+                frameIndex = 0;
                 frameTimer = 0f;
+                if (spriteRenderer != null)
+                {
+                    spriteRenderer.sprite = idleFrames[0];
+                }
                 return;
             }
 
-            UseFrames(idleFrames);
+            UseFrames(GetBestRunFallback());
         }
 
         private Sprite[] GetBestRunFallback()
