@@ -194,7 +194,7 @@ namespace WitcherGame
             hunter.CurrentEquipment.Accessory1 = sampleEquipment[EquipmentSlot.Accessory1][0];
             hunter.CurrentEquipment.RelicCore = sampleEquipment[EquipmentSlot.RelicCore][0];
 
-            PartyMember yennefer = new PartyMember("叶奈法", 1, 88, 142, 8, 5, 24, 12, 0.04f, false);
+            PartyMember yennefer = new PartyMember("叶奈法", 1, 88, 142, 8, 5, 24, 12, 0.04f, true);
             yennefer.LearnSkill("紫晶护盾", "防护 / 护盾", 16, "为队伍展开紫色魔法护盾。");
             yennefer.LearnSkill("诅咒脉冲", "奥术 / 弱化", 20, "释放扭曲脉冲削弱敌人的防御。");
             yennefer.LearnSkill("紫晶箭", "奥术 / 单体", 12, "凝出紫晶箭贯穿单个怪物。");
@@ -219,6 +219,7 @@ namespace WitcherGame
             allMembers.Add(triss);
 
             activeParty.Add(hunter);
+            activeParty.Add(yennefer);
             activeParty.Add(triss);
             RemoveHiddenMainPartyMembers();
             PartyChanged?.Invoke();
