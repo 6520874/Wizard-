@@ -342,7 +342,7 @@ namespace WitcherGame
             titleText = GothicUiFactory.CreateText("Equipment Detail Title", rightPanel.transform, "装备", 28, TextAnchor.MiddleLeft, new Vector2(32f, -18f), new Vector2(330f, 36f), MenuTextColor);
             AddMenuTextOutline(titleText, new Vector2(2f, -2f));
             GothicUiFactory.CreatePanel("Equipment Detail Rule", rightPanel.transform, new Vector2(626f, 2f), new Vector2(32f, -62f), new Vector2(0f, 1f), MenuRuleColor);
-            GameObject portraitFrame = GothicUiFactory.CreatePanel("Equipment Portrait Frame", rightPanel.transform, new Vector2(116f, 132f), new Vector2(36f, -88f), new Vector2(0f, 1f), MenuPanelStrongColor);
+            GameObject portraitFrame = GothicUiFactory.CreatePanel("Equipment Portrait Frame", rightPanel.transform, new Vector2(176f, 230f), new Vector2(30f, -82f), new Vector2(0f, 1f), new Color32(5, 15, 10, 120));
             GothicUiFactory.AddOutline(portraitFrame, MenuBorderColor, new Vector2(1f, -1f));
             GameObject portraitObject = new GameObject("Equipment Portrait");
             portraitObject.transform.SetParent(portraitFrame.transform, false);
@@ -350,7 +350,7 @@ namespace WitcherGame
             portraitRect.anchorMin = new Vector2(0.5f, 0.5f);
             portraitRect.anchorMax = new Vector2(0.5f, 0.5f);
             portraitRect.pivot = new Vector2(0.5f, 0.5f);
-            portraitRect.sizeDelta = new Vector2(104f, 118f);
+            portraitRect.sizeDelta = new Vector2(166f, 220f);
             portraitRect.anchoredPosition = Vector2.zero;
             portraitImage = portraitObject.AddComponent<Image>();
             portraitImage.preserveAspect = true;
@@ -358,12 +358,12 @@ namespace WitcherGame
 
             for (int i = 0; i < slotOrder.Length; i++)
             {
-                Text slotText = GothicUiFactory.CreateText($"Equipment Slot {i + 1}", rightPanel.transform, string.Empty, 22, TextAnchor.MiddleLeft, new Vector2(176f, -92f - i * 42f), new Vector2(250f, 32f), MenuTextColor);
+                Text slotText = GothicUiFactory.CreateText($"Equipment Slot {i + 1}", rightPanel.transform, string.Empty, 22, TextAnchor.MiddleLeft, new Vector2(230f, -92f - i * 42f), new Vector2(226f, 32f), MenuTextColor);
                 AddMenuTextOutline(slotText, new Vector2(2f, -2f));
                 slotTexts.Add(slotText);
             }
 
-            statsText = GothicUiFactory.CreateText("Equipment Stats", rightPanel.transform, string.Empty, 21, TextAnchor.UpperLeft, new Vector2(466f, -92f), new Vector2(178f, 236f), MenuTextColor);
+            statsText = GothicUiFactory.CreateText("Equipment Stats", rightPanel.transform, string.Empty, 21, TextAnchor.UpperLeft, new Vector2(492f, -92f), new Vector2(154f, 236f), MenuTextColor);
             AddMenuTextOutline(statsText, new Vector2(2f, -2f));
             helpText = GothicUiFactory.CreateText("Equipment Help", rightPanel.transform, string.Empty, 15, TextAnchor.MiddleLeft, new Vector2(36f, -368f), new Vector2(620f, 26f), MenuMutedTextColor);
             AddMenuTextOutline(helpText, new Vector2(1f, -1f));

@@ -40,7 +40,7 @@ namespace WitcherGame
                 return System.Array.Empty<Sprite>();
             }
 
-            string relativeFolder = Path.Combine("Art/Party", visualFolder, "Frames", GetFolderName(animation));
+            string relativeFolder = Path.Combine(GetFrameRoot(visualFolder), GetFolderName(visualFolder, animation));
             string folderPath = Path.Combine(Application.dataPath, relativeFolder);
             string key = Directory.Exists(folderPath)
                 ? $"{relativeFolder}_{Directory.GetFiles(folderPath, "*.png").Length}_{Directory.GetLastWriteTimeUtc(folderPath).Ticks}"
@@ -81,8 +81,34 @@ namespace WitcherGame
             return CachedFrames[key];
         }
 
-        private static string GetFolderName(PartyAnimationKind animation)
+        private static string GetFrameRoot(string visualFolder)
         {
+            return visualFolder == "Geralt"
+                ? Path.Combine("Art", "Geralt", "Frames")
+                : Path.Combine("Art", "Party", visualFolder, "Frames");
+        }
+
+        private static string GetFolderName(string visualFolder, PartyAnimationKind animation)
+        {
+            if (visualFolder == "Geralt")
+            {
+                switch (animation)
+                {
+                    case PartyAnimationKind.Up:
+                        return "RunUp";
+                    case PartyAnimationKind.DownWalk:
+                        return "RunDown";
+                    case PartyAnimationKind.Attack:
+                        return "Slash";
+                    case PartyAnimationKind.Cast:
+                        return "FlameSign";
+                    case PartyAnimationKind.Special:
+                        return "PurpleSign";
+                    case PartyAnimationKind.Down:
+                        return "Death";
+                }
+            }
+
             switch (animation)
             {
                 case PartyAnimationKind.DownWalk:
@@ -100,6 +126,11 @@ namespace WitcherGame
 
         public static string GetVisualFolder(string memberName)
         {
+            if (memberName == "猎魔人")
+            {
+                return "Geralt";
+            }
+
             if (memberName == "叶奈法")
             {
                 return "Yennefer";
