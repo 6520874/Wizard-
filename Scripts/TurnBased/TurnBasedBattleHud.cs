@@ -19,6 +19,9 @@ namespace WitcherGame
         private static readonly Color32 JrpgMutedTextColor = new Color32(205, 216, 201, 255);
         private static readonly Color32 JrpgSelectedColor = new Color32(52, 75, 40, 246);
         private static readonly Color32 JrpgGoldColor = new Color32(255, 226, 136, 255);
+        private static readonly Vector2 PartyFigureSize = new Vector2(116f, 112f);
+        private const float PartyFigureMaxWidth = 136f;
+        private const float PartyFigureGroundY = -92f;
 
         private readonly List<Text> enemyRows = new List<Text>();
         private readonly List<EnemyVisualSlot> enemySlots = new List<EnemyVisualSlot>();
@@ -681,8 +684,9 @@ namespace WitcherGame
 
             BuildPartySupportSlots();
 
-            playerFigure = CreateCenteredImage("Battle Player Figure", root.transform, new Vector2(88f, 116f), new Vector2(304f, -54f), Color.white);
+            playerFigure = CreateCenteredImage("Battle Player Figure", root.transform, PartyFigureSize, GetFigureAlignedPosition(304f, GetPlayerIdleFrame(), PartyFigureSize), Color.white);
             playerFigure.sprite = GetPlayerIdleFrame();
+            AlignFigureToGround(playerFigure, 304f);
             playerFigureHomePosition = playerFigure.rectTransform.anchoredPosition;
             playerFigure.preserveAspect = true;
             playerFigure.raycastTarget = false;
@@ -1895,20 +1899,69 @@ namespace WitcherGame
             partyVisualSlots.Clear();
             Vector2[] positions =
             {
-                new Vector2(184f, -54f),
-                new Vector2(244f, -54f),
-                new Vector2(364f, -54f)
+                new Vector2(184f, PartyFigureGroundY),
+                new Vector2(244f, PartyFigureGroundY),
+                new Vector2(364f, PartyFigureGroundY)
             };
 
             for (int i = 0; i < positions.Length; i++)
             {
-                Image supportImage = CreateCenteredImage($"Battle Party Support {i + 1}", root.transform, new Vector2(88f, 116f), positions[i], Color.white);
+                Image supportImage = CreateCenteredImage($"Battle Party Support {i + 1}", root.transform, PartyFigureSize, positions[i], Color.white);
                 supportImage.preserveAspect = true;
                 supportImage.raycastTarget = false;
                 supportImage.color = new Color32(255, 255, 255, 218);
                 supportImage.gameObject.SetActive(false);
                 partyVisualSlots.Add(new PartyVisualSlot { Image = supportImage });
             }
+        }
+
+        private static float GetPartyFigureX(int visualIndex)
+        {
+            switch (visualIndex)
+            {
+                case 0:
+                    return 184f;
+                case 1:
+                    return 244f;
+                default:
+                    return 364f;
+            }
+        }
+
+        private static Vector2 GetFigureLayoutSize(Sprite sprite)
+        {
+            if (sprite == null || sprite.rect.height <= 0.01f)
+            {
+                return PartyFigureSize;
+            }
+
+            float targetHeight = PartyFigureSize.y;
+            float width = targetHeight * sprite.rect.width / sprite.rect.height;
+            if (width > PartyFigureMaxWidth)
+            {
+                width = PartyFigureMaxWidth;
+                targetHeight = width * sprite.rect.height / sprite.rect.width;
+            }
+
+            return new Vector2(width, targetHeight);
+        }
+
+        private static Vector2 GetFigureAlignedPosition(float x, Sprite sprite, Vector2 fallbackSize)
+        {
+            Vector2 size = sprite == null ? fallbackSize : GetFigureLayoutSize(sprite);
+            return new Vector2(x, PartyFigureGroundY + size.y * 0.5f);
+        }
+
+        private static void AlignFigureToGround(Image image, float x)
+        {
+            if (image == null)
+            {
+                return;
+            }
+
+            Vector2 size = GetFigureLayoutSize(image.sprite);
+            image.rectTransform.sizeDelta = size;
+            image.rectTransform.anchoredPosition = new Vector2(x, PartyFigureGroundY + size.y * 0.5f);
         }
 
         private void RefreshPartyVisuals()
@@ -1933,6 +1986,7 @@ namespace WitcherGame
                 slot.IdleIndex = 0;
                 slot.IdleTimer = 0f;
                 slot.Image.sprite = PartyAnimationLibrary.GetIdlePreview(member);
+                AlignFigureToGround(slot.Image, GetPartyFigureX(visualIndex));
                 slot.Image.rectTransform.localScale = new Vector3(-1f, 1f, 1f);
                 slot.Image.gameObject.SetActive(slot.Image.sprite != null);
                 visualIndex++;
