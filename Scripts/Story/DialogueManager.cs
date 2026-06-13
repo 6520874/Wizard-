@@ -18,6 +18,8 @@ namespace WitcherGame
         [SerializeField] private GameObject dialoguePanel;
         [SerializeField] private Text speakerNameText;
         [SerializeField] private Text dialogueText;
+        [SerializeField] private GameObject taskHintPanel;
+        [SerializeField] private Text taskHintText;
         [SerializeField] private Text continueHintText;
 
         [Header("Optional Manager References")]
@@ -66,6 +68,11 @@ namespace WitcherGame
             return new GameObject(ManagerName).AddComponent<DialogueManager>();
         }
 
+        public static void RefreshQuestHintIfVisible()
+        {
+            instance?.RefreshQuestHint();
+        }
+
         private void Awake()
         {
             instance = this;
@@ -110,6 +117,7 @@ namespace WitcherGame
                 dialoguePanel.SetActive(false);
             }
 
+            SetTaskHintVisible(false);
             PlayerInputController.RefreshPlayerControl();
         }
 
@@ -133,6 +141,7 @@ namespace WitcherGame
             lineIndex = 0;
             dialogueActive = true;
             dialoguePanel.SetActive(true);
+            RefreshQuestHint();
             PlayerInputController.RefreshPlayerControl();
             ShowLine(activeLines[lineIndex]);
         }
@@ -160,6 +169,7 @@ namespace WitcherGame
             speakerNameText.text = line.SpeakerName;
             currentFullText = line.Text;
             continueHintText.text = isTyping ? string.Empty : "Enter 继续";
+            RefreshQuestHint();
             StopTyping();
             typingRoutine = StartCoroutine(TypeLine(currentFullText));
         }
@@ -197,6 +207,7 @@ namespace WitcherGame
             StopTyping();
             dialogueActive = false;
             dialoguePanel.SetActive(false);
+            SetTaskHintVisible(false);
             Action finished = onDialogueFinished;
             onDialogueFinished = null;
             finished?.Invoke();
@@ -219,16 +230,73 @@ namespace WitcherGame
         {
             if (dialoguePanel != null && speakerNameText != null && dialogueText != null)
             {
+                EnsureTaskHintUi();
                 return;
             }
 
             Canvas canvas = EnsureCanvas("Story UI Canvas", 160);
-            dialoguePanel = CreatePanel("DialoguePanel", canvas.transform, new Vector2(980f, 196f), new Vector2(0f, 34f), new Vector2(0.5f, 0f), new Color32(5, 7, 10, 232));
+            dialoguePanel = CreatePanel("DialoguePanel", canvas.transform, new Vector2(980f, 224f), new Vector2(0f, 34f), new Vector2(0.5f, 0f), new Color32(5, 7, 10, 232));
             AddOutline(dialoguePanel, new Color32(117, 92, 52, 255), new Vector2(2f, -2f));
             CreatePanel("Dialogue Inner Bloodline", dialoguePanel.transform, new Vector2(920f, 2f), new Vector2(30f, -52f), new Vector2(0f, 1f), new Color32(113, 16, 24, 200));
             speakerNameText = CreateText("Dialogue Speaker Name", dialoguePanel.transform, "角色名", 24, TextAnchor.MiddleLeft, new Vector2(30f, -18f), new Vector2(260f, 36f), new Color32(238, 211, 150, 255));
             dialogueText = CreateText("Dialogue Content", dialoguePanel.transform, "对白", 23, TextAnchor.UpperLeft, new Vector2(30f, -68f), new Vector2(920f, 86f), new Color32(225, 224, 209, 255));
-            continueHintText = CreateText("Dialogue Continue Hint", dialoguePanel.transform, "Enter 继续", 14, TextAnchor.MiddleRight, new Vector2(710f, -154f), new Vector2(240f, 24f), new Color32(155, 166, 166, 255));
+            EnsureTaskHintUi();
+            continueHintText = CreateText("Dialogue Continue Hint", dialoguePanel.transform, "Enter 继续", 14, TextAnchor.MiddleRight, new Vector2(710f, -184f), new Vector2(240f, 24f), new Color32(155, 166, 166, 255));
+        }
+
+        private void EnsureTaskHintUi()
+        {
+            if (dialoguePanel == null || taskHintPanel != null && taskHintText != null)
+            {
+                return;
+            }
+
+            RectTransform dialogueRect = dialoguePanel.GetComponent<RectTransform>();
+            if (dialogueRect != null && dialogueRect.sizeDelta.y < 224f)
+            {
+                dialogueRect.sizeDelta = new Vector2(dialogueRect.sizeDelta.x, 224f);
+            }
+
+            RectTransform continueRect = continueHintText == null ? null : continueHintText.GetComponent<RectTransform>();
+            if (continueRect != null)
+            {
+                continueRect.anchoredPosition = new Vector2(710f, -184f);
+            }
+
+            taskHintPanel = CreatePanel("Dialogue Task Hint Panel", dialoguePanel.transform, new Vector2(702f, 34f), new Vector2(30f, -158f), new Vector2(0f, 1f), new Color32(15, 18, 16, 210));
+            AddOutline(taskHintPanel, new Color32(77, 95, 67, 220), new Vector2(1f, -1f));
+            taskHintText = CreateText("Dialogue Task Hint Text", taskHintPanel.transform, "当前任务", 17, TextAnchor.MiddleLeft, new Vector2(14f, -5f), new Vector2(668f, 24f), new Color32(226, 214, 158, 255));
+            taskHintPanel.SetActive(false);
+        }
+
+        private void RefreshQuestHint()
+        {
+            if (!dialogueActive || taskHintPanel == null || taskHintText == null)
+            {
+                return;
+            }
+
+            questManager = questManager == null ? FindObjectOfType<QuestManager>() : questManager;
+            QuestManager.QuestObjective objective = questManager == null ? null : questManager.CurrentObjective;
+            if (objective == null || string.IsNullOrWhiteSpace(objective.text))
+            {
+                SetTaskHintVisible(false);
+                return;
+            }
+
+            taskHintText.text = objective.completed ? $"任务完成：{objective.text}" : $"当前任务：{objective.text}";
+            taskHintText.color = objective.completed
+                ? new Color32(176, 214, 148, 255)
+                : new Color32(226, 214, 158, 255);
+            SetTaskHintVisible(true);
+        }
+
+        private void SetTaskHintVisible(bool visible)
+        {
+            if (taskHintPanel != null)
+            {
+                taskHintPanel.SetActive(visible);
+            }
         }
 
         private static Canvas EnsureCanvas(string name, int sortingOrder)

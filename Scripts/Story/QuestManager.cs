@@ -47,6 +47,7 @@ namespace WitcherGame
         private QuestData activeQuest;
 
         public QuestData ActiveQuest => activeQuest;
+        public QuestObjective CurrentObjective => activeQuest != null && activeQuest.objectives.Count > 0 ? activeQuest.objectives[0] : null;
 
         public static QuestManager CreateIfMissing()
         {
@@ -97,6 +98,7 @@ namespace WitcherGame
             activeQuest = quest;
             SetQuestPanelVisible(activeQuest != null);
             RefreshQuestUi();
+            DialogueManager.RefreshQuestHintIfVisible();
         }
 
         public void SetObjectiveCompleted(int objectiveIndex, bool completed)
@@ -108,6 +110,7 @@ namespace WitcherGame
 
             activeQuest.objectives[objectiveIndex].completed = completed;
             RefreshQuestUi();
+            DialogueManager.RefreshQuestHintIfVisible();
         }
 
         public void SetObjectiveCompleted(string objectiveText, bool completed)
@@ -137,6 +140,7 @@ namespace WitcherGame
             activeQuest.objectives.Clear();
             activeQuest.objectives.Add(new QuestObjective(objectiveText) { completed = completed });
             RefreshQuestUi();
+            DialogueManager.RefreshQuestHintIfVisible();
         }
 
         private void RefreshQuestUi()
