@@ -127,6 +127,18 @@ namespace WitcherGame
             }
         }
 
+        public void SetCurrentObjective(string objectiveText, bool completed = false)
+        {
+            if (activeQuest == null)
+            {
+                return;
+            }
+
+            activeQuest.objectives.Clear();
+            activeQuest.objectives.Add(new QuestObjective(objectiveText) { completed = completed });
+            RefreshQuestUi();
+        }
+
         private void RefreshQuestUi()
         {
             if (activeQuest == null)

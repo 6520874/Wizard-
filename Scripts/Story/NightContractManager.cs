@@ -9,14 +9,13 @@ namespace WitcherGame
     public class NightContractManager : MonoBehaviour
     {
         private const string ManagerName = "Night Contract Manager";
-        private const int ObjectiveAcceptContract = 0;
-        private const int ObjectiveInvestigateWell = 1;
-        private const int ObjectiveInvestigateMill = 2;
-        private const int ObjectiveInvestigateWidow = 3;
-        private const int ObjectiveClearAmbush = 4;
-        private const int ObjectiveTruthChoice = 5;
-        private const int ObjectiveDefeatBoss = 6;
-        private const int ObjectiveReturnVillage = 7;
+        private const string ObjectiveInvestigateWell = "调查老井旁的黑血，确认怪物弱点";
+        private const string ObjectiveInvestigateMill = "调查老磨坊的爪痕，削弱护盾";
+        private const string ObjectiveInvestigateWidow = "询问寡妇家的假供词，判断真相";
+        private const string ObjectiveClearAmbush = "击败被哭声吸引来的怪物";
+        private const string ObjectiveTruthChoice = "判断哭声真正来源";
+        private const string ObjectiveDefeatBoss = "击败井底哭魂";
+        private const string ObjectiveReturnVillage = "回村结算，等待第二晚异变";
 
         private static NightContractManager instance;
 
@@ -96,6 +95,16 @@ namespace WitcherGame
                 return;
             }
 
+            if (ShouldBlockOutOfOrderNode(nodeId))
+            {
+                dialogueManager = dialogueManager == null ? DialogueManager.CreateIfMissing() : dialogueManager;
+                dialogueManager.StartDialogue(new[]
+                {
+                    new DialogueLine("猎魔人", "先按当前委托目标来。线索如果乱了，真相也会乱。")
+                });
+                return;
+            }
+
             switch (nodeId)
             {
                 case NightInvestigationNodeId.OldWell:
@@ -110,6 +119,36 @@ namespace WitcherGame
             }
         }
 
+        private bool ShouldBlockOutOfOrderNode(NightInvestigationNodeId nodeId)
+        {
+            if (!foundBlackBlood)
+            {
+                return nodeId != NightInvestigationNodeId.OldWell;
+            }
+
+            if (clearedAmbushCount < 1)
+            {
+                return true;
+            }
+
+            if (!foundClawMarks)
+            {
+                return nodeId != NightInvestigationNodeId.OldMill;
+            }
+
+            if (clearedAmbushCount < 2)
+            {
+                return true;
+            }
+
+            if (!foundFalseTestimony)
+            {
+                return nodeId != NightInvestigationNodeId.WidowHouse;
+            }
+
+            return true;
+        }
+
         public void NotifyEncounterCleared(NightContractEncounterRole role)
         {
             if (!contractStarted)
@@ -120,13 +159,25 @@ namespace WitcherGame
             if (role == NightContractEncounterRole.ClueAmbush)
             {
                 clearedAmbushCount++;
-                questManager?.SetObjectiveCompleted(ObjectiveClearAmbush, true);
+                if (!foundClawMarks)
+                {
+                    SetCurrentQuestObjective(ObjectiveInvestigateMill);
+                }
+                else if (!foundFalseTestimony)
+                {
+                    SetCurrentQuestObjective(ObjectiveInvestigateWidow);
+                }
+                else if (!truthChoiceResolved)
+                {
+                    SetCurrentQuestObjective(ObjectiveTruthChoice);
+                }
+
                 return;
             }
 
             if (role == NightContractEncounterRole.Boss)
             {
-                questManager?.SetObjectiveCompleted(ObjectiveDefeatBoss, true);
+                SetCurrentQuestObjective(ObjectiveReturnVillage, true);
                 if (!settlementShown)
                 {
                     settlementShown = true;
@@ -169,19 +220,11 @@ namespace WitcherGame
                 description = "调查灰鸦村夜里传出的女人哭声。每条线索都会削弱最终怪物：找出真相，比直接拔剑更重要。",
                 objectives = new List<QuestManager.QuestObjective>
                 {
-                    new QuestManager.QuestObjective("接受灰鸦村的猎魔委托"),
-                    new QuestManager.QuestObjective("调查老井旁的黑血，确认怪物弱点"),
-                    new QuestManager.QuestObjective("调查老磨坊的爪痕，削弱护盾"),
-                    new QuestManager.QuestObjective("询问寡妇家的假供词，判断真相"),
-                    new QuestManager.QuestObjective("击败被哭声吸引来的怪物"),
-                    new QuestManager.QuestObjective("判断哭声真正来源"),
-                    new QuestManager.QuestObjective("击败井底哭魂"),
-                    new QuestManager.QuestObjective("回村结算，等待第二晚异变")
+                    new QuestManager.QuestObjective(ObjectiveInvestigateWell)
                 }
             };
 
             questManager.StartQuest(quest);
-            questManager.SetObjectiveCompleted(ObjectiveAcceptContract, true);
         }
 
         private IEnumerator ShowContractBriefingWhenReady()
@@ -260,7 +303,8 @@ namespace WitcherGame
             }
 
             foundBlackBlood = true;
-            CompleteNode(NightInvestigationNodeId.OldWell, ObjectiveInvestigateWell);
+            CompleteNode(NightInvestigationNodeId.OldWell);
+            SetCurrentQuestObjective(ObjectiveClearAmbush);
             DialogueLine[] lines =
             {
                 new DialogueLine("老井", "井沿凝着黑色血迹，银粉碰上去时发出轻微嘶鸣。"),
@@ -277,7 +321,8 @@ namespace WitcherGame
             }
 
             foundClawMarks = true;
-            CompleteNode(NightInvestigationNodeId.OldMill, ObjectiveInvestigateMill);
+            CompleteNode(NightInvestigationNodeId.OldMill);
+            SetCurrentQuestObjective(ObjectiveClearAmbush);
             DialogueLine[] lines =
             {
                 new DialogueLine("老磨坊", "木门上有反复抓挠的沟痕，却没有从外面破门的痕迹。"),
@@ -294,7 +339,8 @@ namespace WitcherGame
             }
 
             foundFalseTestimony = true;
-            CompleteNode(NightInvestigationNodeId.WidowHouse, ObjectiveInvestigateWidow);
+            CompleteNode(NightInvestigationNodeId.WidowHouse);
+            SetCurrentQuestObjective(ObjectiveTruthChoice);
             DialogueLine[] lines =
             {
                 new DialogueLine("寡妇", "我听见哭声从井底来……不，从磨坊来。别问了，猎魔人。"),
@@ -303,13 +349,18 @@ namespace WitcherGame
             dialogueManager.StartDialogue(lines, ShowTruthChoice);
         }
 
-        private void CompleteNode(NightInvestigationNodeId id, int objectiveIndex)
+        private void CompleteNode(NightInvestigationNodeId id)
         {
-            questManager?.SetObjectiveCompleted(objectiveIndex, true);
             if (nodes.TryGetValue(id, out NightInvestigationNode node))
             {
                 node.SetCompleted(true);
             }
+        }
+
+        private void SetCurrentQuestObjective(string objectiveText, bool completed = false)
+        {
+            questManager = questManager == null ? QuestManager.CreateIfMissing() : questManager;
+            questManager.SetCurrentObjective(objectiveText, completed);
         }
 
         private void ShowTruthChoice()
@@ -336,7 +387,7 @@ namespace WitcherGame
             truthChoiceResolved = true;
             truthCorrect = choiceIndex == 2;
             choicePanel.SetActive(false);
-            questManager?.SetObjectiveCompleted(ObjectiveTruthChoice, true);
+            SetCurrentQuestObjective(ObjectiveDefeatBoss);
 
             DialogueLine[] lines = truthCorrect
                 ? new[]
@@ -411,7 +462,7 @@ namespace WitcherGame
                 yield return null;
             }
 
-            questManager?.SetObjectiveCompleted(ObjectiveReturnVillage, true);
+            SetCurrentQuestObjective(ObjectiveReturnVillage, true);
             DialogueLine[] lines =
             {
                 new DialogueLine("委托结算", "村民把最后的银币放在桌上。没人欢呼，因为井口的哭声停得太突然。"),
