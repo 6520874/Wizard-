@@ -93,8 +93,8 @@ namespace WitcherGame
             {
                 if (startFirstQuestWhenDefaultDialogueEnds)
                 {
-                    questManager = questManager == null ? FindObjectOfType<QuestManager>() : questManager;
-                    questManager?.StartFirstMainQuest();
+                    GeraltController player = FindObjectOfType<GeraltController>();
+                    NightContractManager.CreateIfMissing(player).BeginFirstNightContract();
                 }
             });
         }

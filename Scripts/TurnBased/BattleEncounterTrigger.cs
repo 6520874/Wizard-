@@ -21,6 +21,13 @@ namespace WitcherGame
 
         private Sprite battleSprite;
         private TurnBasedEnemyVisualKind visualKind = TurnBasedEnemyVisualKind.CorruptedWolf;
+        private int investigationHealthPenalty;
+        private int investigationAttackPenalty;
+        private int investigationDefensePenalty;
+        private int investigationShieldAdjustment;
+        private string[] investigationWeaknessLabels;
+        private bool[] investigationWeaknessDiscovery;
+        private string battleOpeningNote;
         private bool consumed;
         private Collider2D encounterCollider;
         private GeraltController player;
@@ -28,6 +35,7 @@ namespace WitcherGame
         private float triggerHalfHeight = 1.1f;
 
         public string EncounterTitle => encounterTitle;
+        public string BattleOpeningNote => battleOpeningNote;
 
         private void Awake()
         {
@@ -88,6 +96,38 @@ namespace WitcherGame
             ConfigureTriggerBounds(new Vector2(0f, 0.95f), new Vector2(2.35f, 1.95f), 1.65f, 1.35f);
         }
 
+        public void ConfigureContractBoss(Sprite sprite, int waveBonus, string title, string name)
+        {
+            ConfigureBoss(sprite, waveBonus);
+            if (!string.IsNullOrWhiteSpace(title))
+            {
+                encounterTitle = title;
+            }
+
+            if (!string.IsNullOrWhiteSpace(name))
+            {
+                enemyName = name;
+            }
+        }
+
+        public void ApplyInvestigationModifiers(
+            int healthPenalty,
+            int attackPenalty,
+            int defensePenalty,
+            int shieldAdjustment,
+            string[] weaknessLabels,
+            bool[] weaknessDiscovery,
+            string openingNote)
+        {
+            investigationHealthPenalty = Mathf.Max(0, healthPenalty);
+            investigationAttackPenalty = Mathf.Max(0, attackPenalty);
+            investigationDefensePenalty = Mathf.Max(0, defensePenalty);
+            investigationShieldAdjustment = shieldAdjustment;
+            investigationWeaknessLabels = weaknessLabels;
+            investigationWeaknessDiscovery = weaknessDiscovery;
+            battleOpeningNote = openingNote;
+        }
+
         public void ApplyMapScale(float visualScale)
         {
             float safeScale = Mathf.Clamp(visualScale, 0.15f, 1.5f);
@@ -104,16 +144,20 @@ namespace WitcherGame
                 TurnBasedEnemyState enemy = new TurnBasedEnemyState
                 {
                     Name = enemyCount <= 1 ? enemyName : $"{enemyName} {i + 1}",
-                    MaxHealth = enemyHealth,
-                    Health = enemyHealth,
-                    Attack = enemyAttack,
-                    Defense = enemyDefense,
+                    MaxHealth = Mathf.Max(1, enemyHealth - investigationHealthPenalty),
+                    Health = Mathf.Max(1, enemyHealth - investigationHealthPenalty),
+                    Attack = Mathf.Max(1, enemyAttack - investigationAttackPenalty),
+                    Defense = Mathf.Max(0, enemyDefense - investigationDefensePenalty),
                     ExperienceReward = experienceReward,
                     GoldReward = goldReward,
                     LootName = lootName,
                     LootChance = lootChance,
                     Sprite = battleSprite,
-                    SourceObject = gameObject
+                    SourceObject = gameObject,
+                    ShieldAdjustment = investigationShieldAdjustment,
+                    WeaknessLabelsOverride = investigationWeaknessLabels,
+                    WeaknessDiscoveryOverride = investigationWeaknessDiscovery,
+                    BattleOpeningNote = battleOpeningNote
                 };
                 TurnBasedEnemyAnimationLibrary.FillAnimations(enemy, visualKind);
                 result.Add(enemy);

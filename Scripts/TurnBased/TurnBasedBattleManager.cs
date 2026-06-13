@@ -41,6 +41,10 @@ namespace WitcherGame
         public Sprite[] AttackFrames;
         public Sprite[] HurtFrames;
         public GameObject SourceObject;
+        public int ShieldAdjustment;
+        public string[] WeaknessLabelsOverride;
+        public bool[] WeaknessDiscoveryOverride;
+        public string BattleOpeningNote;
         public readonly List<BattleStatusEffect> Statuses = new List<BattleStatusEffect>();
 
         public bool IsAlive => Health > 0;
@@ -260,7 +264,10 @@ namespace WitcherGame
                 battleHud.SetSelectedCommand(selectedCommandIndex);
                 battleHud.SetCommandsEnabled(false);
                 PauseWorldRendering();
-                battleHud.SetMessage($"遭遇 {encounterTitle}！");
+                string openingNote = string.IsNullOrWhiteSpace(currentEncounter.BattleOpeningNote)
+                    ? $"遭遇 {encounterTitle}！"
+                    : currentEncounter.BattleOpeningNote;
+                battleHud.SetMessage(openingNote);
             });
 
             if (!battleActive || currentEncounter == null)

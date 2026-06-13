@@ -21,7 +21,7 @@ namespace WitcherGame
     // 中文说明：在地图固定位置生成狼、女妖和月夜骑士战斗遭遇。
     public class WildHuntBossSpawnDirector : MonoBehaviour
     {
-        [SerializeField] private bool autoSpawn = true;
+        [SerializeField] private bool autoSpawn = false;
         [SerializeField] private float spawnDelay = 0.35f;
         [SerializeField] private float minStageX = -7.6f;
         [SerializeField] private float maxStageX = 55.6f;

@@ -97,6 +97,7 @@ namespace WitcherGame
 
             ApplyRoomLook(room);
             WitcherEquipmentShopTrigger.CreateIfMissing();
+            NightContractManager.CreateIfMissing(player);
             EnsureCameraFollow(stageBounds);
 
             hud = hud == null ? FindObjectOfType<WitcherHud>() : hud;

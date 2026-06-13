@@ -561,7 +561,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7c3f6d8e6da94d1893f3dd36f69c60da, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  autoSpawn: 1
+  autoSpawn: 0
   spawnDelay: 0.35
   minStageX: -7.6
   maxStageX: 55.6

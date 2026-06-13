@@ -250,8 +250,8 @@ namespace WitcherGame
                     Portrait = FirstFrame(enemy.IdleFrames, enemy.Sprite),
                     UiPosition = enemyPositions != null && i < enemyPositions.Count ? enemyPositions[i] : GetFallbackEnemyPosition(i),
                     VisualKind = enemy.VisualKind,
-                    Weaknesses = GetWeaknessLabels(enemy.VisualKind),
-                    WeaknessDiscovered = GetWeaknessDiscovery(enemy.VisualKind)
+                    Weaknesses = enemy.WeaknessLabelsOverride != null && enemy.WeaknessLabelsOverride.Length > 0 ? enemy.WeaknessLabelsOverride : GetWeaknessLabels(enemy.VisualKind),
+                    WeaknessDiscovered = enemy.WeaknessDiscoveryOverride != null && enemy.WeaknessDiscoveryOverride.Length > 0 ? enemy.WeaknessDiscoveryOverride : GetWeaknessDiscovery(enemy.VisualKind)
                 });
             }
 
@@ -316,15 +316,21 @@ namespace WitcherGame
                 return 0;
             }
 
+            int baseShield;
             switch (enemy.VisualKind)
             {
                 case TurnBasedEnemyVisualKind.BlackMoonKnight:
-                    return Mathf.Clamp(Mathf.CeilToInt(enemy.Health / (float)enemy.MaxHealth * 5f), 1, 5);
+                    baseShield = Mathf.Clamp(Mathf.CeilToInt(enemy.Health / (float)enemy.MaxHealth * 5f), 1, 5);
+                    break;
                 case TurnBasedEnemyVisualKind.BloodWraith:
-                    return Mathf.Clamp(Mathf.CeilToInt(enemy.Health / (float)enemy.MaxHealth * 4f), 1, 4);
+                    baseShield = Mathf.Clamp(Mathf.CeilToInt(enemy.Health / (float)enemy.MaxHealth * 4f), 1, 4);
+                    break;
                 default:
-                    return Mathf.Clamp(Mathf.CeilToInt(enemy.Health / (float)enemy.MaxHealth * 3f), 1, 3);
+                    baseShield = Mathf.Clamp(Mathf.CeilToInt(enemy.Health / (float)enemy.MaxHealth * 3f), 1, 3);
+                    break;
             }
+
+            return Mathf.Clamp(baseShield + enemy.ShieldAdjustment, 0, 5);
         }
 
         private static string[] GetWeaknessLabels(TurnBasedEnemyVisualKind kind)

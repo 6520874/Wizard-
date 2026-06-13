@@ -237,7 +237,8 @@ namespace WitcherGame
 
             if (startFirstQuestWhenIntroSkipped && questManager != null)
             {
-                questManager.StartFirstMainQuest();
+                GeraltController player = FindObjectOfType<GeraltController>();
+                NightContractManager.CreateIfMissing(player).BeginFirstNightContract();
             }
         }
 
