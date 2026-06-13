@@ -16,6 +16,8 @@ namespace WitcherGame
 
         [Header("Optional UI References")]
         [SerializeField] private GameObject dialoguePanel;
+        [SerializeField] private GameObject speakerPortraitFrame;
+        [SerializeField] private Image speakerPortraitImage;
         [SerializeField] private Text speakerNameText;
         [SerializeField] private Text dialogueText;
         [SerializeField] private GameObject taskHintPanel;
@@ -117,6 +119,7 @@ namespace WitcherGame
                 dialoguePanel.SetActive(false);
             }
 
+            SetSpeakerPortraitVisible(false);
             SetTaskHintVisible(false);
             PlayerInputController.RefreshPlayerControl();
         }
@@ -169,6 +172,7 @@ namespace WitcherGame
             speakerNameText.text = line.SpeakerName;
             currentFullText = line.Text;
             continueHintText.text = isTyping ? string.Empty : "Enter 继续";
+            RefreshSpeakerPortrait(line.SpeakerName);
             RefreshQuestHint();
             StopTyping();
             typingRoutine = StartCoroutine(TypeLine(currentFullText));
@@ -207,6 +211,7 @@ namespace WitcherGame
             StopTyping();
             dialogueActive = false;
             dialoguePanel.SetActive(false);
+            SetSpeakerPortraitVisible(false);
             SetTaskHintVisible(false);
             Action finished = onDialogueFinished;
             onDialogueFinished = null;
@@ -230,7 +235,9 @@ namespace WitcherGame
         {
             if (dialoguePanel != null && speakerNameText != null && dialogueText != null)
             {
+                EnsureSpeakerPortraitUi();
                 EnsureTaskHintUi();
+                ReflowDialogueTextForPortrait();
                 return;
             }
 
@@ -238,10 +245,44 @@ namespace WitcherGame
             dialoguePanel = CreatePanel("DialoguePanel", canvas.transform, new Vector2(980f, 224f), new Vector2(0f, 34f), new Vector2(0.5f, 0f), new Color32(5, 7, 10, 232));
             AddOutline(dialoguePanel, new Color32(117, 92, 52, 255), new Vector2(2f, -2f));
             CreatePanel("Dialogue Inner Bloodline", dialoguePanel.transform, new Vector2(920f, 2f), new Vector2(30f, -52f), new Vector2(0f, 1f), new Color32(113, 16, 24, 200));
-            speakerNameText = CreateText("Dialogue Speaker Name", dialoguePanel.transform, "角色名", 24, TextAnchor.MiddleLeft, new Vector2(30f, -18f), new Vector2(260f, 36f), new Color32(238, 211, 150, 255));
-            dialogueText = CreateText("Dialogue Content", dialoguePanel.transform, "对白", 23, TextAnchor.UpperLeft, new Vector2(30f, -68f), new Vector2(920f, 86f), new Color32(225, 224, 209, 255));
+            EnsureSpeakerPortraitUi();
+            speakerNameText = CreateText("Dialogue Speaker Name", dialoguePanel.transform, "角色名", 24, TextAnchor.MiddleLeft, new Vector2(174f, -18f), new Vector2(260f, 36f), new Color32(238, 211, 150, 255));
+            dialogueText = CreateText("Dialogue Content", dialoguePanel.transform, "对白", 23, TextAnchor.UpperLeft, new Vector2(174f, -68f), new Vector2(776f, 86f), new Color32(225, 224, 209, 255));
             EnsureTaskHintUi();
             continueHintText = CreateText("Dialogue Continue Hint", dialoguePanel.transform, "Enter 继续", 14, TextAnchor.MiddleRight, new Vector2(710f, -184f), new Vector2(240f, 24f), new Color32(155, 166, 166, 255));
+            ReflowDialogueTextForPortrait();
+        }
+
+        private void EnsureSpeakerPortraitUi()
+        {
+            if (dialoguePanel == null)
+            {
+                return;
+            }
+
+            if (speakerPortraitFrame != null && speakerPortraitImage != null)
+            {
+                return;
+            }
+
+            speakerPortraitFrame = CreatePanel(
+                "Dialogue Speaker Portrait Frame",
+                dialoguePanel.transform,
+                new Vector2(126f, 142f),
+                new Vector2(28f, -62f),
+                new Vector2(0f, 1f),
+                new Color32(8, 10, 11, 228));
+            AddOutline(speakerPortraitFrame, new Color32(99, 121, 111, 235), new Vector2(2f, -2f));
+
+            speakerPortraitImage = CreateImage(
+                "Dialogue Speaker Portrait",
+                speakerPortraitFrame.transform,
+                new Vector2(112f, 130f),
+                new Vector2(7f, -6f),
+                Color.white,
+                new Vector2(0f, 1f));
+            speakerPortraitImage.preserveAspect = true;
+            speakerPortraitFrame.SetActive(false);
         }
 
         private void EnsureTaskHintUi()
@@ -263,10 +304,37 @@ namespace WitcherGame
                 continueRect.anchoredPosition = new Vector2(710f, -184f);
             }
 
-            taskHintPanel = CreatePanel("Dialogue Task Hint Panel", dialoguePanel.transform, new Vector2(702f, 34f), new Vector2(30f, -158f), new Vector2(0f, 1f), new Color32(15, 18, 16, 210));
+            taskHintPanel = CreatePanel("Dialogue Task Hint Panel", dialoguePanel.transform, new Vector2(558f, 34f), new Vector2(174f, -158f), new Vector2(0f, 1f), new Color32(15, 18, 16, 210));
             AddOutline(taskHintPanel, new Color32(77, 95, 67, 220), new Vector2(1f, -1f));
-            taskHintText = CreateText("Dialogue Task Hint Text", taskHintPanel.transform, "当前任务", 17, TextAnchor.MiddleLeft, new Vector2(14f, -5f), new Vector2(668f, 24f), new Color32(226, 214, 158, 255));
+            taskHintText = CreateText("Dialogue Task Hint Text", taskHintPanel.transform, "当前任务", 17, TextAnchor.MiddleLeft, new Vector2(14f, -5f), new Vector2(524f, 24f), new Color32(226, 214, 158, 255));
             taskHintPanel.SetActive(false);
+        }
+
+        private void ReflowDialogueTextForPortrait()
+        {
+            SetRect(speakerNameText, new Vector2(174f, -18f), new Vector2(260f, 36f));
+            SetRect(dialogueText, new Vector2(174f, -68f), new Vector2(776f, 86f));
+
+            RectTransform taskRect = taskHintPanel == null ? null : taskHintPanel.GetComponent<RectTransform>();
+            if (taskRect != null)
+            {
+                taskRect.sizeDelta = new Vector2(558f, 34f);
+                taskRect.anchoredPosition = new Vector2(174f, -158f);
+            }
+
+            SetRect(taskHintText, new Vector2(14f, -5f), new Vector2(524f, 24f));
+        }
+
+        private static void SetRect(Text text, Vector2 position, Vector2 size)
+        {
+            RectTransform rect = text == null ? null : text.GetComponent<RectTransform>();
+            if (rect == null)
+            {
+                return;
+            }
+
+            rect.sizeDelta = size;
+            rect.anchoredPosition = position;
         }
 
         private void RefreshQuestHint()
@@ -296,6 +364,34 @@ namespace WitcherGame
             if (taskHintPanel != null)
             {
                 taskHintPanel.SetActive(visible);
+            }
+        }
+
+        private void RefreshSpeakerPortrait(string speakerName)
+        {
+            EnsureSpeakerPortraitUi();
+            if (speakerPortraitImage == null)
+            {
+                return;
+            }
+
+            Sprite portrait = DialoguePortraitLibrary.GetPortrait(speakerName);
+            if (portrait == null)
+            {
+                SetSpeakerPortraitVisible(false);
+                return;
+            }
+
+            speakerPortraitImage.sprite = portrait;
+            speakerPortraitImage.color = Color.white;
+            SetSpeakerPortraitVisible(true);
+        }
+
+        private void SetSpeakerPortraitVisible(bool visible)
+        {
+            if (speakerPortraitFrame != null)
+            {
+                speakerPortraitFrame.SetActive(visible);
             }
         }
 
@@ -333,6 +429,22 @@ namespace WitcherGame
             image.color = color;
             image.sprite = WitcherSpriteLibrary.GetSolidSprite(color);
             return panel;
+        }
+
+        private static Image CreateImage(string name, Transform parent, Vector2 size, Vector2 position, Color color, Vector2 anchor)
+        {
+            GameObject imageObject = new GameObject(name);
+            imageObject.transform.SetParent(parent, false);
+            RectTransform rect = imageObject.AddComponent<RectTransform>();
+            rect.anchorMin = anchor;
+            rect.anchorMax = anchor;
+            rect.pivot = anchor;
+            rect.sizeDelta = size;
+            rect.anchoredPosition = position;
+
+            Image image = imageObject.AddComponent<Image>();
+            image.color = color;
+            return image;
         }
 
         private static Text CreateText(string name, Transform parent, string text, int fontSize, TextAnchor anchor, Vector2 position, Vector2 size, Color32 color)
