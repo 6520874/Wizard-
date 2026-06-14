@@ -148,6 +148,13 @@ namespace WitcherGame
             }
         }
 
+        public bool ShouldAutoTriggerNode(NightInvestigationNodeId nodeId)
+        {
+            return contractStarted
+                && !DialogueManager.IsDialogueActive
+                && !ShouldBlockOutOfOrderNode(nodeId);
+        }
+
         private bool ShouldBlockOutOfOrderNode(NightInvestigationNodeId nodeId)
         {
             if (!foundBlackBlood)

@@ -9,7 +9,7 @@ namespace WitcherGame
         WidowHouse
     }
 
-    // 中文说明：地图调查点交互组件，玩家靠近按 E 或鼠标点击后通知夜晚委托系统。
+    // 中文说明：地图调查点交互组件，当前任务目标靠近后自动通知夜晚委托系统。
     [RequireComponent(typeof(Collider2D))]
     public class NightInvestigationNode : MonoBehaviour
     {
@@ -67,6 +67,12 @@ namespace WitcherGame
             player = player == null ? FindObjectOfType<GeraltController>() : player;
             bool nearPlayer = player != null && Vector2.Distance(player.transform.position, transform.position) <= interactDistance;
             RefreshLabel(nearPlayer);
+            if (nearPlayer && manager != null && manager.ShouldAutoTriggerNode(nodeId))
+            {
+                manager.InteractWithNode(nodeId);
+                return;
+            }
+
             if (nearPlayer && Input.GetKeyDown(KeyCode.E))
             {
                 manager?.InteractWithNode(nodeId);
@@ -95,7 +101,7 @@ namespace WitcherGame
                 return;
             }
 
-            string actionText = completed ? "已调查" : isNearPlayer ? "E 调查" : "点击调查";
+            string actionText = completed ? "已调查" : isNearPlayer ? "自动调查中" : "靠近触发";
             label.text = $"{displayName}\n{actionText}";
             label.color = completed
                 ? new Color32(158, 160, 148, 210)

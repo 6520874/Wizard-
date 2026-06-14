@@ -37,8 +37,8 @@ namespace WitcherGame
         {
             if (speakerName == "猎魔人" || speakerName == "灰鸦猎人")
             {
-                return LoadSingleFilePortrait(GeraltPortraitPath, "Dialogue_Geralt_Portrait", 128f)
-                    ?? WitcherSpriteLibrary.GetGeraltFrame(GeraltAnimation.Idle, 0);
+                return WitcherSpriteLibrary.GetGeraltFrame(GeraltAnimation.Idle, 0)
+                    ?? LoadSingleFilePortrait(GeraltPortraitPath, "Dialogue_Geralt_Portrait", 128f);
             }
 
             CharacterCrop crop = GetCharacterCrop(speakerName);

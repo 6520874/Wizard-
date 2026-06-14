@@ -384,7 +384,41 @@ namespace WitcherGame
 
             speakerPortraitImage.sprite = portrait;
             speakerPortraitImage.color = Color.white;
+            ApplySpeakerPortraitFrameStyle(!IsHunterSpeaker(speakerName));
             SetSpeakerPortraitVisible(true);
+        }
+
+        private void ApplySpeakerPortraitFrameStyle(bool showFrame)
+        {
+            if (speakerPortraitFrame == null)
+            {
+                return;
+            }
+
+            Image frameImage = speakerPortraitFrame.GetComponent<Image>();
+            if (frameImage != null)
+            {
+                frameImage.color = showFrame
+                    ? new Color32(8, 10, 11, 228)
+                    : new Color32(8, 10, 11, 0);
+            }
+
+            Outline frameOutline = speakerPortraitFrame.GetComponent<Outline>();
+            if (frameOutline != null)
+            {
+                frameOutline.enabled = showFrame;
+            }
+        }
+
+        private static bool IsHunterSpeaker(string speakerName)
+        {
+            if (string.IsNullOrWhiteSpace(speakerName))
+            {
+                return false;
+            }
+
+            string normalizedName = speakerName.Trim();
+            return normalizedName == "猎魔人" || normalizedName == "灰鸦猎人";
         }
 
         private void SetSpeakerPortraitVisible(bool visible)
