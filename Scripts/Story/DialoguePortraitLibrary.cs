@@ -8,7 +8,7 @@ namespace WitcherGame
     public static class DialoguePortraitLibrary
     {
         private const string DialogueCharactersPath = "Art/Story/DialogueCharacters.png";
-        private const string GeraltPortraitPath = "Art/UI/GeraltPortrait.png";
+        private const string GeraltIdleFramePath = "Art/Geralt/Frames/Idle/Geralt_Idle_00.png";
         private static readonly Dictionary<string, Sprite> CachedPortraits = new Dictionary<string, Sprite>();
 
         public static Sprite GetPortrait(string speakerName)
@@ -19,6 +19,15 @@ namespace WitcherGame
             }
 
             string normalizedName = speakerName.Trim();
+            if (IsHunterSpeaker(normalizedName))
+            {
+                Sprite currentPlayerSprite = LoadCurrentHunterSprite();
+                if (currentPlayerSprite != null)
+                {
+                    return currentPlayerSprite;
+                }
+            }
+
             if (CachedPortraits.TryGetValue(normalizedName, out Sprite cached))
             {
                 return cached;
@@ -35,10 +44,9 @@ namespace WitcherGame
 
         private static Sprite LoadPortrait(string speakerName)
         {
-            if (speakerName == "猎魔人" || speakerName == "灰鸦猎人")
+            if (IsHunterSpeaker(speakerName))
             {
-                return WitcherSpriteLibrary.GetGeraltFrame(GeraltAnimation.Idle, 0)
-                    ?? LoadSingleFilePortrait(GeraltPortraitPath, "Dialogue_Geralt_Portrait", 128f);
+                return LoadSingleFilePortrait(GeraltIdleFramePath, "Dialogue_Geralt_Real_Idle", 82f);
             }
 
             CharacterCrop crop = GetCharacterCrop(speakerName);
@@ -73,6 +81,17 @@ namespace WitcherGame
                 crop.PixelsPerUnit);
             sprite.name = $"Dialogue_{speakerName}_Portrait";
             return sprite;
+        }
+
+        private static Sprite LoadCurrentHunterSprite()
+        {
+            GeraltController player = UnityEngine.Object.FindObjectOfType<GeraltController>();
+            if (player == null || !player.TryGetComponent(out SpriteRenderer spriteRenderer))
+            {
+                return null;
+            }
+
+            return spriteRenderer.sprite;
         }
 
         private static Sprite LoadSingleFilePortrait(string relativePath, string spriteName, float pixelsPerUnit)
@@ -169,6 +188,11 @@ namespace WitcherGame
         private static bool IsNearBlackBackground(Color32 color)
         {
             return color.r <= 4 && color.g <= 4 && color.b <= 4;
+        }
+
+        private static bool IsHunterSpeaker(string speakerName)
+        {
+            return speakerName == "猎魔人" || speakerName == "灰鸦猎人";
         }
 
         private readonly struct CharacterCrop
