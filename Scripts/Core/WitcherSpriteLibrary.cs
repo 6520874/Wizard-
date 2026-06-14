@@ -3,6 +3,7 @@ using UnityEngine;
 
 namespace WitcherGame
 {
+    // 中文说明：定义猎魔人主角可播放的动画类型。
     public enum GeraltAnimation
     {
         Idle,

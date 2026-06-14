@@ -3,6 +3,7 @@ using UnityEngine;
 namespace WitcherGame
 {
     // Runtime exploration music player with async loading to keep map entry smooth.
+    // 中文说明：负责播放和循环地图探索背景音乐，进入场景时自动补齐 AudioSource。
     public class WitcherMusicPlayer : MonoBehaviour
     {
         private const string PlayerName = "Witcher Music Player";

@@ -4,6 +4,7 @@ using UnityEngine;
 namespace WitcherGame
 {
     [Serializable]
+    // 中文说明：保存一行剧情对话的说话人和对白文本。
     public struct DialogueLine
     {
         public string SpeakerName;

@@ -195,6 +195,7 @@ namespace WitcherGame
             return speakerName == "猎魔人" || speakerName == "灰鸦猎人";
         }
 
+        // 中文说明：保存组合角色图中的裁剪范围和生成 Sprite 时使用的像素比例。
         private readonly struct CharacterCrop
         {
             public static readonly CharacterCrop Invalid = new CharacterCrop(0, 0, 0, 0, 100f);

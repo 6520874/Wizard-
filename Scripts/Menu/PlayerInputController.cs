@@ -2,6 +2,7 @@ using UnityEngine;
 
 namespace WitcherGame
 {
+    // 中文说明：集中处理玩家菜单快捷键输入，协调主菜单和装备界面的打开关闭。
     public class PlayerInputController : MonoBehaviour
     {
         private const string ControllerName = "Player Input Controller";

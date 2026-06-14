@@ -4,6 +4,7 @@ using UnityEngine;
 
 namespace WitcherGame.Tests
 {
+    // 中文说明：验证回合制技能、任务、敌人动画和队伍系统的编辑器单元测试。
     public class TurnBasedSkillFrameworkTests
     {
         [Test]

@@ -5,6 +5,7 @@ using UnityEngine.UI;
 
 namespace WitcherGame
 {
+    // 中文说明：管理游戏内主菜单，负责打开状态、装备、任务等功能入口。
     public class GameMenuController : MonoBehaviour
     {
         private const string ControllerName = "Game Menu Controller";
@@ -23,6 +24,7 @@ namespace WitcherGame
 
         public bool IsOpen => isOpen;
 
+        // 中文说明：保存一个菜单项的显示文字、说明和点击后执行的动作。
         private class MenuCommand
         {
             public string Label;

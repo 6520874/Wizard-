@@ -202,6 +202,7 @@ namespace WitcherGame
             follow.ConfigureView(stageBounds.IsIsometricVillage ? new Vector3(0.15f, 1.45f, -10f) : new Vector3(2.4f, 1.25f, -10f), stageBounds.IsIsometricVillage ? 0.24f : 0.18f);
         }
 
+        // 中文说明：保存当前地图的出生点、相机边界和是否为等距村庄地图。
         private readonly struct StageBounds
         {
             public StageBounds(float startX, float startY, float minX, float maxX, float minY, float maxY, bool isIsometricVillage)
@@ -224,6 +225,7 @@ namespace WitcherGame
             public bool IsIsometricVillage { get; }
         }
 
+        // 中文说明：保存一个房间/地图段的氛围颜色、雾效和余烬强度配置。
         private readonly struct RoomDefinition
         {
             public RoomDefinition(

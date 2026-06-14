@@ -5,6 +5,7 @@ using UnityEngine;
 
 namespace WitcherGame
 {
+    // 中文说明：定义队伍成员在地图和战斗里会用到的动画类型。
     public enum PartyAnimationKind
     {
         Idle,
@@ -18,6 +19,7 @@ namespace WitcherGame
         Down
     }
 
+    // 中文说明：从角色切图目录读取队伍成员动画帧，并提供待机预览图。
     public static class PartyAnimationLibrary
     {
         private const float PartyPixelsPerUnit = 96f;

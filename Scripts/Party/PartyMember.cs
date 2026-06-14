@@ -3,6 +3,7 @@ using System.Collections.Generic;
 
 namespace WitcherGame
 {
+    // 中文说明：定义装备可以穿戴到角色身上的槽位。
     public enum EquipmentSlot
     {
         Weapon,
@@ -13,6 +14,7 @@ namespace WitcherGame
     }
 
     [Serializable]
+    // 中文说明：保存一件装备的名称、槽位和属性加成。
     public class EquipmentItem
     {
         public string Name;
@@ -40,6 +42,7 @@ namespace WitcherGame
     }
 
     [Serializable]
+    // 中文说明：保存一个队伍成员当前穿戴的全部装备。
     public class PartyEquipment
     {
         public EquipmentItem Weapon;
@@ -100,6 +103,7 @@ namespace WitcherGame
     }
 
     [Serializable]
+    // 中文说明：保存队伍成员已学会技能的名称、定位、消耗和说明。
     public class PartySkill
     {
         public string Name;
@@ -122,6 +126,7 @@ namespace WitcherGame
     }
 
     [Serializable]
+    // 中文说明：保存一个队伍成员的基础属性、装备、技能和入队状态。
     public class PartyMember
     {
         public string Name;

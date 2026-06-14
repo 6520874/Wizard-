@@ -3,6 +3,7 @@ using UnityEngine;
 
 namespace WitcherGame
 {
+    // 中文说明：按队伍成员名字加载头像资源，缺失时回退到占位图。
     public static class PartyPortraitLibrary
     {
         private static readonly Dictionary<string, Sprite> CachedPortraits = new Dictionary<string, Sprite>();

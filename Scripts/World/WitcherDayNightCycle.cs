@@ -3,6 +3,7 @@ using UnityEngine;
 namespace WitcherGame
 {
     // Adds a camera-attached day/night grade plus soft sun and moon glows.
+    // 中文说明：给主相机挂载昼夜色调、太阳/月亮辉光和时间循环效果。
     public class WitcherDayNightCycle : MonoBehaviour
     {
         [SerializeField] private float cycleDuration = 210f;

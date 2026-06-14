@@ -159,6 +159,7 @@ namespace WitcherGame
             }
         }
 
+        // 中文说明：保存单条雨线粒子的渲染器、下落速度倍率和横向漂移量。
         private readonly struct RainStreak
         {
             public RainStreak(SpriteRenderer renderer, float speedMultiplier, float drift)

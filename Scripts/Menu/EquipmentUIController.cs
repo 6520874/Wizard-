@@ -4,6 +4,7 @@ using UnityEngine.UI;
 
 namespace WitcherGame
 {
+    // 中文说明：管理队伍装备界面，显示成员、装备槽、属性并处理换装。
     public class EquipmentUIController : MonoBehaviour
     {
         private const string ControllerName = "Equipment UI Controller";

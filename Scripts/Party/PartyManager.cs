@@ -3,6 +3,7 @@ using UnityEngine;
 
 namespace WitcherGame
 {
+    // 中文说明：管理队伍成员、上阵名单、默认装备和队伍变化通知。
     public class PartyManager : MonoBehaviour
     {
         private const string ManagerName = "Party Manager";

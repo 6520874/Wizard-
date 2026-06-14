@@ -4,6 +4,7 @@ using UnityEngine.UI;
 
 namespace WitcherGame
 {
+    // 中文说明：提供暗黑哥特风 UI 的通用 Canvas、面板、文字和描边创建工具。
     public static class GothicUiFactory
     {
         public static Canvas EnsureCanvas(string name, int sortingOrder)

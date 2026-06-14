@@ -26,6 +26,7 @@ namespace WitcherGame
         YenneferObsidianStorm
     }
 
+    // 中文说明：定义技能会选择自己、单体敌人或全体敌人作为目标。
     public enum BattleSkillTargetKind
     {
         Self,
@@ -34,6 +35,7 @@ namespace WitcherGame
         SingleEnemy
     }
 
+    // 中文说明：定义技能释放时使用的基础表现动画类型。
     public enum BattleSkillAnimationKind
     {
         None,
@@ -44,6 +46,7 @@ namespace WitcherGame
         Item
     }
 
+    // 中文说明：定义技能造成伤害时用于弱点和抗性判断的伤害类型。
     public enum BattleDamageType
     {
         Physical,
@@ -53,6 +56,7 @@ namespace WitcherGame
         Pure
     }
 
+    // 中文说明：定义战斗中可以附加到单位身上的状态效果类型。
     public enum BattleStatusKind
     {
         Guard,

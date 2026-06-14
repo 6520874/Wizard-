@@ -4,6 +4,7 @@ using UnityEngine;
 
 namespace WitcherGame
 {
+    // 中文说明：定义玩家在回合制战斗菜单中可以选择的基础行动。
     public enum TurnBattleAction
     {
         Attack,
@@ -96,6 +97,7 @@ namespace WitcherGame
         public bool BattleActive => battleActive;
         public int TurnNumber => Mathf.Max(1, turnNumber);
 
+        // 中文说明：记录进入战斗前相机的渲染设置，战斗结束后用于恢复地图画面。
         private struct CameraRenderState
         {
             public Camera Camera;
@@ -114,6 +116,7 @@ namespace WitcherGame
             public float ActionValue;
         }
 
+        // 中文说明：用于预演行动条顺序的临时单位数据，不直接改变真实回合状态。
         private struct TimelineSimulationUnit
         {
             public BattleTurnUnit Source;

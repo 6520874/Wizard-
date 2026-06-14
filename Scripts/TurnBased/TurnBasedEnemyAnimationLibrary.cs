@@ -5,6 +5,7 @@ using UnityEngine;
 
 namespace WitcherGame
 {
+    // 中文说明：定义回合制战斗里敌人的视觉资源类型。
     public enum TurnBasedEnemyVisualKind
     {
         CorruptedWolf,

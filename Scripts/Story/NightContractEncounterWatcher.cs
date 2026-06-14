@@ -2,6 +2,7 @@ using UnityEngine;
 
 namespace WitcherGame
 {
+    // 中文说明：定义夜晚委托战斗在任务流程里属于线索小战还是 Boss 战。
     public enum NightContractEncounterRole
     {
         ClueAmbush,

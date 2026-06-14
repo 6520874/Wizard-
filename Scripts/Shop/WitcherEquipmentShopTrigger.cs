@@ -6,6 +6,7 @@ using UnityEngine.UI;
 namespace WitcherGame
 {
     // Places an invisible shop interaction trigger on the village map.
+    // 中文说明：负责装备店门口的靠近检测、交互提示和打开商店流程。
     [RequireComponent(typeof(BoxCollider2D))]
     public class WitcherEquipmentShopTrigger : MonoBehaviour
     {

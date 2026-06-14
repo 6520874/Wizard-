@@ -31,6 +31,7 @@ namespace WitcherGame
         }
     }
 
+    // 中文说明：记录技能对单个目标造成的伤害、治疗、状态和最终生命值。
     public class SkillTargetResult
     {
         public SkillTargetResult(BattleSkillUnit target)

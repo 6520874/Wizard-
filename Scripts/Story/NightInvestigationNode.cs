@@ -2,6 +2,7 @@ using UnityEngine;
 
 namespace WitcherGame
 {
+    // 中文说明：定义夜晚委托可调查节点的剧情身份。
     public enum NightInvestigationNodeId
     {
         OldWell,

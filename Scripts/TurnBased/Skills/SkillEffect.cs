@@ -8,6 +8,7 @@ namespace WitcherGame
         public abstract void Apply(BattleSkillUnit caster, BattleSkillUnit target, SkillResult result);
     }
 
+    // 中文说明：结算技能伤害，支持攻击、防御系数、伤害类型和多段命中。
     public class DamageSkillEffect : SkillEffect
     {
         public DamageSkillEffect(int power, float attackScale, float defenseScale, int hitCount = 1, BattleDamageType damageType = BattleDamageType.Physical)
@@ -40,6 +41,7 @@ namespace WitcherGame
         }
     }
 
+    // 中文说明：结算治疗和回蓝效果，用于药剂、护盾回复等技能。
     public class HealSkillEffect : SkillEffect
     {
         public HealSkillEffect(int healthAmount, int manaAmount = 0)
@@ -60,6 +62,7 @@ namespace WitcherGame
         }
     }
 
+    // 中文说明：给目标附加持续状态，例如防御、燃烧、恐惧或腐化。
     public class StatusSkillEffect : SkillEffect
     {
         private readonly Func<BattleStatusEffect> createStatus;

@@ -3,6 +3,7 @@ using UnityEngine;
 
 namespace WitcherGame
 {
+    // 中文说明：定义地图固定遭遇点会生成哪一种怪物。
     public enum WitcherFixedEncounterKind
     {
         CorruptedWolf,
@@ -11,6 +12,7 @@ namespace WitcherGame
     }
 
     [System.Serializable]
+    // 中文说明：保存一个地图固定遭遇点的怪物类型、位置和数量。
     public struct WitcherFixedEncounterPoint
     {
         public WitcherFixedEncounterKind kind;

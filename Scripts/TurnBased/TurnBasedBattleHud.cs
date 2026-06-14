@@ -91,6 +91,7 @@ namespace WitcherGame
             public float IdleTimer;
         }
 
+        // 中文说明：保存我方队伍成员在战斗场景中的图片和待机动画状态。
         private class PartyVisualSlot
         {
             public Image Image;
