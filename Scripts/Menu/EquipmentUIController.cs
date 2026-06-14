@@ -228,7 +228,7 @@ namespace WitcherGame
                 bool isSelectedMember = i == selectedMemberIndex;
                 PartyMember member = members[i];
                 string joinedState = member.IsJoined ? "入队" : "待命";
-                string locked = member.Name == "猎魔人" ? " 锁定" : string.Empty;
+                string locked = member.Name == "猎魔人" ? " 锁定" : " 上阵锁定";
                 memberTexts[i].text = isSelectedMember
                     ? $"> {member.Name}  {joinedState}{locked}"
                     : $"  {member.Name}  {joinedState}{locked}";
@@ -244,7 +244,7 @@ namespace WitcherGame
                 return;
             }
 
-            string memberState = selectedMember.IsJoined ? "已入队" : "待命";
+            string memberState = selectedMember.IsJoined ? "已上阵" : "待命";
             titleText.text = $"{selectedMember.Name} 装备  {memberState}";
             if (portraitImage != null)
             {
@@ -271,7 +271,7 @@ namespace WitcherGame
                 $"魔力  {selectedMember.TotalMagic}\n" +
                 $"速度  {selectedMember.TotalSpeed}\n" +
                 $"暴击  {Mathf.RoundToInt(selectedMember.TotalCriticalRate * 100f)}%";
-            helpText.text = "↑↓ 选择成员    ←→ 装备槽    Enter 更换装备    J 加入/剔除    Delete 踢出    Esc 关闭";
+            helpText.text = "↑↓ 选择成员    ←→ 装备槽    Enter 更换装备    当前版本仅猎魔人上阵    Esc 关闭";
         }
 
         private PartyMember GetSelectedEditableMember()

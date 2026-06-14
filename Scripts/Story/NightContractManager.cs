@@ -73,6 +73,35 @@ namespace WitcherGame
             player = target == null ? FindObjectOfType<GeraltController>() : target;
         }
 
+        public bool TryGetNavigationTarget(string objectiveText, out Vector2 targetPosition)
+        {
+            switch (objectiveText)
+            {
+                case ObjectiveInvestigateWell:
+                    targetPosition = oldWellPosition;
+                    return true;
+                case ObjectiveInvestigateMill:
+                    targetPosition = oldMillPosition;
+                    return true;
+                case ObjectiveInvestigateWidow:
+                case ObjectiveTruthChoice:
+                    targetPosition = widowHousePosition;
+                    return true;
+                case ObjectiveClearAmbush:
+                    targetPosition = foundClawMarks ? secondAmbushPosition : firstAmbushPosition;
+                    return true;
+                case ObjectiveDefeatBoss:
+                    targetPosition = bossPosition;
+                    return true;
+                case ObjectiveReturnVillage:
+                    targetPosition = Vector2.zero;
+                    return true;
+                default:
+                    targetPosition = default;
+                    return false;
+            }
+        }
+
         public void BeginFirstNightContract()
         {
             if (contractStarted)

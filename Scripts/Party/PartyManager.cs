@@ -7,6 +7,8 @@ namespace WitcherGame
     {
         private const string ManagerName = "Party Manager";
         private const int MaxPartySize = 4;
+        private const string HunterName = "猎魔人";
+        private const bool HunterOnlyActiveParty = true;
 
         private static PartyManager instance;
 
@@ -58,15 +60,22 @@ namespace WitcherGame
                 allMembers.Add(member);
             }
 
+            if (HunterOnlyActiveParty && member.Name != HunterName)
+            {
+                member.IsJoined = false;
+                return false;
+            }
+
             member.IsJoined = true;
             activeParty.Add(member);
+            RemoveHiddenMainPartyMembers();
             PartyChanged?.Invoke();
             return true;
         }
 
         public bool RemoveMember(PartyMember member)
         {
-            if (member == null || activeParty.Count <= 1 || member.Name == "猎魔人")
+            if (member == null || activeParty.Count <= 1 || member.Name == HunterName)
             {
                 return false;
             }
@@ -85,6 +94,12 @@ namespace WitcherGame
         {
             if (replacement == null || partyIndex <= 0 || partyIndex >= activeParty.Count || activeParty.Contains(replacement))
             {
+                return false;
+            }
+
+            if (HunterOnlyActiveParty && replacement.Name != HunterName)
+            {
+                replacement.IsJoined = false;
                 return false;
             }
 
@@ -117,7 +132,7 @@ namespace WitcherGame
         public bool ToggleMember(string memberName)
         {
             PartyMember member = FindMember(memberName);
-            if (member == null || member.Name == "猎魔人")
+            if (member == null || member.Name == HunterName || HunterOnlyActiveParty)
             {
                 return false;
             }
@@ -194,7 +209,7 @@ namespace WitcherGame
             hunter.CurrentEquipment.Accessory1 = sampleEquipment[EquipmentSlot.Accessory1][0];
             hunter.CurrentEquipment.RelicCore = sampleEquipment[EquipmentSlot.RelicCore][0];
 
-            PartyMember yennefer = new PartyMember("叶奈法", 1, 88, 142, 8, 5, 24, 12, 0.04f, true);
+            PartyMember yennefer = new PartyMember("叶奈法", 1, 88, 142, 8, 5, 24, 12, 0.04f, false);
             yennefer.LearnSkill("紫晶护盾", "防护 / 护盾", 16, "为队伍展开紫色魔法护盾。");
             yennefer.LearnSkill("诅咒脉冲", "奥术 / 弱化", 20, "释放扭曲脉冲削弱敌人的防御。");
             yennefer.LearnSkill("紫晶箭", "奥术 / 单体", 12, "凝出紫晶箭贯穿单个怪物。");
@@ -204,7 +219,7 @@ namespace WitcherGame
             yennefer.CurrentEquipment.Accessory1 = sampleEquipment[EquipmentSlot.Accessory1][1];
             yennefer.CurrentEquipment.RelicCore = sampleEquipment[EquipmentSlot.RelicCore][1];
 
-            PartyMember triss = new PartyMember("特莉丝", 1, 102, 126, 11, 6, 22, 14, 0.06f, true);
+            PartyMember triss = new PartyMember("特莉丝", 1, 102, 126, 11, 6, 22, 14, 0.06f, false);
             triss.LearnSkill("火焰术", "火焰 / 单体", 14, "向目标投出压缩火球。");
             triss.LearnSkill("灼热结界", "火焰 / 防护", 22, "以火焰结界保护队伍并反制近身敌人。");
             triss.LearnSkill("熔甲火印", "火焰 / 弱化", 18, "点燃敌人护甲缝隙，降低怪物防御。");
@@ -219,8 +234,6 @@ namespace WitcherGame
             allMembers.Add(triss);
 
             activeParty.Add(hunter);
-            activeParty.Add(yennefer);
-            activeParty.Add(triss);
             RemoveHiddenMainPartyMembers();
             PartyChanged?.Invoke();
         }
@@ -228,6 +241,26 @@ namespace WitcherGame
         private void RemoveHiddenMainPartyMembers()
         {
             activeParty.RemoveAll(member => member == null);
+            if (HunterOnlyActiveParty)
+            {
+                activeParty.RemoveAll(member =>
+                {
+                    bool remove = member.Name != HunterName;
+                    if (remove)
+                    {
+                        member.IsJoined = false;
+                    }
+
+                    return remove;
+                });
+
+                PartyMember hunter = allMembers.Find(member => member != null && member.Name == HunterName);
+                if (hunter != null && !activeParty.Contains(hunter))
+                {
+                    hunter.IsJoined = true;
+                    activeParty.Insert(0, hunter);
+                }
+            }
         }
 
         private void BuildSampleEquipment()

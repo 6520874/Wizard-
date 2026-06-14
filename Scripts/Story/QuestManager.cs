@@ -43,8 +43,11 @@ namespace WitcherGame
         [SerializeField] private Text questTitleText;
         [SerializeField] private Text questDescriptionText;
         [SerializeField] private Text questObjectivesText;
+        [SerializeField] private Text questTrackHintText;
+        [SerializeField] private Button questPanelButton;
 
         private QuestData activeQuest;
+        private GeraltController player;
 
         public QuestData ActiveQuest => activeQuest;
         public QuestObjective CurrentObjective => activeQuest != null && activeQuest.objectives.Count > 0 ? activeQuest.objectives[0] : null;
@@ -190,6 +193,8 @@ namespace WitcherGame
         {
             if (questPanel != null && questTitleText != null && questDescriptionText != null && questObjectivesText != null)
             {
+                EnsureQuestPanelButton();
+                EnsureTrackHintText();
                 return;
             }
 
@@ -199,6 +204,111 @@ namespace WitcherGame
             questTitleText = CreateText("Quest Title", questPanel.transform, "任务标题", 23, TextAnchor.UpperLeft, new Vector2(18f, -16f), new Vector2(324f, 32f), new Color32(236, 230, 211, 255));
             questDescriptionText = CreateText("Quest Description", questPanel.transform, "任务描述", 15, TextAnchor.UpperLeft, new Vector2(18f, -54f), new Vector2(324f, 58f), new Color32(186, 199, 205, 255));
             questObjectivesText = CreateText("Quest Objectives", questPanel.transform, "任务目标", 16, TextAnchor.UpperLeft, new Vector2(18f, -122f), new Vector2(324f, 92f), new Color32(224, 221, 204, 255));
+            questTrackHintText = CreateText("Quest Track Hint", questPanel.transform, "点击任务面板：前往当前目标", 13, TextAnchor.LowerRight, new Vector2(18f, -202f), new Vector2(324f, 22f), new Color32(146, 176, 184, 230));
+            EnsureQuestPanelButton();
+        }
+
+        private void EnsureQuestPanelButton()
+        {
+            if (questPanel == null)
+            {
+                return;
+            }
+
+            questPanelButton = questPanel.GetComponent<Button>();
+            if (questPanelButton == null)
+            {
+                questPanelButton = questPanel.AddComponent<Button>();
+            }
+
+            Image image = questPanel.GetComponent<Image>();
+            if (image != null)
+            {
+                image.raycastTarget = true;
+                questPanelButton.targetGraphic = image;
+            }
+
+            questPanelButton.onClick.RemoveListener(NavigateToCurrentObjective);
+            questPanelButton.onClick.AddListener(NavigateToCurrentObjective);
+            questPanelButton.transition = Selectable.Transition.ColorTint;
+            ColorBlock colors = questPanelButton.colors;
+            colors.normalColor = Color.white;
+            colors.highlightedColor = new Color32(84, 103, 112, 255);
+            colors.pressedColor = new Color32(124, 96, 52, 255);
+            colors.selectedColor = colors.highlightedColor;
+            colors.disabledColor = new Color32(70, 70, 70, 180);
+            colors.colorMultiplier = 1f;
+            colors.fadeDuration = 0.08f;
+            questPanelButton.colors = colors;
+        }
+
+        private void EnsureTrackHintText()
+        {
+            if (questPanel == null || questTrackHintText != null)
+            {
+                return;
+            }
+
+            questTrackHintText = CreateText("Quest Track Hint", questPanel.transform, "点击任务面板：前往当前目标", 13, TextAnchor.LowerRight, new Vector2(18f, -202f), new Vector2(324f, 22f), new Color32(146, 176, 184, 230));
+        }
+
+        private void NavigateToCurrentObjective()
+        {
+            QuestObjective objective = CurrentObjective;
+            if (objective == null || objective.completed || string.IsNullOrWhiteSpace(objective.text))
+            {
+                return;
+            }
+
+            player = player == null ? FindObjectOfType<GeraltController>() : player;
+            if (player == null)
+            {
+                return;
+            }
+
+            if (!TryResolveObjectiveTarget(objective.text, out Vector2 targetPosition))
+            {
+                ShowTrackHint("当前目标暂无可追踪地点");
+                return;
+            }
+
+            bool moving = player.MoveToWorldPosition(targetPosition);
+            ShowTrackHint(moving ? "正在前往当前目标" : "已经到达目标附近");
+        }
+
+        private bool TryResolveObjectiveTarget(string objectiveText, out Vector2 targetPosition)
+        {
+            NightContractManager nightContract = FindObjectOfType<NightContractManager>();
+            if (nightContract != null && nightContract.TryGetNavigationTarget(objectiveText, out targetPosition))
+            {
+                return true;
+            }
+
+            switch (objectiveText)
+            {
+                case "与老村长对话":
+                    targetPosition = Vector2.zero;
+                    return true;
+                case "前往村庄西侧矿洞":
+                case "调查矿洞入口的血迹":
+                case "击败第一只低级食尸鬼":
+                case "进入矿洞深处":
+                    targetPosition = new Vector2(-5.75f, -2.02f);
+                    return true;
+                default:
+                    targetPosition = default;
+                    return false;
+            }
+        }
+
+        private void ShowTrackHint(string hint)
+        {
+            if (questTrackHintText == null)
+            {
+                return;
+            }
+
+            questTrackHintText.text = hint;
         }
 
         private static Canvas EnsureCanvas(string name, int sortingOrder)
@@ -254,6 +364,7 @@ namespace WitcherGame
             textComponent.color = color;
             textComponent.horizontalOverflow = HorizontalWrapMode.Wrap;
             textComponent.verticalOverflow = VerticalWrapMode.Overflow;
+            textComponent.raycastTarget = false;
             return textComponent;
         }
     }

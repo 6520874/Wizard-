@@ -269,6 +269,30 @@ namespace WitcherGame
             ClampToStage();
         }
 
+        public bool MoveToWorldPosition(Vector2 worldPosition)
+        {
+            Vector2 requestedDestination = new Vector2(
+                Mathf.Clamp(worldPosition.x, minStageX, maxStageX),
+                Mathf.Clamp(worldPosition.y, minStageY, maxStageY));
+
+            WitcherVillageWalkableMap walkableMap = WitcherVillageWalkableMap.Current;
+            if (walkableMap != null && !walkableMap.TryGetNearestWalkablePoint(requestedDestination, out requestedDestination))
+            {
+                hasClickMoveDestination = false;
+                return false;
+            }
+
+            clickMoveDestination = requestedDestination;
+            hasClickMoveDestination = Vector2.Distance(transform.position, clickMoveDestination) > clickMoveStopDistance;
+            float facingDelta = clickMoveDestination.x - transform.position.x;
+            if (Mathf.Abs(facingDelta) > 0.03f)
+            {
+                SetFacingDirection(Mathf.Sign(facingDelta));
+            }
+
+            return hasClickMoveDestination;
+        }
+
         private void HandlePointAndClickInput()
         {
             if (!clickToMoveEnabled)
@@ -325,21 +349,7 @@ namespace WitcherGame
             Vector2 requestedDestination = new Vector2(
                 Mathf.Clamp(worldPosition.x, minStageX, maxStageX),
                 Mathf.Clamp(worldPosition.y, minStageY, maxStageY));
-
-            WitcherVillageWalkableMap walkableMap = WitcherVillageWalkableMap.Current;
-            if (walkableMap != null && !walkableMap.TryGetNearestWalkablePoint(requestedDestination, out requestedDestination))
-            {
-                hasClickMoveDestination = false;
-                return;
-            }
-
-            clickMoveDestination = requestedDestination;
-            hasClickMoveDestination = Vector2.Distance(transform.position, clickMoveDestination) > clickMoveStopDistance;
-            float facingDelta = clickMoveDestination.x - transform.position.x;
-            if (Mathf.Abs(facingDelta) > 0.03f)
-            {
-                SetFacingDirection(Mathf.Sign(facingDelta));
-            }
+            MoveToWorldPosition(requestedDestination);
         }
 
         private static bool IsPointerOverUi(int pointerId = -1)

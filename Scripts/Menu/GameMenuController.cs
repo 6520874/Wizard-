@@ -220,12 +220,12 @@ namespace WitcherGame
                     continue;
                 }
 
-                string state = member.IsJoined ? "已入队" : "待命";
-                string locked = member.Name == "猎魔人" ? " 固定" : string.Empty;
+                string state = member.IsJoined ? "已上阵" : "待命";
+                string locked = member.Name == "猎魔人" ? " 固定" : " 上阵锁定";
                 text += $"\n- {member.Name} Lv {member.Level}  {state}{locked}";
             }
 
-            text += "\n\n默认队伍：猎魔人、特莉丝、叶奈法。J 切换叶奈法，D 界面可加入 / 剔除成员。";
+            text += "\n\n当前队伍规则：只有猎魔人一个人上阵；其他角色保留为剧情/装备成员，后续版本再开放参战。";
             ShowDetail(text);
         }
 
