@@ -236,6 +236,7 @@ namespace WitcherGame
             playerAnimator = player.GetComponent<GeraltAnimator>();
             playerInventory = PlayerInventory.CreateIfMissing(player);
             player.SetControlEnabled(false);
+            SetQuestPanelHiddenForBattle(true);
             currentEncounter.PrepareForBattle();
             battleActive = true;
             resolvingTurn = true;
@@ -732,6 +733,7 @@ namespace WitcherGame
 
             battleHud?.Hide();
             ResumeWorldRendering();
+            SetQuestPanelHiddenForBattle(false);
             battleActive = false;
             resolvingTurn = false;
             battleEndSequenceStarted = false;
@@ -745,6 +747,12 @@ namespace WitcherGame
             {
                 player.SetControlEnabled(true);
             }
+        }
+
+        private static void SetQuestPanelHiddenForBattle(bool hidden)
+        {
+            QuestManager questManager = QuestManager.CreateIfMissing();
+            questManager.SetQuestPanelSuppressed(hidden);
         }
 
         private void PauseWorldRendering()

@@ -48,6 +48,7 @@ namespace WitcherGame
 
         private QuestData activeQuest;
         private GeraltController player;
+        private bool questPanelSuppressed;
 
         public QuestData ActiveQuest => activeQuest;
         public QuestObjective CurrentObjective => activeQuest != null && activeQuest.objectives.Count > 0 ? activeQuest.objectives[0] : null;
@@ -102,6 +103,12 @@ namespace WitcherGame
             SetQuestPanelVisible(activeQuest != null);
             RefreshQuestUi();
             DialogueManager.RefreshQuestHintIfVisible();
+        }
+
+        public void SetQuestPanelSuppressed(bool suppressed)
+        {
+            questPanelSuppressed = suppressed;
+            SetQuestPanelVisible(activeQuest != null);
         }
 
         public void SetObjectiveCompleted(int objectiveIndex, bool completed)
@@ -185,7 +192,7 @@ namespace WitcherGame
         {
             if (questPanel != null)
             {
-                questPanel.SetActive(visible);
+                questPanel.SetActive(visible && !questPanelSuppressed);
             }
         }
 
