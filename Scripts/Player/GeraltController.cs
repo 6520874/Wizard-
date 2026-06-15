@@ -7,7 +7,7 @@ namespace WitcherGame
     [RequireComponent(typeof(BoxCollider2D))]
     [RequireComponent(typeof(SpriteRenderer))]
     [RequireComponent(typeof(GeraltAnimator))]
-    // 中文说明：管理主角移动、生命魔力、受击、冲刺和地图控制输入。
+    // 中文说明：管理主角移动、生命魔力、受击和地图控制输入。
     public class GeraltController : MonoBehaviour
     {
         [SerializeField] private float moveSpeed = 5f;
@@ -21,10 +21,6 @@ namespace WitcherGame
         [SerializeField] private int maxHealth = 120;
         [SerializeField] private int maxMana = 100;
         [SerializeField] private float manaRegenPerSecond = 11f;
-        [SerializeField] private float dashSpeed = 12f;
-        [SerializeField] private float dashDuration = 0.16f;
-        [SerializeField] private float dashCooldown = 0.55f;
-        [SerializeField] private int dashManaCost = 18;
         [SerializeField] private int healManaCost = 35;
         [SerializeField] private int healAmount = 22;
         [Header("Point And Click Movement")]
@@ -38,10 +34,7 @@ namespace WitcherGame
         private float hurtLockTimer;
         private int currentHealth;
         private float currentMana;
-        private float dashTimer;
-        private float dashCooldownTimer;
         private float invulnerableTimer;
-        private float lastFacingDirection = 1f;
         private bool defeatHandled;
         private bool hasClickMoveDestination;
         private Vector2 clickMoveDestination;
@@ -80,7 +73,6 @@ namespace WitcherGame
         private void Update()
         {
             RegenerateMana();
-            dashCooldownTimer -= Time.deltaTime;
             invulnerableTimer -= Time.deltaTime;
 
             if (!IsAlive)
@@ -100,17 +92,6 @@ namespace WitcherGame
             {
                 hurtLockTimer -= Time.deltaTime;
                 StopMovementAndClamp();
-                return;
-            }
-
-            if (dashTimer > 0f)
-            {
-                dashTimer -= Time.deltaTime;
-                hasClickMoveDestination = false;
-                Vector2 dashVelocity = ResolveMapVelocity(new Vector2(lastFacingDirection * dashSpeed, 0f));
-                ApplyMovement(dashVelocity);
-                geraltAnimator.PlayLocomotion(dashVelocity);
-                ClampToStage();
                 return;
             }
 
@@ -355,26 +336,6 @@ namespace WitcherGame
                 : EventSystem.current.IsPointerOverGameObject();
         }
 
-        private void TryDash(float moveInput)
-        {
-            if (dashCooldownTimer > 0f || currentMana < dashManaCost)
-            {
-                return;
-            }
-
-            if (Mathf.Abs(moveInput) > 0.01f)
-            {
-                lastFacingDirection = Mathf.Sign(moveInput);
-            }
-
-            currentMana = Mathf.Max(0f, currentMana - dashManaCost);
-            StatsChanged?.Invoke();
-            dashTimer = dashDuration;
-            dashCooldownTimer = dashCooldown;
-            invulnerableTimer = dashDuration + 0.08f;
-            hurtLockTimer = 0f;
-        }
-
         private void TryHeal()
         {
             if (currentHealth >= maxHealth || currentMana < healManaCost)
@@ -503,8 +464,7 @@ namespace WitcherGame
                 return;
             }
 
-            lastFacingDirection = Mathf.Sign(direction);
-            spriteRenderer.flipX = lastFacingDirection < 0f;
+            spriteRenderer.flipX = Mathf.Sign(direction) < 0f;
         }
 
         private void UpdateFacingForMovement(Vector2 movement)
