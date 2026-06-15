@@ -192,7 +192,7 @@ namespace WitcherGame
                 for (int i = 0; i < activeQuest.objectives.Count; i++)
                 {
                     QuestObjective objective = activeQuest.objectives[i];
-                    builder.Append(objective.completed ? "✓ " : "□ ");
+                    builder.Append(objective.completed ? GameText.Quest.CompletedPrefix : GameText.Quest.PendingPrefix);
                     builder.Append(objective.text);
                     if (i < activeQuest.objectives.Count - 1)
                     {
@@ -224,10 +224,10 @@ namespace WitcherGame
             Canvas canvas = EnsureCanvas("Story UI Canvas", 120);
             questPanel = CreatePanel("QuestPanel", canvas.transform, new Vector2(360f, 230f), new Vector2(-26f, -110f), new Vector2(1f, 1f), new Color32(8, 11, 15, 210));
 
-            questTitleText = CreateText("Quest Title", questPanel.transform, "任务标题", 23, TextAnchor.UpperLeft, new Vector2(18f, -16f), new Vector2(324f, 32f), new Color32(236, 230, 211, 255));
-            questDescriptionText = CreateText("Quest Description", questPanel.transform, "任务描述", 15, TextAnchor.UpperLeft, new Vector2(18f, -54f), new Vector2(324f, 58f), new Color32(186, 199, 205, 255));
-            questObjectivesText = CreateText("Quest Objectives", questPanel.transform, "任务目标", 16, TextAnchor.UpperLeft, new Vector2(18f, -122f), new Vector2(324f, 92f), new Color32(224, 221, 204, 255));
-            questTrackHintText = CreateText("Quest Track Hint", questPanel.transform, "点击任务面板：前往当前目标", 13, TextAnchor.LowerRight, new Vector2(18f, -202f), new Vector2(324f, 22f), new Color32(146, 176, 184, 230));
+            questTitleText = CreateText("Quest Title", questPanel.transform, GameText.Quest.TitlePlaceholder, 23, TextAnchor.UpperLeft, new Vector2(18f, -16f), new Vector2(324f, 32f), new Color32(236, 230, 211, 255));
+            questDescriptionText = CreateText("Quest Description", questPanel.transform, GameText.Quest.DescriptionPlaceholder, 15, TextAnchor.UpperLeft, new Vector2(18f, -54f), new Vector2(324f, 58f), new Color32(186, 199, 205, 255));
+            questObjectivesText = CreateText("Quest Objectives", questPanel.transform, GameText.Quest.ObjectivesPlaceholder, 16, TextAnchor.UpperLeft, new Vector2(18f, -122f), new Vector2(324f, 92f), new Color32(224, 221, 204, 255));
+            questTrackHintText = CreateText("Quest Track Hint", questPanel.transform, GameText.Quest.TrackHint, 13, TextAnchor.LowerRight, new Vector2(18f, -202f), new Vector2(324f, 22f), new Color32(146, 176, 184, 230));
             EnsureQuestPanelButton();
         }
 
@@ -272,7 +272,7 @@ namespace WitcherGame
                 return;
             }
 
-            questTrackHintText = CreateText("Quest Track Hint", questPanel.transform, "点击任务面板：前往当前目标", 13, TextAnchor.LowerRight, new Vector2(18f, -202f), new Vector2(324f, 22f), new Color32(146, 176, 184, 230));
+            questTrackHintText = CreateText("Quest Track Hint", questPanel.transform, GameText.Quest.TrackHint, 13, TextAnchor.LowerRight, new Vector2(18f, -202f), new Vector2(324f, 22f), new Color32(146, 176, 184, 230));
         }
 
         private void NavigateToCurrentObjective()
@@ -291,12 +291,12 @@ namespace WitcherGame
 
             if (!TryResolveObjectiveTarget(string.IsNullOrWhiteSpace(objective.id) ? objective.text : objective.id, out Vector2 targetPosition))
             {
-                ShowTrackHint("当前目标暂无可追踪地点");
+                ShowTrackHint(GameText.Quest.NoTrackTarget);
                 return;
             }
 
             bool moving = player.MoveToWorldPosition(targetPosition);
-            ShowTrackHint(moving ? "正在前往当前目标" : "已经到达目标附近");
+            ShowTrackHint(moving ? GameText.Quest.MovingToTarget : GameText.Quest.ArrivedNearTarget);
         }
 
         private bool TryResolveObjectiveTarget(string objectiveText, out Vector2 targetPosition)

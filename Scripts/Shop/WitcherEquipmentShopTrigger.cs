@@ -152,7 +152,7 @@ namespace WitcherGame
             textRect.offsetMax = Vector2.zero;
             promptText = textObject.AddComponent<Text>();
             promptText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            promptText.text = "按 E 交互：装备店";
+            promptText.text = GameText.Shop.InteractPrompt;
             promptText.fontSize = 20;
             promptText.alignment = TextAnchor.MiddleCenter;
             promptText.color = new Color32(255, 222, 141, 255);

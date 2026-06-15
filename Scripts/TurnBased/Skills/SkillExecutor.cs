@@ -30,7 +30,7 @@ namespace WitcherGame
 
             if (!caster.TrySpendMana(skill.ManaCost))
             {
-                result.Message = "魔力不足。";
+                result.Message = GameText.Battle.NotEnoughManaShort;
                 return result;
             }
 

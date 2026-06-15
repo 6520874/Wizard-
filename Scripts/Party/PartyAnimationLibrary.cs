@@ -128,17 +128,17 @@ namespace WitcherGame
 
         public static string GetVisualFolder(string memberName)
         {
-            if (memberName == "猎魔人")
+            if (memberName == GameText.HunterName)
             {
                 return "Geralt";
             }
 
-            if (memberName == "叶奈法")
+            if (memberName == GameText.YenneferName)
             {
                 return "Yennefer";
             }
 
-            if (memberName == "特莉丝")
+            if (memberName == GameText.TrissName)
             {
                 return "Triss";
             }

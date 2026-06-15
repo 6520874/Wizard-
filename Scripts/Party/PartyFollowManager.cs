@@ -207,7 +207,7 @@ namespace WitcherGame
         {
             return member != null
                 && member.IsJoined
-                && member.Name != "猎魔人"
+                && member.Name != GameText.HunterName
                 && !string.IsNullOrEmpty(PartyAnimationLibrary.GetVisualFolder(member.Name));
         }
 

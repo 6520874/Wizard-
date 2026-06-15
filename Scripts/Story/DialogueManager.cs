@@ -171,7 +171,7 @@ namespace WitcherGame
         {
             speakerNameText.text = line.SpeakerName;
             currentFullText = line.Text;
-            continueHintText.text = isTyping ? string.Empty : "Enter 继续";
+            continueHintText.text = isTyping ? string.Empty : GameText.Dialogue.ContinueHint;
             RefreshSpeakerPortrait(line.SpeakerName);
             RefreshQuestHint();
             StopTyping();
@@ -195,7 +195,7 @@ namespace WitcherGame
             }
 
             isTyping = false;
-            continueHintText.text = "Enter 继续";
+            continueHintText.text = GameText.Dialogue.ContinueHint;
         }
 
         private void FinishTypingImmediately()
@@ -203,7 +203,7 @@ namespace WitcherGame
             StopTyping();
             dialogueText.text = currentFullText;
             isTyping = false;
-            continueHintText.text = "Enter 继续";
+            continueHintText.text = GameText.Dialogue.ContinueHint;
         }
 
         private void EndDialogue()
@@ -246,10 +246,10 @@ namespace WitcherGame
             AddOutline(dialoguePanel, new Color32(117, 92, 52, 255), new Vector2(2f, -2f));
             CreatePanel("Dialogue Inner Bloodline", dialoguePanel.transform, new Vector2(920f, 2f), new Vector2(30f, -52f), new Vector2(0f, 1f), new Color32(113, 16, 24, 200));
             EnsureSpeakerPortraitUi();
-            speakerNameText = CreateText("Dialogue Speaker Name", dialoguePanel.transform, "角色名", 24, TextAnchor.MiddleLeft, new Vector2(174f, -18f), new Vector2(260f, 36f), new Color32(238, 211, 150, 255));
-            dialogueText = CreateText("Dialogue Content", dialoguePanel.transform, "对白", 23, TextAnchor.UpperLeft, new Vector2(174f, -68f), new Vector2(776f, 86f), new Color32(225, 224, 209, 255));
+            speakerNameText = CreateText("Dialogue Speaker Name", dialoguePanel.transform, GameText.Dialogue.SpeakerPlaceholder, 24, TextAnchor.MiddleLeft, new Vector2(174f, -18f), new Vector2(260f, 36f), new Color32(238, 211, 150, 255));
+            dialogueText = CreateText("Dialogue Content", dialoguePanel.transform, GameText.Dialogue.ContentPlaceholder, 23, TextAnchor.UpperLeft, new Vector2(174f, -68f), new Vector2(776f, 86f), new Color32(225, 224, 209, 255));
             EnsureTaskHintUi();
-            continueHintText = CreateText("Dialogue Continue Hint", dialoguePanel.transform, "Enter 继续", 14, TextAnchor.MiddleRight, new Vector2(710f, -184f), new Vector2(240f, 24f), new Color32(155, 166, 166, 255));
+            continueHintText = CreateText("Dialogue Continue Hint", dialoguePanel.transform, GameText.Dialogue.ContinueHint, 14, TextAnchor.MiddleRight, new Vector2(710f, -184f), new Vector2(240f, 24f), new Color32(155, 166, 166, 255));
             ReflowDialogueTextForPortrait();
         }
 
@@ -306,7 +306,7 @@ namespace WitcherGame
 
             taskHintPanel = CreatePanel("Dialogue Task Hint Panel", dialoguePanel.transform, new Vector2(558f, 34f), new Vector2(174f, -158f), new Vector2(0f, 1f), new Color32(15, 18, 16, 210));
             AddOutline(taskHintPanel, new Color32(77, 95, 67, 220), new Vector2(1f, -1f));
-            taskHintText = CreateText("Dialogue Task Hint Text", taskHintPanel.transform, "当前任务", 17, TextAnchor.MiddleLeft, new Vector2(14f, -5f), new Vector2(524f, 24f), new Color32(226, 214, 158, 255));
+            taskHintText = CreateText("Dialogue Task Hint Text", taskHintPanel.transform, GameText.Dialogue.CurrentTaskPlaceholder, 17, TextAnchor.MiddleLeft, new Vector2(14f, -5f), new Vector2(524f, 24f), new Color32(226, 214, 158, 255));
             taskHintPanel.SetActive(false);
         }
 
@@ -352,7 +352,7 @@ namespace WitcherGame
                 return;
             }
 
-            taskHintText.text = objective.completed ? $"任务完成：{objective.text}" : $"当前任务：{objective.text}";
+            taskHintText.text = objective.completed ? GameText.Dialogue.CompletedTask(objective.text) : GameText.Dialogue.CurrentTask(objective.text);
             taskHintText.color = objective.completed
                 ? new Color32(176, 214, 148, 255)
                 : new Color32(226, 214, 158, 255);
@@ -418,7 +418,7 @@ namespace WitcherGame
             }
 
             string normalizedName = speakerName.Trim();
-            return normalizedName == "猎魔人" || normalizedName == "灰鸦猎人";
+            return normalizedName == GameText.HunterName || normalizedName == "灰鸦猎人";
         }
 
         private void SetSpeakerPortraitVisible(bool visible)

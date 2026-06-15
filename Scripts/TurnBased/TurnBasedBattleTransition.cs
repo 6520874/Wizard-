@@ -59,8 +59,8 @@ namespace WitcherGame
             SetTextAlpha(titleText, 0f);
             SetTextAlpha(subtitleText, 0f);
 
-            titleText.text = "遭遇战";
-            subtitleText.text = string.IsNullOrWhiteSpace(encounterTitle) ? "黑暗中的怪物逼近" : encounterTitle;
+            titleText.text = GameText.Battle.EncounterTitle;
+            subtitleText.text = string.IsNullOrWhiteSpace(encounterTitle) ? GameText.Battle.EncounterFallback : encounterTitle;
 
             RectTransform topRect = topBlade.rectTransform;
             RectTransform bottomRect = bottomBlade.rectTransform;
@@ -141,7 +141,7 @@ namespace WitcherGame
             redSweep = CreateImage("Battle Transition Red Sweep", root.transform, new Vector2(420f, 8f), new Vector2(-760f, -38f), new Color32(211, 32, 33, 0), new Vector2(0.5f, 0.5f));
             blueSweep = CreateImage("Battle Transition Blue Sweep", root.transform, new Vector2(420f, 8f), new Vector2(760f, 42f), new Color32(70, 171, 255, 0), new Vector2(0.5f, 0.5f));
 
-            titleText = CreateText("Battle Transition Title", root.transform, "遭遇战", 46, TextAnchor.MiddleCenter, new Vector2(0f, 18f), new Vector2(420f, 66f), new Color32(255, 224, 138, 0));
+            titleText = CreateText("Battle Transition Title", root.transform, GameText.Battle.EncounterTitle, 46, TextAnchor.MiddleCenter, new Vector2(0f, 18f), new Vector2(420f, 66f), new Color32(255, 224, 138, 0));
             AddOutline(titleText, new Color32(0, 0, 0, 220), new Vector2(2f, -2f));
             subtitleText = CreateText("Battle Transition Subtitle", root.transform, string.Empty, 22, TextAnchor.MiddleCenter, new Vector2(0f, -42f), new Vector2(520f, 42f), new Color32(226, 233, 238, 0));
             AddOutline(subtitleText, new Color32(0, 0, 0, 230), new Vector2(1f, -1f));

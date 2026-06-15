@@ -23,20 +23,20 @@ namespace WitcherGame
         {
             if (AttackBonus > 0 && DefenseBonus > 0)
             {
-                return $"攻击 +{AttackBonus}  防御 +{DefenseBonus}";
+                return GameText.Stats.AttackDefenseBonus(AttackBonus, DefenseBonus);
             }
 
             if (AttackBonus > 0)
             {
-                return $"攻击 +{AttackBonus}";
+                return GameText.Stats.AttackBonus(AttackBonus);
             }
 
             if (DefenseBonus > 0)
             {
-                return $"防御 +{DefenseBonus}";
+                return GameText.Stats.DefenseBonus(DefenseBonus);
             }
 
-            return "无属性加成";
+            return GameText.Stats.NoBonus;
         }
     }
 }

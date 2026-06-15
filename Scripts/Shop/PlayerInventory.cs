@@ -49,19 +49,19 @@ namespace WitcherGame
         {
             if (item == null)
             {
-                message = "商品不存在";
+                message = GameText.Shop.MissingItem;
                 return false;
             }
 
             if (HasEquipment(item.ItemName))
             {
-                message = "你已经拥有这件装备";
+                message = GameText.Shop.AlreadyOwnedItem;
                 return false;
             }
 
             if (gold < item.Price)
             {
-                message = "金币不足";
+                message = GameText.Shop.NotEnoughGold;
                 return false;
             }
 
@@ -70,7 +70,7 @@ namespace WitcherGame
             attackBonus += Math.Max(0, item.AttackBonus);
             defenseBonus += Math.Max(0, item.DefenseBonus);
             InventoryChanged?.Invoke();
-            message = $"购买成功：{item.ItemName}（{item.GetBonusText()}）";
+            message = GameText.Shop.PurchaseSuccess(item.ItemName, item.GetBonusText());
             return true;
         }
 

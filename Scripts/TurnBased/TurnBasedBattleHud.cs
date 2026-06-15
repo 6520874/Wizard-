@@ -202,10 +202,7 @@ namespace WitcherGame
 
             if (victoryRewardText != null)
             {
-                victoryRewardText.text =
-                    "战斗胜利\n" +
-                    $"经验 +{Mathf.Max(0, experience)}    金币 +{Mathf.Max(0, gold)}\n" +
-                    BuildLootLine(loot);
+                victoryRewardText.text = GameText.Battle.VictoryReward(Mathf.Max(0, experience), Mathf.Max(0, gold), BuildLootLine(loot));
             }
 
             victoryRewardPanel.SetActive(true);
@@ -265,11 +262,11 @@ namespace WitcherGame
 
                 if (i < skillCostTexts.Count)
                 {
-                    skillCostTexts[i].text = skill.ManaCost > 0 ? $"MP {skill.ManaCost}" : "无消耗";
+                    skillCostTexts[i].text = GameText.Battle.SkillCost(skill.ManaCost);
                 }
             }
 
-            SetMessage($"{actorName}：选择技能。");
+            SetMessage(GameText.Battle.SkillSelect(actorName));
         }
 
         public void HideSkillMenu()
@@ -322,14 +319,14 @@ namespace WitcherGame
             hdBattleHud?.RefreshFromBattle(manager, enemies, player, GetEnemyHudPositions());
             if (playerText != null && player != null)
             {
-                playerText.text = $"HP {player.CurrentHealth}/{player.MaxHealth}    MP {player.CurrentMana}/{player.MaxMana}";
+                playerText.text = $"{GameText.Stats.CompactHp(player.CurrentHealth, player.MaxHealth)}    {GameText.Stats.CompactMp(player.CurrentMana, player.MaxMana)}";
                 SetFillWidth(playerHealthFill, player.MaxHealth <= 0 ? 0f : (float)player.CurrentHealth / player.MaxHealth, 190f);
                 SetFillWidth(playerManaFill, player.MaxMana <= 0 ? 0f : (float)player.CurrentMana / player.MaxMana, 190f);
             }
 
             if (potionText != null)
             {
-                potionText.text = $"药剂 x{potionCount}";
+                potionText.text = GameText.Battle.PotionCount(potionCount);
             }
 
             for (int i = 0; i < enemyRows.Count; i++)
@@ -351,7 +348,7 @@ namespace WitcherGame
                 }
 
                 TurnBasedEnemyState enemy = enemies[i];
-                string state = enemy.IsAlive ? $"HP {enemy.Health}/{enemy.MaxHealth}" : "已击败";
+                string state = enemy.IsAlive ? GameText.Battle.EnemyHp(enemy.Health, enemy.MaxHealth) : GameText.Battle.Defeated;
                 enemyRows[i].text = $"{enemy.Name}\n{state}";
                 enemyRows[i].color = enemy.IsAlive ? new Color32(233, 238, 229, 255) : new Color32(128, 126, 119, 255);
 
@@ -705,11 +702,11 @@ namespace WitcherGame
             playerPanel.sprite = WitcherSpriteLibrary.GetSolidSprite(JrpgPanelColor);
             AddOutline(playerPanel, JrpgBorderColor, new Vector2(2f, -2f));
 
-            Text playerName = CreateText("Player Battle Name", playerPanel.transform, "猎魔人", 24, TextAnchor.MiddleLeft, new Vector2(18f, -12f), new Vector2(176f, 28f));
+            Text playerName = CreateText("Player Battle Name", playerPanel.transform, GameText.HunterName, 24, TextAnchor.MiddleLeft, new Vector2(18f, -12f), new Vector2(176f, 28f));
             playerName.color = JrpgTextColor;
             AddOutline(playerName, Color.black, new Vector2(2f, -2f));
 
-            Text bpText = CreateText("Player Battle BP", playerPanel.transform, "回合", 15, TextAnchor.MiddleRight, new Vector2(132f, -16f), new Vector2(88f, 24f));
+            Text bpText = CreateText("Player Battle BP", playerPanel.transform, GameText.Battle.RoundLabel, 15, TextAnchor.MiddleRight, new Vector2(132f, -16f), new Vector2(88f, 24f));
             bpText.color = JrpgMutedTextColor;
             AddOutline(bpText, Color.black, new Vector2(1f, -1f));
 
@@ -723,7 +720,7 @@ namespace WitcherGame
             playerManaFill = CreateImage("Player Battle MP Fill", playerManaBack.transform, new Vector2(190f, 7f), new Vector2(4f, -3f), new Color32(46, 145, 255, 255));
             playerManaFill.rectTransform.pivot = new Vector2(0f, 0.5f);
 
-            playerText = CreateText("Battle Player Stats", playerPanel.transform, "HP 100/100    MP 100/100", 15, TextAnchor.MiddleLeft, new Vector2(18f, -94f), new Vector2(220f, 20f));
+            playerText = CreateText("Battle Player Stats", playerPanel.transform, $"{GameText.Stats.CompactHp(100, 100)}    {GameText.Stats.CompactMp(100, 100)}", 15, TextAnchor.MiddleLeft, new Vector2(18f, -94f), new Vector2(220f, 20f));
             playerText.color = JrpgTextColor;
             AddOutline(playerText, Color.black, new Vector2(2f, -2f));
             playerPanel.gameObject.SetActive(false);
@@ -827,24 +824,24 @@ namespace WitcherGame
             commandGoldRule.sprite = WitcherSpriteLibrary.GetSolidSprite(new Color32(255, 226, 136, 170));
             commandGoldRule.raycastTarget = false;
 
-            Text commandTitle = CreateText("Battle Command Title", commandPanel.transform, "行动", 20, TextAnchor.MiddleLeft, new Vector2(22f, -12f), new Vector2(86f, 28f));
+            Text commandTitle = CreateText("Battle Command Title", commandPanel.transform, GameText.Battle.Action, 20, TextAnchor.MiddleLeft, new Vector2(22f, -12f), new Vector2(86f, 28f));
             commandTitle.color = JrpgTextColor;
             AddOutline(commandTitle, Color.black, new Vector2(2f, -2f));
 
-            potionText = CreateText("Battle Potion Count", commandPanel.transform, "药剂 x3", 14, TextAnchor.MiddleRight, new Vector2(322f, -14f), new Vector2(86f, 24f));
+            potionText = CreateText("Battle Potion Count", commandPanel.transform, GameText.Battle.PotionCount(3), 14, TextAnchor.MiddleRight, new Vector2(322f, -14f), new Vector2(86f, 24f));
             potionText.color = JrpgMutedTextColor;
             AddOutline(potionText, Color.black, new Vector2(1f, -1f));
 
-            messageText = CreateText("Battle Message", commandPanel.transform, "选择行动。", 14, TextAnchor.UpperLeft, new Vector2(104f, -18f), new Vector2(210f, 32f));
+            messageText = CreateText("Battle Message", commandPanel.transform, GameText.Battle.SelectAction, 14, TextAnchor.UpperLeft, new Vector2(104f, -18f), new Vector2(210f, 32f));
             messageText.color = JrpgTextColor;
             AddOutline(messageText, Color.black, new Vector2(2f, -2f));
 
             commandButtons.Clear();
             commandButtonImages.Clear();
-            AddCommandButton(commandPanel.transform, "1 攻击", TurnBattleAction.Attack, new Vector2(18f, -58f));
-            AddCommandButton(commandPanel.transform, "2 技能", TurnBattleAction.FlameSign, new Vector2(222f, -58f));
-            AddCommandButton(commandPanel.transform, "3 道具", TurnBattleAction.Item, new Vector2(18f, -90f));
-            AddCommandButton(commandPanel.transform, "4 防御", TurnBattleAction.Defend, new Vector2(222f, -90f));
+            AddCommandButton(commandPanel.transform, "1 " + GameText.Battle.Attack, TurnBattleAction.Attack, new Vector2(18f, -58f));
+            AddCommandButton(commandPanel.transform, "2 " + GameText.Battle.Skill, TurnBattleAction.FlameSign, new Vector2(222f, -58f));
+            AddCommandButton(commandPanel.transform, "3 " + GameText.Battle.Item, TurnBattleAction.Item, new Vector2(18f, -90f));
+            AddCommandButton(commandPanel.transform, "4 " + GameText.Battle.Defend, TurnBattleAction.Defend, new Vector2(222f, -90f));
             BuildSkillPanel(commandPanel.transform);
             BuildVictoryRewardPanel(root.transform);
             EnsureHdBattleHud();
@@ -868,7 +865,7 @@ namespace WitcherGame
             topRule.sprite = WitcherSpriteLibrary.GetSolidSprite(new Color32(255, 204, 101, 210));
             topRule.raycastTarget = false;
 
-            victoryRewardText = CreateText("Battle Victory Reward Text", panel.transform, "战斗胜利", 18, TextAnchor.MiddleCenter, new Vector2(12f, -12f), new Vector2(332f, 100f));
+            victoryRewardText = CreateText("Battle Victory Reward Text", panel.transform, GameText.Battle.BattleVictory, 18, TextAnchor.MiddleCenter, new Vector2(12f, -12f), new Vector2(332f, 100f));
             victoryRewardText.color = JrpgTextColor;
             AddOutline(victoryRewardText, Color.black, new Vector2(2f, -2f));
             victoryRewardPanel.SetActive(false);
@@ -878,10 +875,10 @@ namespace WitcherGame
         {
             if (loot == null || loot.Count == 0)
             {
-                return "战利品：无";
+                return GameText.Battle.LootNone;
             }
 
-            string line = "战利品：";
+            string line = GameText.Battle.LootPrefix;
             for (int i = 0; i < loot.Count; i++)
             {
                 if (string.IsNullOrEmpty(loot[i]))
@@ -897,7 +894,7 @@ namespace WitcherGame
                 line += loot[i];
             }
 
-            return line.Length > 4 ? line : "战利品：无";
+            return line.Length > GameText.Battle.LootPrefix.Length ? line : GameText.Battle.LootNone;
         }
 
         private void BuildTurnTimeline(Transform parent)
@@ -909,7 +906,7 @@ namespace WitcherGame
             currentPlate.sprite = WitcherSpriteLibrary.GetSolidSprite(new Color32(5, 8, 12, 228));
             AddOutline(currentPlate, new Color32(124, 149, 178, 255), new Vector2(2f, -2f));
 
-            currentTurnText = CreateText("Battle Current Turn Text", currentPlate.transform, "第1手", 18, TextAnchor.MiddleRight, new Vector2(48f, -8f), new Vector2(70f, 24f));
+            currentTurnText = CreateText("Battle Current Turn Text", currentPlate.transform, GameText.Battle.TurnNumber(1), 18, TextAnchor.MiddleRight, new Vector2(48f, -8f), new Vector2(70f, 24f));
             currentTurnText.color = new Color32(228, 236, 245, 255);
             AddOutline(currentTurnText, Color.black, new Vector2(1f, -1f));
 
@@ -935,7 +932,7 @@ namespace WitcherGame
             nextPlate.sprite = WitcherSpriteLibrary.GetSolidSprite(new Color32(5, 8, 12, 188));
             AddOutline(nextPlate, new Color32(80, 88, 105, 210), new Vector2(1f, -1f));
 
-            nextTurnText = CreateText("Battle Next Turn Text", nextPlate.transform, "等待出手", 15, TextAnchor.MiddleCenter, Vector2.zero, new Vector2(112f, 28f));
+            nextTurnText = CreateText("Battle Next Turn Text", nextPlate.transform, GameText.Battle.WaitingTurn, 15, TextAnchor.MiddleCenter, Vector2.zero, new Vector2(112f, 28f));
             nextTurnText.color = new Color32(210, 215, 220, 255);
             AddOutline(nextTurnText, Color.black, new Vector2(1f, -1f));
 
@@ -968,12 +965,12 @@ namespace WitcherGame
             List<TurnBattleTimelineEntry> preview = manager.GetTimelinePreview(timelineGems.Count);
             if (currentTurnText != null)
             {
-                currentTurnText.text = $"第{manager.TurnNumber}手";
+                currentTurnText.text = GameText.Battle.TurnNumber(manager.TurnNumber);
             }
 
             if (nextTurnText != null)
             {
-                nextTurnText.text = preview.Count > 0 ? $"当前 {preview[0].Name}" : "等待出手";
+                nextTurnText.text = preview.Count > 0 ? GameText.Battle.CurrentTurn(preview[0].Name) : GameText.Battle.WaitingTurn;
             }
 
             if (currentActorPortrait != null)
@@ -1021,7 +1018,7 @@ namespace WitcherGame
         {
             if (entry.IsPlayer)
             {
-                return string.IsNullOrEmpty(entry.PartyMemberName) ? "猎" : entry.PartyMemberName.Substring(0, 1);
+                return string.IsNullOrEmpty(entry.PartyMemberName) ? GameText.Battle.PlayerInitial : entry.PartyMemberName.Substring(0, 1);
             }
 
             if (!string.IsNullOrEmpty(entry.Name))
@@ -1029,14 +1026,14 @@ namespace WitcherGame
                 return entry.Name.Substring(0, 1);
             }
 
-            return "怪";
+            return GameText.Battle.MonsterInitial;
         }
 
         private Sprite GetTimelinePortraitSprite(TurnBattleTimelineEntry entry)
         {
             if (entry.IsPlayer)
             {
-                if (!string.IsNullOrEmpty(entry.PartyMemberName) && entry.PartyMemberName != "猎魔人")
+                if (!string.IsNullOrEmpty(entry.PartyMemberName) && entry.PartyMemberName != GameText.HunterName)
                 {
                     PartyMember member = PartyManager.CreateIfMissing().FindMember(entry.PartyMemberName);
                     return PartyAnimationLibrary.GetIdlePreview(member);
@@ -2003,7 +2000,7 @@ namespace WitcherGame
         private static bool ShouldHideBattleSupportMember(PartyMember member)
         {
             return member == null
-                || member.Name == "猎魔人";
+                || member.Name == GameText.HunterName;
         }
 
         private bool TryGetPartySlot(PartyMember member, out PartyVisualSlot slot)
@@ -2258,11 +2255,11 @@ namespace WitcherGame
             AddOutline(panelImage, JrpgBorderColor, new Vector2(2f, -2f));
             skillPanel = panelImage.gameObject;
 
-            Text title = CreateText("Battle Skill Panel Title", skillPanel.transform, "角色技能", 17, TextAnchor.MiddleLeft, new Vector2(12f, -8f), new Vector2(112f, 24f));
+            Text title = CreateText("Battle Skill Panel Title", skillPanel.transform, GameText.Battle.CharacterSkills, 17, TextAnchor.MiddleLeft, new Vector2(12f, -8f), new Vector2(112f, 24f));
             title.color = JrpgTextColor;
             AddOutline(title, Color.black, new Vector2(2f, -2f));
 
-            Text hint = CreateText("Battle Skill Panel Hint", skillPanel.transform, "Esc 返回", 13, TextAnchor.MiddleRight, new Vector2(300f, -10f), new Vector2(78f, 20f));
+            Text hint = CreateText("Battle Skill Panel Hint", skillPanel.transform, GameText.Battle.BackHint, 13, TextAnchor.MiddleRight, new Vector2(300f, -10f), new Vector2(78f, 20f));
             hint.color = JrpgMutedTextColor;
             AddOutline(hint, Color.black, new Vector2(1f, -1f));
 
@@ -2335,31 +2332,31 @@ namespace WitcherGame
             switch (skill.Id)
             {
                 case BattleSkillId.ExecuteSlash:
-                    return "三连银剑";
+                    return GameText.Battle.ComboSlashShort;
                 case BattleSkillId.FlameSign:
-                    return "群体火焰";
+                    return GameText.Battle.GroupFlameShort;
                 case BattleSkillId.ThunderSign:
-                    return "双段闪电";
+                    return GameText.Battle.DoubleLightningShort;
                 case BattleSkillId.HunterFocus:
-                    return "攻击提升";
+                    return GameText.Battle.AttackUpShort;
                 case BattleSkillId.TrissFirebolt:
-                    return "火焰单体";
+                    return GameText.Battle.SingleFlameShort;
                 case BattleSkillId.TrissMeltingSigil:
-                    return "群体削弱";
+                    return GameText.Battle.GroupDebuffShort;
                 case BattleSkillId.TrissFlameWard:
-                    return "前排护盾";
+                    return GameText.Battle.FrontShieldShort;
                 case BattleSkillId.TrissMeteorFlare:
-                    return "火焰群体";
+                    return GameText.Battle.FireGroupShort;
                 case BattleSkillId.YenneferArcaneBolt:
-                    return "奥术单体";
+                    return GameText.Battle.ArcaneSingleShort;
                 case BattleSkillId.YenneferCursePulse:
-                    return "群体削弱";
+                    return GameText.Battle.GroupDebuffShort;
                 case BattleSkillId.YenneferAegis:
-                    return "前排护盾";
+                    return GameText.Battle.FrontShieldShort;
                 case BattleSkillId.YenneferObsidianStorm:
-                    return "奥术群体";
+                    return GameText.Battle.ArcaneGroupShort;
                 default:
-                    return skill.TargetKind == BattleSkillTargetKind.AllLivingEnemies ? "群体" : "单体";
+                    return skill.TargetKind == BattleSkillTargetKind.AllLivingEnemies ? GameText.Battle.GroupTargetShort : GameText.Battle.SingleTargetShort;
             }
         }
 
@@ -2368,15 +2365,15 @@ namespace WitcherGame
             switch (action)
             {
                 case TurnBattleAction.Attack:
-                    return "攻击";
+                    return GameText.Battle.Attack;
                 case TurnBattleAction.FlameSign:
-                    return "技能";
+                    return GameText.Battle.Skill;
                 case TurnBattleAction.Defend:
-                    return "防御";
+                    return GameText.Battle.Defend;
                 case TurnBattleAction.Item:
-                    return "道具";
+                    return GameText.Battle.Item;
                 case TurnBattleAction.Escape:
-                    return "撤离战场";
+                    return GameText.Battle.Escape;
                 default:
                     return action.ToString();
             }
@@ -2387,13 +2384,13 @@ namespace WitcherGame
             switch (action)
             {
                 case TurnBattleAction.FlameSign:
-                    return "展开";
+                    return GameText.Battle.Expand;
                 case TurnBattleAction.Item:
-                    return "药剂";
+                    return GameText.Battle.Potion;
                 case TurnBattleAction.Defend:
-                    return "护身";
+                    return GameText.Battle.Guard;
                 case TurnBattleAction.Attack:
-                    return "普通";
+                    return GameText.Battle.Normal;
                 default:
                     return string.Empty;
             }

@@ -175,7 +175,7 @@ namespace WitcherGame
             units.Add(new BattleUnit
             {
                 Id = "player",
-                Name = "猎魔人",
+                Name = GameText.HunterName,
                 IsPlayer = true,
                 Level = 1,
                 CurrentHp = player.CurrentHealth,
@@ -599,9 +599,9 @@ namespace WitcherGame
             portrait.raycastTarget = false;
             BattleHudStyle.AddOutline(portrait, BattleHudStyle.BorderColor, new Vector2(1f, -1f));
 
-            nameText = BattleHudStyle.CreateText("Name", transform, "猎魔人", 18, TextAnchor.MiddleLeft, new Vector2(76f, -10f), new Vector2(150f, 24f), BattleHudStyle.TextColor);
-            hpText = BattleHudStyle.CreateText("HP", transform, "HP 0 / 0", 15, TextAnchor.MiddleLeft, new Vector2(76f, -38f), new Vector2(156f, 20f), BattleHudStyle.TextColor);
-            spText = BattleHudStyle.CreateText("SP", transform, "SP 0 / 0", 14, TextAnchor.MiddleLeft, new Vector2(76f, -64f), new Vector2(156f, 20f), BattleHudStyle.MutedTextColor);
+            nameText = BattleHudStyle.CreateText("Name", transform, GameText.HunterName, 18, TextAnchor.MiddleLeft, new Vector2(76f, -10f), new Vector2(150f, 24f), BattleHudStyle.TextColor);
+            hpText = BattleHudStyle.CreateText("HP", transform, GameText.Stats.Hp(0, 0), 15, TextAnchor.MiddleLeft, new Vector2(76f, -38f), new Vector2(156f, 20f), BattleHudStyle.TextColor);
+            spText = BattleHudStyle.CreateText("SP", transform, GameText.Stats.Sp(0, 0), 14, TextAnchor.MiddleLeft, new Vector2(76f, -64f), new Vector2(156f, 20f), BattleHudStyle.MutedTextColor);
             BattleHudStyle.AddOutline(nameText, Color.black, new Vector2(2f, -2f));
             BattleHudStyle.AddOutline(hpText, Color.black, new Vector2(1f, -1f));
             BattleHudStyle.AddOutline(spText, Color.black, new Vector2(1f, -1f));
@@ -622,8 +622,8 @@ namespace WitcherGame
             targetSp = unit.MaxSp <= 0 ? 0f : Mathf.Clamp01((float)unit.CurrentSp / unit.MaxSp);
             portrait.sprite = unit.Portrait;
             nameText.text = $"Lv {unit.Level}  {unit.Name}";
-            hpText.text = $"HP {unit.CurrentHp} / {unit.MaxHp}";
-            spText.text = $"SP {unit.CurrentSp} / {unit.MaxSp}";
+            hpText.text = GameText.Stats.Hp(unit.CurrentHp, unit.MaxHp);
+            spText.text = GameText.Stats.Sp(unit.CurrentSp, unit.MaxSp);
             Color aliveColor = unit.IsAlive ? Color.white : new Color32(120, 125, 128, 190);
             portrait.color = aliveColor;
             nameText.color = unit.IsAlive ? BattleHudStyle.TextColor : new Color32(128, 134, 138, 210);
@@ -720,7 +720,7 @@ namespace WitcherGame
             BattleHudStyle.AddOutline(frame, BattleHudStyle.BorderColor, new Vector2(1f, -1f));
 
             shieldText = BattleHudStyle.CreateText("Shield", transform, "5", 18, TextAnchor.MiddleCenter, new Vector2(8f, -4f), new Vector2(28f, 26f), BattleHudStyle.TextColor);
-            weaknessText = BattleHudStyle.CreateText("Weakness", transform, "弱点", 14, TextAnchor.MiddleLeft, new Vector2(42f, -6f), new Vector2(44f, 24f), BattleHudStyle.TextColor);
+            weaknessText = BattleHudStyle.CreateText("Weakness", transform, GameText.Battle.Weakness, 14, TextAnchor.MiddleLeft, new Vector2(42f, -6f), new Vector2(44f, 24f), BattleHudStyle.TextColor);
             BattleHudStyle.AddOutline(shieldText, Color.black, new Vector2(1f, -1f));
             BattleHudStyle.AddOutline(weaknessText, Color.black, new Vector2(1f, -1f));
 
@@ -741,7 +741,7 @@ namespace WitcherGame
                 cellBack.raycastTarget = false;
                 BattleHudStyle.AddOutline(cellBack, BattleHudStyle.BorderColor, new Vector2(1f, -1f));
 
-                Text cell = BattleHudStyle.CreateText("Glyph", cellRoot.transform, "?", 13, TextAnchor.MiddleCenter, Vector2.zero, new Vector2(18f, 20f), BattleHudStyle.TextColor);
+                Text cell = BattleHudStyle.CreateText("Glyph", cellRoot.transform, GameText.Battle.Question, 13, TextAnchor.MiddleCenter, Vector2.zero, new Vector2(18f, 20f), BattleHudStyle.TextColor);
                 BattleHudStyle.AddOutline(cell, Color.black, new Vector2(1f, -1f));
                 weaknessCells.Add(cell);
             }
@@ -772,7 +772,7 @@ namespace WitcherGame
             {
                 bool hasWeakness = unit.Weaknesses != null && i < unit.Weaknesses.Length;
                 bool discovered = unit.WeaknessDiscovered != null && i < unit.WeaknessDiscovered.Length && unit.WeaknessDiscovered[i];
-                weaknessCells[i].text = hasWeakness && discovered ? unit.Weaknesses[i] : "?";
+                weaknessCells[i].text = hasWeakness && discovered ? unit.Weaknesses[i] : GameText.Battle.Question;
                 weaknessCells[i].color = discovered ? BattleHudStyle.GoldColor : BattleHudStyle.MutedTextColor;
             }
         }
@@ -829,7 +829,7 @@ namespace WitcherGame
                 StopCoroutine(routine);
             }
 
-            text.text = string.IsNullOrEmpty(skillName) ? "行动" : skillName;
+            text.text = string.IsNullOrEmpty(skillName) ? GameText.Battle.Action : skillName;
             routine = StartCoroutine(Play());
         }
 

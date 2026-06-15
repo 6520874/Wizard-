@@ -89,7 +89,7 @@ namespace WitcherGame
             }
             else if (IsPartyCommandSelected() && Input.GetKeyDown(KeyCode.J))
             {
-                TogglePartyMember("叶奈法");
+                TogglePartyMember(GameText.YenneferName);
             }
             else if (Input.GetKeyDown(KeyCode.Escape))
             {
@@ -135,14 +135,14 @@ namespace WitcherGame
                 return;
             }
 
-            commands.Add(new MenuCommand("状态", "查看队伍生命、魔力、基础属性与当前任务。", ShowStatus));
-            commands.Add(new MenuCommand("装备", "调整武器、护甲、饰品与圣物核心。", OpenEquipment));
-            commands.Add(new MenuCommand("道具", "背包系统预留：药剂、委托物品和战利品将从这里使用。", () => ShowDetail("道具袋里只有几瓶药剂和怪物牙。真实背包接口已预留。")));
-            commands.Add(new MenuCommand("技能", "查看猎魔法印、女术士法术、血魔法和怪物伙伴技能。", ShowSkills));
-            commands.Add(new MenuCommand("队伍", "查看当前队伍成员与怪物伙伴预留位。", ShowParty));
-            commands.Add(new MenuCommand("对话", "与队友闲聊，获取当前区域的线索。", PlayPartyTalk));
-            commands.Add(new MenuCommand("系统", "系统设置预留：存档、读档、选项和返回标题。", () => ShowDetail("系统菜单预留中。之后可接入存档、音量和按键设置。")));
-            commands.Add(new MenuCommand("关闭", "关闭命令菜单，返回探索。", Close));
+            commands.Add(new MenuCommand(GameText.Menu.Status, GameText.Menu.StatusDescription, ShowStatus));
+            commands.Add(new MenuCommand(GameText.Menu.Equipment, GameText.Menu.EquipmentDescription, OpenEquipment));
+            commands.Add(new MenuCommand(GameText.Menu.Item, GameText.Menu.ItemDescription, () => ShowDetail(GameText.Menu.ItemPlaceholder)));
+            commands.Add(new MenuCommand(GameText.Menu.Skill, GameText.Menu.SkillDescription, ShowSkills));
+            commands.Add(new MenuCommand(GameText.Menu.Party, GameText.Menu.PartyDescription, ShowParty));
+            commands.Add(new MenuCommand(GameText.Menu.Talk, GameText.Menu.TalkDescription, PlayPartyTalk));
+            commands.Add(new MenuCommand(GameText.Menu.System, GameText.Menu.SystemDescription, () => ShowDetail(GameText.Menu.SystemPlaceholder)));
+            commands.Add(new MenuCommand(GameText.Common.Close, GameText.Menu.CloseDescription, Close));
         }
 
         private void MoveSelection(int delta)
@@ -178,11 +178,11 @@ namespace WitcherGame
         {
             PartyManager party = PartyManager.CreateIfMissing();
             QuestManager quest = QuestManager.CreateIfMissing();
-            string questText = quest.ActiveQuest == null ? "暂无进行中的委托。" : $"{quest.ActiveQuest.title}\n{quest.ActiveQuest.description}";
-            string text = $"当前任务\n{questText}\n\n队伍状态";
+            string questText = quest.ActiveQuest == null ? GameText.Menu.NoActiveQuest : $"{quest.ActiveQuest.title}\n{quest.ActiveQuest.description}";
+            string text = $"{GameText.Menu.CurrentTaskHeader}\n{questText}\n\n{GameText.Menu.PartyStatusHeader}";
             foreach (PartyMember member in party.ActiveParty)
             {
-                text += $"\n{member.Name} Lv {member.Level}  HP {member.HP}/{member.TotalMaxHP}  MP {member.MP}/{member.TotalMaxMP}";
+                text += $"\n{member.Name} Lv {member.Level}  {GameText.Stats.CompactHp(member.HP, member.TotalMaxHP)}  {GameText.Stats.CompactMp(member.MP, member.TotalMaxMP)}";
             }
 
             ShowDetail(text);
@@ -191,7 +191,7 @@ namespace WitcherGame
         private void ShowSkills()
         {
             PartyManager party = PartyManager.CreateIfMissing();
-            string text = "技能";
+            string text = GameText.Menu.SkillsHeader;
             foreach (PartyMember member in party.ActiveParty)
             {
                 text += $"\n\n{member.Name}";
@@ -204,7 +204,7 @@ namespace WitcherGame
                 for (int i = 0; i < member.SkillDetails.Count; i++)
                 {
                     PartySkill skill = member.SkillDetails[i];
-                    text += $"\n- {skill.Name}  {skill.Role}  MP {skill.MpCost}\n  {skill.Description}";
+                    text += $"\n- {skill.Name}  {skill.Role}  {GameText.Stats.MpLabel} {skill.MpCost}\n  {skill.Description}";
                 }
             }
 
@@ -214,7 +214,7 @@ namespace WitcherGame
         private void ShowParty()
         {
             PartyManager party = PartyManager.CreateIfMissing();
-            string text = "队伍管理";
+            string text = GameText.Menu.PartyManageHeader;
             foreach (PartyMember member in party.AllMembers)
             {
                 if (member == null)
@@ -222,12 +222,12 @@ namespace WitcherGame
                     continue;
                 }
 
-                string state = member.IsJoined ? "已上阵" : "待命";
-                string locked = member.Name == "猎魔人" ? " 固定" : " 上阵锁定";
+                string state = member.IsJoined ? GameText.Common.InParty : GameText.Common.Standby;
+                string locked = member.Name == GameText.HunterName ? GameText.Common.Fixed : GameText.Common.ActiveLocked;
                 text += $"\n- {member.Name} Lv {member.Level}  {state}{locked}";
             }
 
-            text += "\n\n当前队伍规则：只有猎魔人一个人上阵；其他角色保留为剧情/装备成员，后续版本再开放参战。";
+            text += "\n\n" + GameText.Menu.HunterOnlyPartyRule;
             ShowDetail(text);
         }
 
@@ -242,7 +242,7 @@ namespace WitcherGame
 
         private bool IsPartyCommandSelected()
         {
-            return selectedIndex >= 0 && selectedIndex < commands.Count && commands[selectedIndex].Label == "队伍";
+            return selectedIndex >= 0 && selectedIndex < commands.Count && commands[selectedIndex].Label == GameText.Menu.Party;
         }
 
         private void PlayPartyTalk()
@@ -291,7 +291,7 @@ namespace WitcherGame
             menuPanel = GothicUiFactory.CreatePanel("Command Panel", root.transform, new Vector2(300f, 430f), new Vector2(44f, -60f), new Vector2(0f, 1f), new Color32(5, 7, 10, 232));
             GothicUiFactory.AddOutline(menuPanel, new Color32(112, 89, 48, 255), new Vector2(2f, -2f));
             GothicUiFactory.CreatePanel("Command Blood Rule", menuPanel.transform, new Vector2(248f, 2f), new Vector2(26f, -60f), new Vector2(0f, 1f), new Color32(133, 18, 27, 210));
-            titleText = GothicUiFactory.CreateText("Command Title", menuPanel.transform, "猎魔命令", 28, TextAnchor.MiddleCenter, new Vector2(24f, -18f), new Vector2(252f, 34f), new Color32(238, 205, 130, 255));
+            titleText = GothicUiFactory.CreateText("Command Title", menuPanel.transform, GameText.Menu.CommandTitle, 28, TextAnchor.MiddleCenter, new Vector2(24f, -18f), new Vector2(252f, 34f), new Color32(238, 205, 130, 255));
 
             for (int i = 0; i < commands.Count; i++)
             {

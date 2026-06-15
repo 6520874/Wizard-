@@ -180,7 +180,7 @@ namespace WitcherGame
         {
             PartyManager party = PartyManager.CreateIfMissing();
             PartyMember member = GetSelectedEditableMember();
-            if (member == null || member.Name == "猎魔人")
+            if (member == null || member.Name == GameText.HunterName)
             {
                 Refresh();
                 return;
@@ -202,7 +202,7 @@ namespace WitcherGame
         {
             PartyManager party = PartyManager.CreateIfMissing();
             PartyMember member = GetSelectedEditableMember();
-            if (member != null && member.Name != "猎魔人" && member.IsJoined)
+            if (member != null && member.Name != GameText.HunterName && member.IsJoined)
             {
                 party.RemoveMember(member);
             }
@@ -228,25 +228,23 @@ namespace WitcherGame
                 memberTexts[i].gameObject.SetActive(true);
                 bool isSelectedMember = i == selectedMemberIndex;
                 PartyMember member = members[i];
-                string joinedState = member.IsJoined ? "入队" : "待命";
-                string locked = member.Name == "猎魔人" ? " 锁定" : " 上阵锁定";
-                memberTexts[i].text = isSelectedMember
-                    ? $"> {member.Name}  {joinedState}{locked}"
-                    : $"  {member.Name}  {joinedState}{locked}";
+                string joinedState = member.IsJoined ? GameText.Common.Joined : GameText.Common.Standby;
+                string locked = member.Name == GameText.HunterName ? GameText.Common.Locked : GameText.Common.ActiveLocked;
+                memberTexts[i].text = GameText.Equipment.MemberRow(member.Name, joinedState, locked, isSelectedMember);
                 memberTexts[i].color = isSelectedMember ? MenuSelectedTextColor : member.IsJoined ? MenuTextColor : MenuMutedTextColor;
             }
 
             PartyMember selectedMember = GetSelectedEditableMember();
             if (selectedMember == null)
             {
-                titleText.text = "队伍";
-                statsText.text = "暂无可编辑成员。";
-                helpText.text = "Esc 关闭";
+                titleText.text = GameText.Equipment.PartyTitle;
+                statsText.text = GameText.Equipment.NoEditableMember;
+                helpText.text = GameText.Equipment.CloseHint;
                 return;
             }
 
-            string memberState = selectedMember.IsJoined ? "已上阵" : "待命";
-            titleText.text = $"{selectedMember.Name} 装备  {memberState}";
+            string memberState = selectedMember.IsJoined ? GameText.Common.InParty : GameText.Common.Standby;
+            titleText.text = GameText.Equipment.MemberTitle(selectedMember.Name, memberState);
             if (portraitImage != null)
             {
                 portraitImage.sprite = PartyAnimationLibrary.GetIdlePreview(selectedMember);
@@ -259,7 +257,7 @@ namespace WitcherGame
                 EquipmentItem item = selectedMember.CurrentEquipment.Get(slot);
                 bool selectedSlot = i == selectedSlotIndex;
                 string slotName = GetSlotDisplayName(slot);
-                string itemName = item == null ? "空" : item.Name;
+                string itemName = item == null ? GameText.Common.Empty : item.Name;
                 slotTexts[i].text = selectedSlot ? $"< {slotName} >  {itemName}" : $"{slotName}  {itemName}";
                 slotTexts[i].color = selectedSlot ? MenuSelectedTextColor : MenuTextColor;
             }
@@ -267,12 +265,12 @@ namespace WitcherGame
             statsText.text =
                 $"HP    {selectedMember.HP}/{selectedMember.TotalMaxHP}\n" +
                 $"MP    {selectedMember.MP}/{selectedMember.TotalMaxMP}\n" +
-                $"攻击  {selectedMember.TotalAttack}\n" +
-                $"防御  {selectedMember.TotalDefense}\n" +
-                $"魔力  {selectedMember.TotalMagic}\n" +
-                $"速度  {selectedMember.TotalSpeed}\n" +
-                $"暴击  {Mathf.RoundToInt(selectedMember.TotalCriticalRate * 100f)}%";
-            helpText.text = "↑↓ 选择成员    ←→ 装备槽    Enter 更换装备    当前版本仅猎魔人上阵    Esc 关闭";
+                $"{GameText.Stats.Attack}  {selectedMember.TotalAttack}\n" +
+                $"{GameText.Stats.Defense}  {selectedMember.TotalDefense}\n" +
+                $"{GameText.Stats.Magic}  {selectedMember.TotalMagic}\n" +
+                $"{GameText.Stats.Speed}  {selectedMember.TotalSpeed}\n" +
+                $"{GameText.Stats.Critical}  {Mathf.RoundToInt(selectedMember.TotalCriticalRate * 100f)}%";
+            helpText.text = GameText.Equipment.HelpHint;
         }
 
         private PartyMember GetSelectedEditableMember()
@@ -308,15 +306,15 @@ namespace WitcherGame
             switch (slot)
             {
                 case EquipmentSlot.Weapon:
-                    return "武器";
+                    return GameText.Equipment.SlotWeapon;
                 case EquipmentSlot.Armor:
-                    return "护甲";
+                    return GameText.Equipment.SlotArmor;
                 case EquipmentSlot.Accessory1:
-                    return "饰品 1";
+                    return GameText.Equipment.SlotAccessory1;
                 case EquipmentSlot.Accessory2:
-                    return "饰品 2";
+                    return GameText.Equipment.SlotAccessory2;
                 case EquipmentSlot.RelicCore:
-                    return "圣物 / 魔法核心";
+                    return GameText.Equipment.SlotRelicCore;
                 default:
                     return slot.ToString();
             }
@@ -344,7 +342,7 @@ namespace WitcherGame
             GameObject leftPanel = GothicUiFactory.CreatePanel("Equipment Party Panel", root.transform, new Vector2(324f, 422f), new Vector2(54f, -62f), new Vector2(0f, 1f), MenuPanelColor);
             GothicUiFactory.AddOutline(leftPanel, MenuBorderColor, new Vector2(2f, -2f));
             GothicUiFactory.AddOutline(leftPanel, new Color32(0, 0, 0, 230), new Vector2(4f, -4f));
-            Text partyTitle = GothicUiFactory.CreateText("Equipment Party Title", leftPanel.transform, "队伍", 28, TextAnchor.MiddleCenter, new Vector2(30f, -18f), new Vector2(264f, 36f), MenuTextColor);
+            Text partyTitle = GothicUiFactory.CreateText("Equipment Party Title", leftPanel.transform, GameText.Equipment.PartyTitle, 28, TextAnchor.MiddleCenter, new Vector2(30f, -18f), new Vector2(264f, 36f), MenuTextColor);
             AddMenuTextOutline(partyTitle, new Vector2(2f, -2f));
             GothicUiFactory.CreatePanel("Equipment Party Rule", leftPanel.transform, new Vector2(260f, 2f), new Vector2(32f, -62f), new Vector2(0f, 1f), MenuRuleColor);
             for (int i = 0; i < 4; i++)
@@ -357,7 +355,7 @@ namespace WitcherGame
             GameObject rightPanel = GothicUiFactory.CreatePanel("Equipment Detail Panel", root.transform, new Vector2(690f, 422f), new Vector2(404f, -62f), new Vector2(0f, 1f), MenuPanelColor);
             GothicUiFactory.AddOutline(rightPanel, MenuBorderColor, new Vector2(2f, -2f));
             GothicUiFactory.AddOutline(rightPanel, new Color32(0, 0, 0, 230), new Vector2(4f, -4f));
-            titleText = GothicUiFactory.CreateText("Equipment Detail Title", rightPanel.transform, "装备", 28, TextAnchor.MiddleLeft, new Vector2(32f, -18f), new Vector2(330f, 36f), MenuTextColor);
+            titleText = GothicUiFactory.CreateText("Equipment Detail Title", rightPanel.transform, GameText.Equipment.EquipmentTitle, 28, TextAnchor.MiddleLeft, new Vector2(32f, -18f), new Vector2(330f, 36f), MenuTextColor);
             AddMenuTextOutline(titleText, new Vector2(2f, -2f));
             GothicUiFactory.CreatePanel("Equipment Detail Rule", rightPanel.transform, new Vector2(626f, 2f), new Vector2(32f, -62f), new Vector2(0f, 1f), MenuRuleColor);
             GameObject portraitFrame = GothicUiFactory.CreatePanel("Equipment Portrait Frame", rightPanel.transform, new Vector2(176f, 230f), new Vector2(30f, -82f), new Vector2(0f, 1f), new Color32(5, 15, 10, 120));

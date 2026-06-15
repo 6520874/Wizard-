@@ -67,7 +67,7 @@ namespace WitcherGame
             {
                 if (showingShopList)
                 {
-                    ShowDialogueOptions("还需要别的吗？");
+                    ShowDialogueOptions(GameText.Shop.AnythingElseLine);
                 }
                 else
                 {
@@ -98,7 +98,7 @@ namespace WitcherGame
             selectedItemIndex = 0;
             root.SetActive(true);
             player?.SetControlEnabled(false);
-            ShowDialogueOptions("欢迎，猎魔人。看看有没有你趁手的家伙。");
+            ShowDialogueOptions(GameText.Shop.WelcomeLine);
         }
 
         private void HandleDialogueInput()
@@ -158,7 +158,7 @@ namespace WitcherGame
             dialoguePanel.SetActive(false);
             shopPanel.SetActive(true);
             selectedItemIndex = 0;
-            shopFeedbackText.text = "方向键选择，回车购买，Esc 返回。";
+            shopFeedbackText.text = GameText.Shop.ShopInputHint;
             RefreshShop();
         }
 
@@ -184,7 +184,7 @@ namespace WitcherGame
             shopFeedbackText.text = message;
             if (success && player != null)
             {
-                WitcherCombatText.Spawn("-" + items[selectedItemIndex].Price + " 金币", player.transform.position + Vector3.up * 1.2f, new Color32(255, 214, 97, 255));
+                WitcherCombatText.Spawn(GameText.Shop.GoldSpent(items[selectedItemIndex].Price), player.transform.position + Vector3.up * 1.2f, new Color32(255, 214, 97, 255));
             }
 
             RefreshShop();
@@ -192,7 +192,7 @@ namespace WitcherGame
 
         private void RefreshShop()
         {
-            goldText.text = inventory == null ? "金币 0" : $"金币 {inventory.Gold}";
+            goldText.text = inventory == null ? GameText.Stats.GoldAmount(0) : GameText.Stats.GoldAmount(inventory.Gold);
             ownedText.text = BuildOwnedText();
             for (int i = 0; i < itemButtons.Count; i++)
             {
@@ -205,7 +205,7 @@ namespace WitcherGame
 
                 ShopItemData item = items[i];
                 bool owned = inventory != null && inventory.HasEquipment(item.ItemName);
-                itemButtonTexts[i].text = $"{item.ItemName}    {item.Price} 金币    {item.GetBonusText()}" + (owned ? "    已拥有" : string.Empty);
+                itemButtonTexts[i].text = GameText.Shop.ItemRow(item.ItemName, item.Price, item.GetBonusText()) + (owned ? GameText.Shop.AlreadyOwnedSuffix : string.Empty);
                 itemButtons[i].interactable = !owned;
             }
 
@@ -216,13 +216,13 @@ namespace WitcherGame
         {
             if (inventory == null)
             {
-                return "已拥有：暂无";
+                return GameText.Shop.OwnedNone;
             }
 
             string equipmentText = inventory.OwnedEquipment.Count == 0
-                ? "暂无"
+                ? GameText.Common.NotAvailable
                 : string.Join("、", inventory.OwnedEquipment);
-            return $"已拥有：{equipmentText}\n装备加成：攻击 +{inventory.AttackBonus}  防御 +{inventory.DefenseBonus}\n经验：{inventory.Experience}  战利品：{inventory.OwnedLoot.Count}";
+            return GameText.Shop.OwnedSummary(equipmentText, inventory.AttackBonus, inventory.DefenseBonus, inventory.Experience, inventory.OwnedLoot.Count);
         }
 
         private void RefreshItemSelection()
@@ -296,12 +296,12 @@ namespace WitcherGame
             AddOutline(panel, new Color32(108, 83, 50, 255), new Vector2(2f, -2f));
             CreateShopkeeperPortrait(dialoguePanel.transform, "Dialogue", new Vector2(26f, -18f), new Vector2(116f, 116f), new Vector2(102f, 102f));
 
-            Text name = CreateText("Equipment Shop Keeper Name", dialoguePanel.transform, "铁匠", 24, TextAnchor.MiddleLeft, new Vector2(160f, -18f), new Vector2(160f, 28f), new Color32(255, 219, 132, 255));
+            Text name = CreateText("Equipment Shop Keeper Name", dialoguePanel.transform, GameText.Shop.KeeperName, 24, TextAnchor.MiddleLeft, new Vector2(160f, -18f), new Vector2(160f, 28f), new Color32(255, 219, 132, 255));
             AddOutline(name, Color.black, new Vector2(1f, -1f));
             dialogueText = CreateText("Equipment Shop Dialogue Text", dialoguePanel.transform, string.Empty, 21, TextAnchor.UpperLeft, new Vector2(160f, -56f), new Vector2(572f, 42f), new Color32(232, 235, 228, 255));
 
-            AddDialogueButton("购买装备", 0, new Vector2(318f, -104f));
-            AddDialogueButton("离开", 1, new Vector2(504f, -104f));
+            AddDialogueButton(GameText.Shop.BuyEquipment, 0, new Vector2(318f, -104f));
+            AddDialogueButton(GameText.Common.Leave, 1, new Vector2(504f, -104f));
         }
 
         private void BuildShopPanel()
@@ -309,24 +309,24 @@ namespace WitcherGame
             Image panel = CreateImage("Equipment Shop Panel", root.transform, new Vector2(760f, 390f), Vector2.zero, new Color32(6, 8, 12, 244), new Vector2(0.5f, 0.5f));
             shopPanel = panel.gameObject;
             AddOutline(panel, new Color32(122, 94, 55, 255), new Vector2(2f, -2f));
-            Text title = CreateText("Equipment Shop Title", shopPanel.transform, "乌鸦铁砧装备店", 28, TextAnchor.MiddleCenter, new Vector2(0f, -18f), new Vector2(760f, 36f), new Color32(255, 218, 132, 255));
+            Text title = CreateText("Equipment Shop Title", shopPanel.transform, GameText.Shop.ShopTitle, 28, TextAnchor.MiddleCenter, new Vector2(0f, -18f), new Vector2(760f, 36f), new Color32(255, 218, 132, 255));
             AddOutline(title, Color.black, new Vector2(2f, -2f));
-            goldText = CreateText("Equipment Shop Gold", shopPanel.transform, "金币 0", 20, TextAnchor.MiddleRight, new Vector2(552f, -62f), new Vector2(170f, 26f), new Color32(255, 220, 96, 255));
+            goldText = CreateText("Equipment Shop Gold", shopPanel.transform, GameText.Stats.GoldAmount(0), 20, TextAnchor.MiddleRight, new Vector2(552f, -62f), new Vector2(170f, 26f), new Color32(255, 220, 96, 255));
             CreateShopkeeperPortrait(shopPanel.transform, "Shop", new Vector2(38f, -78f), new Vector2(124f, 124f), new Vector2(110f, 110f));
-            Text keeperName = CreateText("Equipment Shop Keeper Card Name", shopPanel.transform, "铁匠", 21, TextAnchor.MiddleCenter, new Vector2(38f, -210f), new Vector2(124f, 28f), new Color32(255, 219, 132, 255));
+            Text keeperName = CreateText("Equipment Shop Keeper Card Name", shopPanel.transform, GameText.Shop.KeeperName, 21, TextAnchor.MiddleCenter, new Vector2(38f, -210f), new Vector2(124f, 28f), new Color32(255, 219, 132, 255));
             AddOutline(keeperName, Color.black, new Vector2(1f, -1f));
-            Text keeperHint = CreateText("Equipment Shop Keeper Card Hint", shopPanel.transform, "武器 / 护甲", 14, TextAnchor.MiddleCenter, new Vector2(38f, -238f), new Vector2(124f, 24f), new Color32(180, 200, 213, 255));
+            Text keeperHint = CreateText("Equipment Shop Keeper Card Hint", shopPanel.transform, GameText.Shop.KeeperRole, 14, TextAnchor.MiddleCenter, new Vector2(38f, -238f), new Vector2(124f, 24f), new Color32(180, 200, 213, 255));
             AddOutline(keeperHint, Color.black, new Vector2(1f, -1f));
-            ownedText = CreateText("Equipment Shop Owned", shopPanel.transform, "已拥有：暂无", 14, TextAnchor.UpperLeft, new Vector2(38f, -314f), new Vector2(384f, 66f), new Color32(180, 200, 213, 255));
-            shopFeedbackText = CreateText("Equipment Shop Feedback", shopPanel.transform, "方向键选择，回车购买，Esc 返回。", 16, TextAnchor.MiddleRight, new Vector2(456f, -336f), new Vector2(270f, 24f), new Color32(207, 223, 232, 255));
+            ownedText = CreateText("Equipment Shop Owned", shopPanel.transform, GameText.Shop.OwnedNone, 14, TextAnchor.UpperLeft, new Vector2(38f, -314f), new Vector2(384f, 66f), new Color32(180, 200, 213, 255));
+            shopFeedbackText = CreateText("Equipment Shop Feedback", shopPanel.transform, GameText.Shop.ShopInputHint, 16, TextAnchor.MiddleRight, new Vector2(456f, -336f), new Vector2(270f, 24f), new Color32(207, 223, 232, 255));
 
             for (int i = 0; i < 5; i++)
             {
                 AddItemButton(i, new Vector2(184f, -100f - i * 44f), new Vector2(538f, 36f));
             }
 
-            Button closeButton = CreateButton("Equipment Shop Close Button", shopPanel.transform, "返回", new Vector2(110f, 30f), new Vector2(614f, -28f));
-            closeButton.onClick.AddListener(() => ShowDialogueOptions("还需要别的吗？"));
+            Button closeButton = CreateButton("Equipment Shop Close Button", shopPanel.transform, GameText.Shop.ReturnToDialogue, new Vector2(110f, 30f), new Vector2(614f, -28f));
+            closeButton.onClick.AddListener(() => ShowDialogueOptions(GameText.Shop.AnythingElseLine));
         }
 
         private void AddDialogueButton(string label, int optionIndex, Vector2 position)

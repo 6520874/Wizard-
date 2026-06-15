@@ -157,15 +157,15 @@ namespace WitcherGame
             healthFill = CreateReferenceFill("Health Runtime Fill", root.transform, new Vector2(PlayerBarWidth, 20f), new Vector2(198f, -76f), new Color32(139, 16, 24, 238), GetHealthFillSprite());
             manaFill = CreateReferenceFill("Mana Runtime Fill", root.transform, new Vector2(ManaBarWidth, 20f), new Vector2(198f, -146f), new Color32(37, 70, 132, 236), GetManaFillSprite());
 
-            healthText = CreateText("Health Value", root.transform, "HP 100 / 100", 21, TextAnchor.MiddleLeft, new Vector2(220f, -76f), new Vector2(240f, 28f));
+            healthText = CreateText("Health Value", root.transform, GameText.Stats.Hp(100, 100), 21, TextAnchor.MiddleLeft, new Vector2(220f, -76f), new Vector2(240f, 28f));
             healthText.color = new Color32(255, 250, 232, 255);
             AddOutline(healthText, new Color32(0, 0, 0, 255), new Vector2(2f, -2f));
 
-            manaText = CreateText("Mana Value", root.transform, "MP 100 / 100", 21, TextAnchor.MiddleLeft, new Vector2(220f, -146f), new Vector2(230f, 28f));
+            manaText = CreateText("Mana Value", root.transform, GameText.Stats.Mp(100, 100), 21, TextAnchor.MiddleLeft, new Vector2(220f, -146f), new Vector2(230f, 28f));
             manaText.color = new Color32(255, 250, 232, 255);
             AddOutline(manaText, new Color32(0, 0, 0, 255), new Vector2(2f, -2f));
 
-            roomText = CreateText("Room Label", root.transform, "霜林边境", 12, TextAnchor.MiddleRight, new Vector2(480f, -18f), new Vector2(150f, 20f));
+            roomText = CreateText("Room Label", root.transform, GameText.Hud.DefaultRoom, 12, TextAnchor.MiddleRight, new Vector2(480f, -18f), new Vector2(150f, 20f));
             roomText.color = new Color32(152, 178, 188, 255);
             AddOutline(roomText, new Color32(0, 0, 0, 220), new Vector2(1f, -1f));
 
@@ -201,8 +201,8 @@ namespace WitcherGame
 
             SetFill(healthFill, health01, PlayerBarWidth);
             SetFill(manaFill, mana01, ManaBarWidth);
-            healthText.text = $"HP {player.CurrentHealth} / {player.MaxHealth}";
-            manaText.text = $"MP {player.CurrentMana} / {player.MaxMana}";
+            healthText.text = GameText.Stats.Hp(player.CurrentHealth, player.MaxHealth);
+            manaText.text = GameText.Stats.Mp(player.CurrentMana, player.MaxMana);
             UpdateInventoryText();
             UpdateBossBar();
         }
@@ -274,7 +274,7 @@ namespace WitcherGame
             panel.sprite = WitcherSpriteLibrary.GetSolidSprite(new Color32(5, 9, 14, 205));
             panel.color = new Color32(5, 9, 14, 205);
 
-            Text title = CreateText("Boss Name", bossStatusRoot.transform, "狂猎统领", 15, TextAnchor.MiddleLeft, new Vector2(14f, -6f), new Vector2(160f, 20f));
+            Text title = CreateText("Boss Name", bossStatusRoot.transform, GameText.Hud.BossName, 15, TextAnchor.MiddleLeft, new Vector2(14f, -6f), new Vector2(160f, 20f));
             title.color = new Color32(207, 231, 245, 255);
 
             Image back = CreateImage("Boss Health Back", bossStatusRoot.transform, new Vector2(392f, 16f), new Vector2(18f, -28f), new Color32(2, 4, 8, 240));
@@ -310,17 +310,17 @@ namespace WitcherGame
             panel.sprite = WitcherSpriteLibrary.GetSolidSprite(new Color32(15, 18, 22, 236));
             AddOutline(panel, new Color32(130, 31, 33, 255), new Vector2(4f, -4f));
 
-            Text title = CreateText("Defeat Title", panel.transform, "你失败了", 48, TextAnchor.MiddleCenter, Vector2.zero, new Vector2(520f, 70f));
+            Text title = CreateText("Defeat Title", panel.transform, GameText.Hud.DefeatTitle, 48, TextAnchor.MiddleCenter, Vector2.zero, new Vector2(520f, 70f));
             CenterRect(title.rectTransform, new Vector2(0f, 68f), new Vector2(520f, 70f));
             title.color = new Color32(255, 70, 64, 255);
             AddOutline(title, new Color32(0, 0, 0, 255), new Vector2(3f, -3f));
 
-            Text subtitle = CreateText("Defeat Subtitle", panel.transform, "猎魔人的道路还没有结束", 19, TextAnchor.MiddleCenter, Vector2.zero, new Vector2(520f, 34f));
+            Text subtitle = CreateText("Defeat Subtitle", panel.transform, GameText.Hud.DefeatSubtitle, 19, TextAnchor.MiddleCenter, Vector2.zero, new Vector2(520f, 34f));
             CenterRect(subtitle.rectTransform, new Vector2(0f, 12f), new Vector2(520f, 34f));
             subtitle.color = new Color32(226, 219, 199, 255);
             AddOutline(subtitle, new Color32(0, 0, 0, 240), new Vector2(2f, -2f));
 
-            Button retryButton = CreateButton("Retry Button", panel.transform, "再来一次", new Vector2(0f, -72f), new Vector2(190f, 50f));
+            Button retryButton = CreateButton("Retry Button", panel.transform, GameText.Hud.Retry, new Vector2(0f, -72f), new Vector2(190f, 50f));
             retryButton.onClick.AddListener(RestartCurrentScene);
 
             gameOverRoot.SetActive(false);

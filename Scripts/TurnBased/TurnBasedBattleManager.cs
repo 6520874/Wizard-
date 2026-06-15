@@ -269,7 +269,7 @@ namespace WitcherGame
                 battleHud.SetCommandsEnabled(false);
                 PauseWorldRendering();
                 string openingNote = string.IsNullOrWhiteSpace(currentEncounter.BattleOpeningNote)
-                    ? $"遭遇 {encounterTitle}！"
+                    ? GameText.Battle.Encounter(encounterTitle)
                     : currentEncounter.BattleOpeningNote;
                 battleHud.SetMessage(openingNote);
             });
@@ -313,7 +313,7 @@ namespace WitcherGame
 
             if (!ActiveFriendlyHasMana(skill.ManaCost))
             {
-                battleHud.SetMessage($"魔力不足，无法释放{skill.DisplayName}。");
+                battleHud.SetMessage(GameText.Battle.NotEnoughMana(skill.DisplayName));
                 return;
             }
 
@@ -335,7 +335,7 @@ namespace WitcherGame
 
             if (!ActiveFriendlyHasMana(skill.ManaCost))
             {
-                battleHud.SetMessage($"魔力不足，无法释放{skill.DisplayName}。");
+                battleHud.SetMessage(GameText.Battle.NotEnoughMana(skill.DisplayName));
                 return;
             }
 
@@ -454,7 +454,7 @@ namespace WitcherGame
 
             if (skill.ManaCost > 0 && !TrySpendActiveFriendlyMana(activeMember, skill.ManaCost))
             {
-                battleHud.SetMessage($"魔力不足，无法释放{skill.DisplayName}。");
+                battleHud.SetMessage(GameText.Battle.NotEnoughMana(skill.DisplayName));
                 yield return Wait(0.55f);
                 yield break;
             }
@@ -553,13 +553,13 @@ namespace WitcherGame
         {
             if (potionCount <= 0)
             {
-                battleHud.SetMessage("药剂已经用完了。");
+                battleHud.SetMessage(GameText.Battle.PotionEmpty);
                 return false;
             }
 
             if (player == null || player.CurrentHealth >= player.MaxHealth)
             {
-                battleHud.SetMessage("现在还不需要喝药。");
+                battleHud.SetMessage(GameText.Battle.PotionNotNeeded);
                 return false;
             }
 
@@ -570,13 +570,13 @@ namespace WitcherGame
         {
             if (Random.value <= escapeChance)
             {
-                battleHud.SetMessage("猎魔人撤出战斗，重新寻找机会。");
+                battleHud.SetMessage(GameText.Battle.EscapeSuccess);
                 yield return Wait(0.65f);
                 EndBattle(false, false);
             }
             else
             {
-                battleHud.SetMessage("撤退失败，怪物逼了上来！");
+                battleHud.SetMessage(GameText.Battle.EscapeFailed);
                 yield return Wait(0.55f);
             }
         }
@@ -611,7 +611,7 @@ namespace WitcherGame
                 currentSkillSlots.Clear();
                 battleHud.SetCommandsEnabled(true);
                 battleHud.SetSelectedCommand(selectedCommandIndex);
-                battleHud.SetMessage($"{GetTurnUnitName(activeTurnUnit)} 回合：选择攻击、技能、道具或防御。");
+                battleHud.SetMessage(GameText.Battle.TurnPrompt(GetTurnUnitName(activeTurnUnit)));
                 yield break;
             }
 
@@ -641,7 +641,7 @@ namespace WitcherGame
             SkillTargetResult playerResult = GetPlayerTargetResult(result);
             int damage = playerResult == null ? 0 : playerResult.Damage;
 
-            battleHud.SetMessage($"{enemy.Name} 使用 {skill.DisplayName}！");
+            battleHud.SetMessage(GameText.Battle.EnemyUseSkill(enemy.Name, skill.DisplayName));
             battleHud.ShowSkillName(skill.DisplayName);
             yield return battleHud.PlayEnemyAttack(enemyIndex);
             yield return battleHud.PlayEnemySkillEffect(skill.Id, enemyIndex);
@@ -702,11 +702,11 @@ namespace WitcherGame
             playerInventory = playerInventory == null && player != null ? PlayerInventory.CreateIfMissing(player) : playerInventory;
             playerInventory?.AddBattleRewards(goldReward, reward, lootRewards);
             battleHud.ShowVictoryRewards(reward, goldReward, lootRewards);
-            battleHud.SetMessage($"战斗胜利！获得 {reward} 点经验、{goldReward} 枚金币。");
-            WitcherCombatText.Spawn($"+{reward} XP", player.transform.position + Vector3.up * 1.2f, new Color32(255, 219, 91, 255));
+            battleHud.SetMessage(GameText.Battle.VictoryMessage(reward, goldReward));
+            WitcherCombatText.Spawn(GameText.Stats.ExperienceGain(reward), player.transform.position + Vector3.up * 1.2f, new Color32(255, 219, 91, 255));
             if (goldReward > 0)
             {
-                WitcherCombatText.Spawn($"+{goldReward} 金币", player.transform.position + Vector3.up * 1.55f, new Color32(255, 203, 88, 255));
+                WitcherCombatText.Spawn(GameText.Stats.GoldGain(goldReward), player.transform.position + Vector3.up * 1.55f, new Color32(255, 203, 88, 255));
             }
 
             yield return Wait(1.25f);
@@ -718,7 +718,7 @@ namespace WitcherGame
             battleEndSequenceStarted = true;
             resolvingTurn = true;
             battleHud.SetCommandsEnabled(false);
-            battleHud.SetMessage("战斗失败……");
+            battleHud.SetMessage(GameText.Battle.BattleFailure);
             yield return Wait(1.1f);
             EndBattle(false, false);
         }
@@ -862,7 +862,7 @@ namespace WitcherGame
 
         private BattleSkillUnit CreatePlayerTargetSkillUnit()
         {
-            BattleSkillUnit unit = BattleSkillUnit.CreatePlayer("猎魔人", player.MaxHealth, player.MaxMana, GetPlayerAttack(), GetPlayerDefense());
+            BattleSkillUnit unit = BattleSkillUnit.CreatePlayer(GameText.HunterName, player.MaxHealth, player.MaxMana, GetPlayerAttack(), GetPlayerDefense());
             unit.SetHealth(player.CurrentHealth);
             unit.SetMana(player.CurrentMana);
             for (int i = 0; i < playerStatuses.Count; i++)
@@ -1013,7 +1013,7 @@ namespace WitcherGame
                 yield return battleHud.PlayEnemyHurt(targetResult.EnemyIndex, 0.08f, targetResult.Damage);
                 if (targetResult.Defeated)
                 {
-                    battleHud.SetMessage($"{targetResult.TargetName} 被击倒了。");
+                    battleHud.SetMessage(GameText.Battle.TargetDefeated(targetResult.TargetName));
                     yield return Wait(0.28f);
                 }
             }
@@ -1052,7 +1052,7 @@ namespace WitcherGame
                 if (status.DamageOverTime > 0 && player != null && player.IsAlive)
                 {
                     player.TakeTurnBasedDamage(status.DamageOverTime, player.transform.position.x + 1f);
-                    battleHud.SetMessage($"{status.DisplayName} 侵蚀猎魔人，造成 {status.DamageOverTime} 点伤害。");
+                    battleHud.SetMessage(GameText.Battle.StatusDotDamage(status.DisplayName, status.DamageOverTime));
                     yield return battleHud.PlayPlayerHurt(status.DamageOverTime);
                 }
 
@@ -1120,7 +1120,7 @@ namespace WitcherGame
             {
                 int healed = Mathf.Max(4, Mathf.CeilToInt(playerResult.Damage * 0.45f));
                 enemies[enemyIndex].Health = Mathf.Clamp(enemies[enemyIndex].Health + healed, 0, enemies[enemyIndex].MaxHealth);
-                battleHud.SetMessage($"{enemies[enemyIndex].Name} 吸回 {healed} 点生命。");
+                battleHud.SetMessage(GameText.Battle.EnemyDrainLife(enemies[enemyIndex].Name, healed));
             }
         }
 
@@ -1154,17 +1154,17 @@ namespace WitcherGame
 
         private static bool IsHunter(PartyMember member)
         {
-            return member == null || member.Name == "猎魔人";
+            return member == null || member.Name == GameText.HunterName;
         }
 
         private static bool IsSorceress(PartyMember member)
         {
-            return member != null && (member.Name == "特莉丝" || member.Name == "叶奈法");
+            return member != null && (member.Name == GameText.TrissName || member.Name == GameText.YenneferName);
         }
 
         private static string GetFriendlyDisplayName(PartyMember member)
         {
-            return IsHunter(member) ? "猎魔人" : member.Name;
+            return IsHunter(member) ? GameText.HunterName : member.Name;
         }
 
         private SkillDefinition GetDefaultAttackSkill(PartyMember member)
@@ -1174,7 +1174,7 @@ namespace WitcherGame
                 return WitcherSkillBook.CreateBasicAttack();
             }
 
-            return member.Name == "叶奈法" ? WitcherSkillBook.CreateYenneferArcaneBolt() : WitcherSkillBook.CreateTrissFirebolt();
+            return member.Name == GameText.YenneferName ? WitcherSkillBook.CreateYenneferArcaneBolt() : WitcherSkillBook.CreateTrissFirebolt();
         }
 
         private SkillDefinition GetDefaultDefendSkill(PartyMember member)
@@ -1184,7 +1184,7 @@ namespace WitcherGame
                 return WitcherSkillBook.CreateDefend();
             }
 
-            return member.Name == "叶奈法" ? WitcherSkillBook.CreateYenneferAegis() : WitcherSkillBook.CreateTrissFlameWard();
+            return member.Name == GameText.YenneferName ? WitcherSkillBook.CreateYenneferAegis() : WitcherSkillBook.CreateTrissFlameWard();
         }
 
         private bool ActiveFriendlyHasMana(int cost)
@@ -1341,7 +1341,7 @@ namespace WitcherGame
                 return GetFriendlyDisplayName(unit.Member);
             }
 
-            return unit.EnemyIndex >= 0 && unit.EnemyIndex < enemies.Count ? enemies[unit.EnemyIndex].Name : "怪物";
+            return unit.EnemyIndex >= 0 && unit.EnemyIndex < enemies.Count ? enemies[unit.EnemyIndex].Name : GameText.MonsterFallbackName;
         }
 
         private void BuildTurnUnits()
@@ -1469,7 +1469,7 @@ namespace WitcherGame
 
         private static int GetFriendlyTurnSpeed(PartyMember member)
         {
-            if (member == null || member.Name == "猎魔人")
+            if (member == null || member.Name == GameText.HunterName)
             {
                 return PlayerTurnSpeed;
             }

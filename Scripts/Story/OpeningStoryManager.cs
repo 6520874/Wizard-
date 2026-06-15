@@ -137,7 +137,7 @@ namespace WitcherGame
         private void ShowNarrationLine(string line)
         {
             currentFullText = line;
-            continueHintText.text = "点击或按空格继续";
+            continueHintText.text = GameText.Opening.ContinueHint;
 
             if (typingRoutine != null)
             {
@@ -249,7 +249,7 @@ namespace WitcherGame
             AudioClip clip = Resources.Load<AudioClip>(openingMusicResourcePath);
             if (clip == null)
             {
-                Debug.LogWarning($"Opening music clip not found at Resources/{openingMusicResourcePath}");
+                Debug.LogWarning(GameText.Opening.MissingMusic(openingMusicResourcePath));
                 return;
             }
 
@@ -377,7 +377,7 @@ namespace WitcherGame
             Canvas canvas = EnsureCanvas("Story UI Canvas", 120);
             openingPanel = CreateFullScreenPanel("OpeningPanel", canvas.transform, new Color32(0, 0, 0, 255));
             narrationText = CreateText("Opening Narration Text", openingPanel.transform, string.Empty, 30, TextAnchor.MiddleCenter, Vector2.zero, new Vector2(1080f, 220f), new Color32(220, 228, 231, 255));
-            continueHintText = CreateText("Opening Continue Hint", openingPanel.transform, "点击或按空格继续", 16, TextAnchor.MiddleCenter, new Vector2(0f, -210f), new Vector2(420f, 36f), new Color32(121, 134, 141, 255));
+            continueHintText = CreateText("Opening Continue Hint", openingPanel.transform, GameText.Opening.ContinueHint, 16, TextAnchor.MiddleCenter, new Vector2(0f, -210f), new Vector2(420f, 36f), new Color32(121, 134, 141, 255));
         }
 
         private static Canvas EnsureCanvas(string name, int sortingOrder)
