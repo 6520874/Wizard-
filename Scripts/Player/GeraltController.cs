@@ -75,31 +75,21 @@ namespace WitcherGame
             RegenerateMana();
             invulnerableTimer -= Time.deltaTime;
 
-            if (!IsAlive)
+            if (ShouldStopForState())
             {
                 StopMovementAndClamp();
-                return;
-            }
+                if (!controlsEnabled && IsAlive)
+                {
+                    geraltAnimator.ForceIdle();
+                }
 
-            if (!controlsEnabled)
-            {
-                StopMovementAndClamp();
-                geraltAnimator.ForceIdle();
-                return;
-            }
-
-            if (hurtLockTimer > 0f)
-            {
-                hurtLockTimer -= Time.deltaTime;
-                StopMovementAndClamp();
                 return;
             }
 
             HandlePointAndClickInput();
 
             Vector2 movement = ReadMovementInput();
-            Vector2 requestedVelocity = new Vector2(movement.x * moveSpeed, movement.y * verticalMoveSpeed);
-            Vector2 resolvedVelocity = ResolveMapVelocity(requestedVelocity);
+            Vector2 resolvedVelocity = ResolveMapVelocity(GetRequestedVelocity(movement));
             ApplyMovement(resolvedVelocity);
             ClampToStage();
 
@@ -120,6 +110,22 @@ namespace WitcherGame
         private void LateUpdate()
         {
             ClampToStage();
+        }
+
+        private bool ShouldStopForState()
+        {
+            if (!IsAlive || !controlsEnabled)
+            {
+                return true;
+            }
+
+            if (hurtLockTimer <= 0f)
+            {
+                return false;
+            }
+
+            hurtLockTimer -= Time.deltaTime;
+            return true;
         }
 
         private void StopMovementAndClamp()
@@ -178,31 +184,6 @@ namespace WitcherGame
             TakeDamage(damage, attackerX);
         }
 
-        public void IncreaseMaxHealth(int amount)
-        {
-            maxHealth += Mathf.Max(1, amount);
-            currentHealth = Mathf.Clamp(currentHealth + amount, 0, maxHealth);
-            StatsChanged?.Invoke();
-        }
-
-        public void IncreaseMaxMana(int amount)
-        {
-            maxMana += Mathf.Max(1, amount);
-            currentMana = Mathf.Clamp(currentMana + amount, 0f, maxMana);
-            StatsChanged?.Invoke();
-        }
-
-        public void ImproveManaRegen(float amount)
-        {
-            manaRegenPerSecond += Mathf.Max(0.1f, amount);
-        }
-
-        public void ImproveMobility(float horizontalAmount, float verticalAmount)
-        {
-            moveSpeed += Mathf.Max(0.1f, horizontalAmount);
-            verticalMoveSpeed += Mathf.Max(0.05f, verticalAmount);
-        }
-
         public void ConfigureExplorationView(float scale, float horizontalSpeed, float verticalSpeed)
         {
             visualScale = Mathf.Clamp(scale, 0.18f, 1.2f);
@@ -231,9 +212,7 @@ namespace WitcherGame
 
         public bool MoveToWorldPosition(Vector2 worldPosition)
         {
-            Vector2 requestedDestination = new Vector2(
-                Mathf.Clamp(worldPosition.x, minStageX, maxStageX),
-                Mathf.Clamp(worldPosition.y, minStageY, maxStageY));
+            Vector2 requestedDestination = ClampToStageBounds(worldPosition);
 
             WitcherVillageWalkableMap walkableMap = WitcherVillageWalkableMap.Current;
             if (walkableMap != null && !walkableMap.TryGetNearestWalkablePoint(requestedDestination, out requestedDestination))
@@ -309,6 +288,11 @@ namespace WitcherGame
             return GetClickMoveInput();
         }
 
+        private Vector2 GetRequestedVelocity(Vector2 movement)
+        {
+            return new Vector2(movement.x * moveSpeed, movement.y * verticalMoveSpeed);
+        }
+
         private void SetClickMoveDestination(Vector2 screenPosition)
         {
             Camera camera = Camera.main;
@@ -318,10 +302,7 @@ namespace WitcherGame
             }
 
             Vector3 worldPosition = camera.ScreenToWorldPoint(new Vector3(screenPosition.x, screenPosition.y, -camera.transform.position.z));
-            Vector2 requestedDestination = new Vector2(
-                Mathf.Clamp(worldPosition.x, minStageX, maxStageX),
-                Mathf.Clamp(worldPosition.y, minStageY, maxStageY));
-            MoveToWorldPosition(requestedDestination);
+            MoveToWorldPosition(worldPosition);
         }
 
         private static bool IsPointerOverUi(int pointerId = -1)
@@ -359,28 +340,42 @@ namespace WitcherGame
 
             int previousHealth = currentHealth;
             currentHealth = Mathf.Clamp(currentHealth - Mathf.Max(0, damage), 0, maxHealth);
-            WitcherCombatText.Spawn($"-{damage}", transform.position + Vector3.up * 0.95f, new Color32(255, 72, 82, 255));
-            WitcherCombatFeedback.PlayerHit(transform.position);
+            ShowDamageFeedback(damage);
             if (currentHealth != previousHealth)
             {
                 StatsChanged?.Invoke();
             }
+
             hurtLockTimer = hurtLockDuration;
             invulnerableTimer = Mathf.Max(invulnerableTimer, 0.32f);
+            ApplyKnockback(attackerX);
+            StopPhysicsVelocity();
+            PlayDamageResult();
+            controlsEnabled = currentHealth > 0;
+            ClampToStage();
+        }
+
+        private void ShowDamageFeedback(int damage)
+        {
+            WitcherCombatText.Spawn($"-{damage}", transform.position + Vector3.up * 0.95f, new Color32(255, 72, 82, 255));
+            WitcherCombatFeedback.PlayerHit(transform.position);
+        }
+
+        private void ApplyKnockback(float attackerX)
+        {
             float knockDirection = transform.position.x >= attackerX ? 1f : -1f;
             transform.position += new Vector3(knockDirection * 0.38f, 0f, 0f);
-            StopPhysicsVelocity();
+        }
+
+        private void PlayDamageResult()
+        {
             if (currentHealth <= 0)
             {
                 HandleDefeat();
-            }
-            else
-            {
-                geraltAnimator.PlayHurt();
+                return;
             }
 
-            controlsEnabled = currentHealth > 0;
-            ClampToStage();
+            geraltAnimator.PlayHurt();
         }
 
         private void HandleDefeat()
@@ -413,20 +408,29 @@ namespace WitcherGame
         private void ClampToStage()
         {
             Vector3 position = transform.position;
-            position.x = Mathf.Clamp(position.x, minStageX, maxStageX);
-            position.y = Mathf.Clamp(position.y, minStageY, maxStageY);
+            Vector2 clampedPosition = ClampToStageBounds(position);
+            position.x = clampedPosition.x;
+            position.y = clampedPosition.y;
 
             WitcherVillageWalkableMap walkableMap = WitcherVillageWalkableMap.Current;
             if (walkableMap != null && !walkableMap.IsWalkable(position))
             {
                 if (walkableMap.TryGetNearestWalkablePoint(position, out Vector2 correctedPosition))
                 {
-                    position.x = Mathf.Clamp(correctedPosition.x, minStageX, maxStageX);
-                    position.y = Mathf.Clamp(correctedPosition.y, minStageY, maxStageY);
+                    clampedPosition = ClampToStageBounds(correctedPosition);
+                    position.x = clampedPosition.x;
+                    position.y = clampedPosition.y;
                 }
             }
 
             transform.position = position;
+        }
+
+        private Vector2 ClampToStageBounds(Vector2 position)
+        {
+            return new Vector2(
+                Mathf.Clamp(position.x, minStageX, maxStageX),
+                Mathf.Clamp(position.y, minStageY, maxStageY));
         }
 
         private Vector2 ResolveMapVelocity(Vector2 requestedVelocity)
