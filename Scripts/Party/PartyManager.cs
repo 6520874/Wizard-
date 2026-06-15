@@ -202,33 +202,9 @@ namespace WitcherGame
                 return;
             }
 
-            PartyMember hunter = new PartyMember("猎魔人", 1, 120, 100, 18, 7, 6, 13, 0.06f, true);
-            hunter.LearnSkill("银剑斩", "物理 / 单体", 0, "可靠的猎魔人基础攻击。");
-            hunter.LearnSkill("焚焰法印", "火焰 / 群体", 18, "用法印横扫敌群。");
-            hunter.CurrentEquipment.Weapon = sampleEquipment[EquipmentSlot.Weapon][0];
-            hunter.CurrentEquipment.Armor = sampleEquipment[EquipmentSlot.Armor][0];
-            hunter.CurrentEquipment.Accessory1 = sampleEquipment[EquipmentSlot.Accessory1][0];
-            hunter.CurrentEquipment.RelicCore = sampleEquipment[EquipmentSlot.RelicCore][0];
-
-            PartyMember yennefer = new PartyMember("叶奈法", 1, 88, 142, 8, 5, 24, 12, 0.04f, false);
-            yennefer.LearnSkill("紫晶护盾", "防护 / 护盾", 16, "为队伍展开紫色魔法护盾。");
-            yennefer.LearnSkill("诅咒脉冲", "奥术 / 弱化", 20, "释放扭曲脉冲削弱敌人的防御。");
-            yennefer.LearnSkill("紫晶箭", "奥术 / 单体", 12, "凝出紫晶箭贯穿单个怪物。");
-            yennefer.LearnSkill("黑曜风暴", "奥术 / 群体", 28, "以黑曜碎光席卷敌群。");
-            yennefer.CurrentEquipment.Weapon = sampleEquipment[EquipmentSlot.Weapon][1];
-            yennefer.CurrentEquipment.Armor = sampleEquipment[EquipmentSlot.Armor][1];
-            yennefer.CurrentEquipment.Accessory1 = sampleEquipment[EquipmentSlot.Accessory1][1];
-            yennefer.CurrentEquipment.RelicCore = sampleEquipment[EquipmentSlot.RelicCore][1];
-
-            PartyMember triss = new PartyMember("特莉丝", 1, 102, 126, 11, 6, 22, 14, 0.06f, false);
-            triss.LearnSkill("火焰术", "火焰 / 单体", 14, "向目标投出压缩火球。");
-            triss.LearnSkill("灼热结界", "火焰 / 防护", 22, "以火焰结界保护队伍并反制近身敌人。");
-            triss.LearnSkill("熔甲火印", "火焰 / 弱化", 18, "点燃敌人护甲缝隙，降低怪物防御。");
-            triss.LearnSkill("流星火雨", "火焰 / 群体", 28, "召下火雨压制敌群。");
-            triss.CurrentEquipment.Weapon = sampleEquipment[EquipmentSlot.Weapon][2];
-            triss.CurrentEquipment.Armor = sampleEquipment[EquipmentSlot.Armor][2];
-            triss.CurrentEquipment.Accessory1 = sampleEquipment[EquipmentSlot.Accessory1][2];
-            triss.CurrentEquipment.RelicCore = sampleEquipment[EquipmentSlot.RelicCore][2];
+            PartyMember hunter = CreateDefaultHunter();
+            PartyMember yennefer = CreateDefaultYennefer();
+            PartyMember triss = CreateDefaultTriss();
 
             allMembers.Add(hunter);
             allMembers.Add(yennefer);
@@ -237,6 +213,45 @@ namespace WitcherGame
             activeParty.Add(hunter);
             RemoveHiddenMainPartyMembers();
             PartyChanged?.Invoke();
+        }
+
+        private PartyMember CreateDefaultHunter()
+        {
+            PartyMember hunter = new PartyMember("猎魔人", 1, 120, 100, 18, 7, 6, 13, 0.06f, true);
+            hunter.LearnSkill("银剑斩", "物理 / 单体", 0, "可靠的猎魔人基础攻击。");
+            hunter.LearnSkill("焚焰法印", "火焰 / 群体", 18, "用法印横扫敌群。");
+            EquipStarterItems(hunter, 0);
+            return hunter;
+        }
+
+        private PartyMember CreateDefaultYennefer()
+        {
+            PartyMember yennefer = new PartyMember("叶奈法", 1, 88, 142, 8, 5, 24, 12, 0.04f, false);
+            yennefer.LearnSkill("紫晶护盾", "防护 / 护盾", 16, "为队伍展开紫色魔法护盾。");
+            yennefer.LearnSkill("诅咒脉冲", "奥术 / 弱化", 20, "释放扭曲脉冲削弱敌人的防御。");
+            yennefer.LearnSkill("紫晶箭", "奥术 / 单体", 12, "凝出紫晶箭贯穿单个怪物。");
+            yennefer.LearnSkill("黑曜风暴", "奥术 / 群体", 28, "以黑曜碎光席卷敌群。");
+            EquipStarterItems(yennefer, 1);
+            return yennefer;
+        }
+
+        private PartyMember CreateDefaultTriss()
+        {
+            PartyMember triss = new PartyMember("特莉丝", 1, 102, 126, 11, 6, 22, 14, 0.06f, false);
+            triss.LearnSkill("火焰术", "火焰 / 单体", 14, "向目标投出压缩火球。");
+            triss.LearnSkill("灼热结界", "火焰 / 防护", 22, "以火焰结界保护队伍并反制近身敌人。");
+            triss.LearnSkill("熔甲火印", "火焰 / 弱化", 18, "点燃敌人护甲缝隙，降低怪物防御。");
+            triss.LearnSkill("流星火雨", "火焰 / 群体", 28, "召下火雨压制敌群。");
+            EquipStarterItems(triss, 2);
+            return triss;
+        }
+
+        private void EquipStarterItems(PartyMember member, int equipmentIndex)
+        {
+            member.CurrentEquipment.Weapon = sampleEquipment[EquipmentSlot.Weapon][equipmentIndex];
+            member.CurrentEquipment.Armor = sampleEquipment[EquipmentSlot.Armor][equipmentIndex];
+            member.CurrentEquipment.Accessory1 = sampleEquipment[EquipmentSlot.Accessory1][equipmentIndex];
+            member.CurrentEquipment.RelicCore = sampleEquipment[EquipmentSlot.RelicCore][equipmentIndex];
         }
 
         private void RemoveHiddenMainPartyMembers()

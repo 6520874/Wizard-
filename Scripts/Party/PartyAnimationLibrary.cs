@@ -44,43 +44,63 @@ namespace WitcherGame
 
             string relativeFolder = Path.Combine(GetFrameRoot(visualFolder), GetFolderName(visualFolder, animation));
             string folderPath = Path.Combine(Application.dataPath, relativeFolder);
-            string key = Directory.Exists(folderPath)
-                ? $"{relativeFolder}_{Directory.GetFiles(folderPath, "*.png").Length}_{Directory.GetLastWriteTimeUtc(folderPath).Ticks}"
-                : $"{relativeFolder}_missing";
+            string key = BuildCacheKey(relativeFolder, folderPath);
 
             if (CachedFrames.TryGetValue(key, out Sprite[] cached))
             {
                 return cached;
             }
 
+            CachedFrames[key] = Directory.Exists(folderPath)
+                ? LoadSpritesFromFolder(folderPath)
+                : System.Array.Empty<Sprite>();
+            return CachedFrames[key];
+        }
+
+        private static string BuildCacheKey(string relativeFolder, string folderPath)
+        {
             if (!Directory.Exists(folderPath))
             {
-                CachedFrames[key] = System.Array.Empty<Sprite>();
-                return CachedFrames[key];
+                return $"{relativeFolder}_missing";
             }
 
+            int pngCount = Directory.GetFiles(folderPath, "*.png").Length;
+            long writeTime = Directory.GetLastWriteTimeUtc(folderPath).Ticks;
+            return $"{relativeFolder}_{pngCount}_{writeTime}";
+        }
+
+        private static Sprite[] LoadSpritesFromFolder(string folderPath)
+        {
             List<Sprite> frames = new List<Sprite>();
             foreach (string filePath in Directory.GetFiles(folderPath, "*.png").OrderBy(path => path))
             {
-                Texture2D texture = new Texture2D(2, 2, TextureFormat.RGBA32, false);
-                if (!texture.LoadImage(File.ReadAllBytes(filePath)))
+                Sprite sprite = LoadSprite(filePath);
+                if (sprite != null)
                 {
-                    continue;
+                    frames.Add(sprite);
                 }
-
-                texture.filterMode = FilterMode.Bilinear;
-                texture.wrapMode = TextureWrapMode.Clamp;
-                Sprite sprite = Sprite.Create(
-                    texture,
-                    new Rect(0f, 0f, texture.width, texture.height),
-                    new Vector2(0.5f, 0.08f),
-                    PartyPixelsPerUnit);
-                sprite.name = Path.GetFileNameWithoutExtension(filePath);
-                frames.Add(sprite);
             }
 
-            CachedFrames[key] = frames.ToArray();
-            return CachedFrames[key];
+            return frames.ToArray();
+        }
+
+        private static Sprite LoadSprite(string filePath)
+        {
+            Texture2D texture = new Texture2D(2, 2, TextureFormat.RGBA32, false);
+            if (!texture.LoadImage(File.ReadAllBytes(filePath)))
+            {
+                return null;
+            }
+
+            texture.filterMode = FilterMode.Bilinear;
+            texture.wrapMode = TextureWrapMode.Clamp;
+            Sprite sprite = Sprite.Create(
+                texture,
+                new Rect(0f, 0f, texture.width, texture.height),
+                new Vector2(0.5f, 0.08f),
+                PartyPixelsPerUnit);
+            sprite.name = Path.GetFileNameWithoutExtension(filePath);
+            return sprite;
         }
 
         private static string GetFrameRoot(string visualFolder)

@@ -212,11 +212,17 @@ namespace WitcherGame
 
         private void Refresh()
         {
-            PartyManager party = PartyManager.CreateIfMissing();
             IReadOnlyList<PartyMember> members = GetEditableMembers();
             selectedMemberIndex = Mathf.Clamp(selectedMemberIndex, 0, Mathf.Max(0, members.Count - 1));
             selectedSlotIndex = Mathf.Clamp(selectedSlotIndex, 0, slotOrder.Length - 1);
 
+            RefreshMemberList(members);
+            PartyMember selectedMember = members.Count == 0 ? null : members[selectedMemberIndex];
+            RefreshSelectedMember(selectedMember);
+        }
+
+        private void RefreshMemberList(IReadOnlyList<PartyMember> members)
+        {
             for (int i = 0; i < memberTexts.Count; i++)
             {
                 if (i >= members.Count)
@@ -231,10 +237,12 @@ namespace WitcherGame
                 string joinedState = member.IsJoined ? GameText.Common.Joined : GameText.Common.Standby;
                 string locked = member.Name == GameText.HunterName ? GameText.Common.Locked : GameText.Common.ActiveLocked;
                 memberTexts[i].text = GameText.Equipment.MemberRow(member.Name, joinedState, locked, isSelectedMember);
-                memberTexts[i].color = isSelectedMember ? MenuSelectedTextColor : member.IsJoined ? MenuTextColor : MenuMutedTextColor;
+                memberTexts[i].color = GetMemberRowColor(member, isSelectedMember);
             }
+        }
 
-            PartyMember selectedMember = GetSelectedEditableMember();
+        private void RefreshSelectedMember(PartyMember selectedMember)
+        {
             if (selectedMember == null)
             {
                 titleText.text = GameText.Equipment.PartyTitle;
@@ -251,6 +259,13 @@ namespace WitcherGame
                 portraitImage.color = Color.white;
             }
 
+            RefreshEquipmentSlots(selectedMember);
+            statsText.text = BuildStatsText(selectedMember);
+            helpText.text = GameText.Equipment.HelpHint;
+        }
+
+        private void RefreshEquipmentSlots(PartyMember selectedMember)
+        {
             for (int i = 0; i < slotTexts.Count; i++)
             {
                 EquipmentSlot slot = slotOrder[i];
@@ -261,8 +276,21 @@ namespace WitcherGame
                 slotTexts[i].text = selectedSlot ? $"< {slotName} >  {itemName}" : $"{slotName}  {itemName}";
                 slotTexts[i].color = selectedSlot ? MenuSelectedTextColor : MenuTextColor;
             }
+        }
 
-            statsText.text =
+        private static Color32 GetMemberRowColor(PartyMember member, bool isSelectedMember)
+        {
+            if (isSelectedMember)
+            {
+                return MenuSelectedTextColor;
+            }
+
+            return member.IsJoined ? MenuTextColor : MenuMutedTextColor;
+        }
+
+        private static string BuildStatsText(PartyMember selectedMember)
+        {
+            return
                 $"HP    {selectedMember.HP}/{selectedMember.TotalMaxHP}\n" +
                 $"MP    {selectedMember.MP}/{selectedMember.TotalMaxMP}\n" +
                 $"{GameText.Stats.Attack}  {selectedMember.TotalAttack}\n" +
@@ -270,7 +298,6 @@ namespace WitcherGame
                 $"{GameText.Stats.Magic}  {selectedMember.TotalMagic}\n" +
                 $"{GameText.Stats.Speed}  {selectedMember.TotalSpeed}\n" +
                 $"{GameText.Stats.Critical}  {Mathf.RoundToInt(selectedMember.TotalCriticalRate * 100f)}%";
-            helpText.text = GameText.Equipment.HelpHint;
         }
 
         private PartyMember GetSelectedEditableMember()
