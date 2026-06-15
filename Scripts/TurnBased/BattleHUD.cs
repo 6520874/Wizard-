@@ -37,9 +37,6 @@ namespace WitcherGame
         private PartyStatusPanel partyStatusPanel;
         private EnemyWeaknessPanel enemyWeaknessPanel;
         private SkillNameBanner skillNameBanner;
-        private Image targetIndicator;
-        private RectTransform targetIndicatorRect;
-        private BattleUnit currentTarget;
 
         public static BattleHUD CreateIfMissing(Transform parent)
         {
@@ -69,13 +66,12 @@ namespace WitcherGame
 
             List<BattleUnit> enemyUnits = BuildEnemyUnits(enemies, enemyPositions);
             List<BattleUnit> partyUnits = BuildPartyUnits(player);
-            List<BattleUnit> timelineUnits = BuildTimelineUnits(manager, enemies, player, enemyPositions);
+            List<BattleUnit> timelineUnits = BuildTimelineUnits(manager, partyUnits, enemyUnits);
 
             RefreshTurnOrder(timelineUnits);
             RefreshPartyStatus(partyUnits);
             RefreshEnemyWeakness(enemyUnits);
             SetCurrentActor(timelineUnits.Count > 0 ? timelineUnits[0] : null);
-            SetTarget(FindFirstAliveEnemy(enemyUnits));
         }
 
         public void RefreshTurnOrder(List<BattleUnit> units)
@@ -106,27 +102,7 @@ namespace WitcherGame
 
         public void SetTarget(BattleUnit target)
         {
-            currentTarget = target;
-            if (targetIndicator == null)
-            {
-                return;
-            }
-
-            bool show = target != null && target.IsAlive;
-            targetIndicator.gameObject.SetActive(show);
-            if (show)
-            {
-                targetIndicatorRect.anchoredPosition = target.UiPosition + new Vector2(0f, 112f);
-            }
-        }
-
-        private void Update()
-        {
-            if (targetIndicator != null && targetIndicator.gameObject.activeSelf && currentTarget != null)
-            {
-                float bob = Mathf.Sin(Time.unscaledTime * 8f) * 5f;
-                targetIndicatorRect.anchoredPosition = currentTarget.UiPosition + new Vector2(0f, 112f + bob);
-            }
+            // 目标提示现在由敌人血条和弱点栏承担，保留公开入口方便后续恢复。
         }
 
         private void Build()
@@ -260,9 +236,8 @@ namespace WitcherGame
 
         private static List<BattleUnit> BuildTimelineUnits(
             TurnBasedBattleManager manager,
-            IReadOnlyList<TurnBasedEnemyState> enemies,
-            GeraltController player,
-            IReadOnlyList<Vector2> enemyPositions)
+            List<BattleUnit> partyUnits,
+            List<BattleUnit> enemyUnits)
         {
             List<BattleUnit> result = new List<BattleUnit>();
             if (manager == null)
@@ -277,11 +252,11 @@ namespace WitcherGame
                 BattleUnit unit;
                 if (entry.IsPlayer)
                 {
-                    unit = BuildPartyUnits(player).Count > 0 ? BuildPartyUnits(player)[0] : null;
+                    unit = partyUnits != null && partyUnits.Count > 0 ? partyUnits[0] : null;
                 }
                 else
                 {
-                    unit = BuildEnemyUnits(enemies, enemyPositions).Find(e => e.EnemyIndex == entry.EnemyIndex);
+                    unit = enemyUnits?.Find(e => e.EnemyIndex == entry.EnemyIndex);
                 }
 
                 if (unit == null)
@@ -294,19 +269,6 @@ namespace WitcherGame
             }
 
             return result;
-        }
-
-        private static BattleUnit FindFirstAliveEnemy(List<BattleUnit> enemies)
-        {
-            for (int i = 0; i < enemies.Count; i++)
-            {
-                if (enemies[i].IsAlive)
-                {
-                    return enemies[i];
-                }
-            }
-
-            return null;
         }
 
         private static int GetShieldValue(TurnBasedEnemyState enemy)
@@ -396,11 +358,10 @@ namespace WitcherGame
     public class TurnOrderBar : MonoBehaviour
     {
         private readonly List<TurnOrderIcon> icons = new List<TurnOrderIcon>();
-        private RectTransform rect;
 
         public void Build()
         {
-            rect = gameObject.AddComponent<RectTransform>();
+            RectTransform rect = gameObject.AddComponent<RectTransform>();
             rect.anchorMin = new Vector2(0.5f, 1f);
             rect.anchorMax = new Vector2(0.5f, 1f);
             rect.pivot = new Vector2(0.5f, 1f);
@@ -516,11 +477,10 @@ namespace WitcherGame
     public class PartyStatusPanel : MonoBehaviour
     {
         private readonly List<PartyStatusItem> items = new List<PartyStatusItem>();
-        private RectTransform rect;
 
         public void Build()
         {
-            rect = gameObject.AddComponent<RectTransform>();
+            RectTransform rect = gameObject.AddComponent<RectTransform>();
             rect.anchorMin = new Vector2(1f, 0.5f);
             rect.anchorMax = new Vector2(1f, 0.5f);
             rect.pivot = new Vector2(1f, 0.5f);

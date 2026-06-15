@@ -92,7 +92,6 @@ namespace WitcherGame
             public const string ShopInputHint = "方向键选择，回车购买，Esc 返回。";
             public const string ReturnToDialogue = "返回";
             public const string InteractPrompt = "按 E 交互：装备店";
-            public const string OwnedPrefix = "已拥有：";
             public const string OwnedNone = "已拥有：暂无";
             public const string AlreadyOwnedSuffix = "    已拥有";
             public const string MissingItem = "商品不存在";
@@ -206,7 +205,6 @@ namespace WitcherGame
             public const string ArcaneGroupShort = "奥术群体";
             public const string GroupTargetShort = "群体";
             public const string SingleTargetShort = "单体";
-            public const string NotEnoughManaPrefix = "魔力不足，无法释放";
             public const string NotEnoughManaShort = "魔力不足。";
             public const string PotionEmpty = "药剂已经用完了。";
             public const string PotionNotNeeded = "现在还不需要喝药。";
