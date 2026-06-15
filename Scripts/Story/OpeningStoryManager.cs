@@ -101,12 +101,14 @@ namespace WitcherGame
                 return;
             }
 
-            if (narrationLines == null || narrationLines.Length == 0)
+            string[] activeNarrationLines = StoryDatabase.GetOpeningNarration(narrationLines);
+            if (activeNarrationLines == null || activeNarrationLines.Length == 0)
             {
                 EnterVillageScene();
                 return;
             }
 
+            narrationLines = activeNarrationLines;
             narrationIndex = 0;
             openingActive = true;
             openingPanel.SetActive(true);

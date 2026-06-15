@@ -9,20 +9,20 @@ namespace WitcherGame
     public class NightContractManager : MonoBehaviour
     {
         private const string ManagerName = "Night Contract Manager";
-        private const string ObjectiveInvestigateWell = "调查老井旁的黑血，确认怪物弱点";
-        private const string ObjectiveInvestigateMill = "调查老磨坊的爪痕，削弱护盾";
-        private const string ObjectiveInvestigateWidow = "询问寡妇家的假供词，判断真相";
-        private const string ObjectiveClearAmbush = "击败被哭声吸引来的怪物";
-        private const string ObjectiveTruthChoice = "判断哭声真正来源";
-        private const string ObjectiveDefeatBoss = "击败井底哭魂";
-        private const string ObjectiveReturnVillage = "回村结算，等待第二晚异变";
-        private const string ObjectiveSecondInspectCorpse = "检查村口铁匠围裙尸体";
-        private const string ObjectiveSecondInspectHammer = "调查铁匠铺染黑的锤子";
-        private const string ObjectiveSecondClearAmbush = "击败被黑血引来的怪物";
-        private const string ObjectiveSecondInspectChapel = "调查教堂门口的黑蜡";
-        private const string ObjectiveSecondTruthChoice = "判断第二具尸体为何会行走";
-        private const string ObjectiveSecondDefeatBoss = "击败黑钉傀儡";
-        private const string ObjectiveSecondReturnVillage = "回村结算，记录第三晚异变";
+        private const string ObjectiveInvestigateWell = "firstNight.investigateWell";
+        private const string ObjectiveInvestigateMill = "firstNight.investigateMill";
+        private const string ObjectiveInvestigateWidow = "firstNight.investigateWidow";
+        private const string ObjectiveClearAmbush = "firstNight.clearAmbush";
+        private const string ObjectiveTruthChoice = "firstNight.truthChoice";
+        private const string ObjectiveDefeatBoss = "firstNight.defeatBoss";
+        private const string ObjectiveReturnVillage = "firstNight.returnVillage";
+        private const string ObjectiveSecondInspectCorpse = "secondNight.inspectCorpse";
+        private const string ObjectiveSecondInspectHammer = "secondNight.inspectHammer";
+        private const string ObjectiveSecondClearAmbush = "secondNight.clearAmbush";
+        private const string ObjectiveSecondInspectChapel = "secondNight.inspectChapel";
+        private const string ObjectiveSecondTruthChoice = "secondNight.truthChoice";
+        private const string ObjectiveSecondDefeatBoss = "secondNight.defeatBoss";
+        private const string ObjectiveSecondReturnVillage = "secondNight.returnVillage";
 
         private static NightContractManager instance;
 
@@ -187,10 +187,10 @@ namespace WitcherGame
             if (ShouldBlockOutOfOrderNode(nodeId))
             {
                 dialogueManager = dialogueManager == null ? DialogueManager.CreateIfMissing() : dialogueManager;
-                dialogueManager.StartDialogue(new[]
+                dialogueManager.StartDialogue(StoryDatabase.GetDialogue("contract.outOfOrder", new[]
                 {
                     new DialogueLine("猎魔人", "先按当前委托目标来。线索如果乱了，真相也会乱。")
-                });
+                }));
                 return;
             }
 
@@ -400,32 +400,20 @@ namespace WitcherGame
 
         private void StartFirstNightQuest()
         {
-            QuestManager.QuestData quest = new QuestManager.QuestData
-            {
-                title = "第一晚：老井哭声案",
-                description = "调查灰鸦村夜里传出的女人哭声。每条线索都会削弱最终怪物：找出真相，比直接拔剑更重要。",
-                objectives = new List<QuestManager.QuestObjective>
-                {
-                    new QuestManager.QuestObjective(ObjectiveInvestigateWell)
-                }
-            };
-
-            questManager.StartQuest(quest);
+            questManager.StartQuest(StoryDatabase.GetQuest(
+                "firstNight",
+                "第一晚：老井哭声案",
+                "调查灰鸦村夜里传出的女人哭声。每条线索都会削弱最终怪物：找出真相，比直接拔剑更重要。",
+                ObjectiveInvestigateWell));
         }
 
         private void StartSecondNightQuest()
         {
-            QuestManager.QuestData quest = new QuestManager.QuestData
-            {
-                title = "第二晚：铁匠黑血案",
-                description = "第一晚之后，村口出现了穿着铁匠围裙的尸体。调查黑血、铁锤和教堂蜡泪，找出是谁让尸体重新站了起来。",
-                objectives = new List<QuestManager.QuestObjective>
-                {
-                    new QuestManager.QuestObjective(ObjectiveSecondInspectCorpse)
-                }
-            };
-
-            questManager.StartQuest(quest);
+            questManager.StartQuest(StoryDatabase.GetQuest(
+                "secondNight",
+                "第二晚：铁匠黑血案",
+                "第一晚之后，村口出现了穿着铁匠围裙的尸体。调查黑血、铁锤和教堂蜡泪，找出是谁让尸体重新站了起来。",
+                ObjectiveSecondInspectCorpse));
         }
 
         private IEnumerator ShowContractBriefingWhenReady()
@@ -436,11 +424,11 @@ namespace WitcherGame
                 yield return null;
             }
 
-            DialogueLine[] briefing =
+            DialogueLine[] briefing = StoryDatabase.GetDialogue("firstNight.briefing", new[]
             {
                 new DialogueLine("委托", "第一晚：老井哭声案。村口尸体还没凉，井里却传来女人哭声。"),
                 new DialogueLine("猎魔人", "先查线索。黑血、爪痕、假供词……它们会告诉我该用什么杀死它。")
-            };
+            });
             dialogueManager.StartDialogue(briefing);
         }
 
@@ -452,11 +440,11 @@ namespace WitcherGame
                 yield return null;
             }
 
-            DialogueLine[] briefing =
+            DialogueLine[] briefing = StoryDatabase.GetDialogue("secondNight.briefing", new[]
             {
                 new DialogueLine("委托", "第二晚：铁匠黑血案。天亮前，村口多了一具穿着铁匠围裙的尸体。"),
                 new DialogueLine("猎魔人", "铁匠未必死了。先看尸体、锤子和教堂。死人不会自己换衣服，除非有人想让它看起来像铁匠。")
-            };
+            });
             dialogueManager.StartDialogue(briefing);
         }
 
@@ -529,11 +517,11 @@ namespace WitcherGame
             foundBlackBlood = true;
             CompleteNode(NightInvestigationNodeId.OldWell);
             SetCurrentQuestObjective(ObjectiveClearAmbush);
-            DialogueLine[] lines =
+            DialogueLine[] lines = StoryDatabase.GetDialogue("firstNight.oldWell", new[]
             {
                 new DialogueLine("老井", "井沿凝着黑色血迹，银粉碰上去时发出轻微嘶鸣。"),
                 new DialogueLine("猎魔人", "不是普通亡魂。银剑能伤它。")
-            };
+            });
             dialogueManager.StartDialogue(lines, () => SpawnAmbush(firstAmbushPosition, TurnBasedEnemyVisualKind.CorruptedWolf, 1, "井边腐兽"));
         }
 
@@ -547,11 +535,11 @@ namespace WitcherGame
             foundClawMarks = true;
             CompleteNode(NightInvestigationNodeId.OldMill);
             SetCurrentQuestObjective(ObjectiveClearAmbush);
-            DialogueLine[] lines =
+            DialogueLine[] lines = StoryDatabase.GetDialogue("firstNight.oldMill", new[]
             {
                 new DialogueLine("老磨坊", "木门上有反复抓挠的沟痕，却没有从外面破门的痕迹。"),
                 new DialogueLine("猎魔人", "它被困过。它的护盾不会完整。")
-            };
+            });
             dialogueManager.StartDialogue(lines, () => SpawnAmbush(secondAmbushPosition, TurnBasedEnemyVisualKind.BloodWraith, 1, "磨坊哭影"));
         }
 
@@ -565,11 +553,11 @@ namespace WitcherGame
             foundFalseTestimony = true;
             CompleteNode(NightInvestigationNodeId.WidowHouse);
             SetCurrentQuestObjective(ObjectiveTruthChoice);
-            DialogueLine[] lines =
+            DialogueLine[] lines = StoryDatabase.GetDialogue("firstNight.widowHouse", new[]
             {
                 new DialogueLine("寡妇", "我听见哭声从井底来……不，从磨坊来。别问了，猎魔人。"),
                 new DialogueLine("猎魔人", "她在撒谎。哭声不是引诱，是警告。有人还想继续献祭。")
-            };
+            });
             dialogueManager.StartDialogue(lines, ShowTruthChoice);
         }
 
@@ -583,11 +571,11 @@ namespace WitcherGame
             foundIronCorpse = true;
             CompleteNode(NightInvestigationNodeId.ForgeCorpse);
             SetCurrentQuestObjective(ObjectiveSecondInspectHammer);
-            DialogueLine[] lines =
+            DialogueLine[] lines = StoryDatabase.GetDialogue("secondNight.forgeCorpse", new[]
             {
                 new DialogueLine("围裙尸体", "尸体穿着铁匠的围裙，手指却细得像从未握过锤。脖颈后钉着一枚发黑银钉。"),
                 new DialogueLine("猎魔人", "这不是铁匠。有人把死者装成他，想把我的剑引向错的人。")
-            };
+            });
             dialogueManager.StartDialogue(lines);
         }
 
@@ -601,11 +589,11 @@ namespace WitcherGame
             foundBlackenedHammer = true;
             CompleteNode(NightInvestigationNodeId.BlackenedHammer);
             SetCurrentQuestObjective(ObjectiveSecondClearAmbush);
-            DialogueLine[] lines =
+            DialogueLine[] lines = StoryDatabase.GetDialogue("secondNight.blackenedHammer", new[]
             {
                 new DialogueLine("黑血铁锤", "铁锤缝隙里有黑血，火星碰到血迹时炸出一圈蓝白色寒光。"),
                 new DialogueLine("猎魔人", "黑血怕火，也怕银。今晚的东西不是肉身，是被钉住的怨念。")
-            };
+            });
             dialogueManager.StartDialogue(lines, () => SpawnAmbush(secondNightFirstAmbushPosition, TurnBasedEnemyVisualKind.CorruptedWolf, 2, "黑血腐狼"));
         }
 
@@ -619,11 +607,11 @@ namespace WitcherGame
             foundChapelWax = true;
             CompleteNode(NightInvestigationNodeId.ChapelWax);
             SetCurrentQuestObjective(ObjectiveSecondClearAmbush);
-            DialogueLine[] lines =
+            DialogueLine[] lines = StoryDatabase.GetDialogue("secondNight.chapelWax", new[]
             {
                 new DialogueLine("教堂黑蜡", "教堂门口的蜡泪混着铁屑，凝成倒置的祷文。祷文最后一行写着：死者替活人赎罪。"),
                 new DialogueLine("猎魔人", "神父在用银钉操控尸体。找到蜡源，傀儡的护盾会裂开。")
-            };
+            });
             dialogueManager.StartDialogue(lines, () => SpawnAmbush(secondNightSecondAmbushPosition, TurnBasedEnemyVisualKind.BloodWraith, 1, "黑蜡哭影"));
         }
 
@@ -638,7 +626,7 @@ namespace WitcherGame
         private void SetCurrentQuestObjective(string objectiveText, bool completed = false)
         {
             questManager = questManager == null ? QuestManager.CreateIfMissing() : questManager;
-            questManager.SetCurrentObjective(objectiveText, completed);
+            questManager.SetCurrentObjectiveById(objectiveText, objectiveText, completed);
         }
 
         private void ShowTruthChoice()
@@ -649,8 +637,15 @@ namespace WitcherGame
             }
 
             EnsureChoiceUi();
-            choiceSummaryText.text = "哭声真正来源是？\nA 女鬼复仇   B 水鬼诱捕   C 村民伪装献祭";
-            SetChoiceLabels("A 女鬼", "B 水鬼", "C 献祭");
+            StoryDatabase.ChoiceData choice = StoryDatabase.GetChoice(
+                "firstNight.truthChoice",
+                "哭声真正来源是？\nA 女鬼复仇   B 水鬼诱捕   C 村民伪装献祭",
+                2,
+                "A 女鬼",
+                "B 水鬼",
+                "C 献祭");
+            choiceSummaryText.text = choice.Summary;
+            SetChoiceLabels(choice.Labels[0], choice.Labels[1], choice.Labels[2]);
             choicePanel.SetActive(true);
             player = player == null ? FindObjectOfType<GeraltController>() : player;
             player?.SetControlEnabled(false);
@@ -675,8 +670,15 @@ namespace WitcherGame
             }
 
             EnsureChoiceUi();
-            choiceSummaryText.text = "第二具尸体为何会行走？\nA 铁匠杀人   B 神父驱魔失败   C 银钉操控尸体";
-            SetChoiceLabels("A 铁匠", "B 神父", "C 银钉");
+            StoryDatabase.ChoiceData choice = StoryDatabase.GetChoice(
+                "secondNight.truthChoice",
+                "第二具尸体为何会行走？\nA 铁匠杀人   B 神父驱魔失败   C 银钉操控尸体",
+                2,
+                "A 铁匠",
+                "B 神父",
+                "C 银钉");
+            choiceSummaryText.text = choice.Summary;
+            SetChoiceLabels(choice.Labels[0], choice.Labels[1], choice.Labels[2]);
             choicePanel.SetActive(true);
             player = player == null ? FindObjectOfType<GeraltController>() : player;
             player?.SetControlEnabled(false);
@@ -690,21 +692,22 @@ namespace WitcherGame
             }
 
             truthChoiceResolved = true;
-            truthCorrect = choiceIndex == 2;
+            StoryDatabase.ChoiceData choice = StoryDatabase.GetChoice("firstNight.truthChoice", string.Empty, 2, "A 女鬼", "B 水鬼", "C 献祭");
+            truthCorrect = choiceIndex == choice.CorrectIndex;
             choicePanel.SetActive(false);
             SetCurrentQuestObjective(ObjectiveDefeatBoss);
 
             DialogueLine[] lines = truthCorrect
-                ? new[]
+                ? StoryDatabase.GetDialogue("firstNight.truthCorrect", new[]
                 {
                     new DialogueLine("猎魔人", "不是女鬼，也不是水鬼。是活人在借哭声掩盖献祭。"),
                     new DialogueLine("委托", "真相刺穿诅咒，井底怪物露出破绽。")
-                }
-                : new[]
+                })
+                : StoryDatabase.GetDialogue("firstNight.truthWrong", new[]
                 {
                     new DialogueLine("猎魔人", "判断还不完整，但线索足够让我活下来。"),
                     new DialogueLine("委托", "诅咒因此加深，不过黑血和爪痕仍然削弱了它。")
-                };
+                });
 
             dialogueManager.StartDialogue(lines, SpawnContractBoss);
         }
@@ -717,21 +720,22 @@ namespace WitcherGame
             }
 
             secondTruthChoiceResolved = true;
-            secondTruthCorrect = choiceIndex == 2;
+            StoryDatabase.ChoiceData choice = StoryDatabase.GetChoice("secondNight.truthChoice", string.Empty, 2, "A 铁匠", "B 神父", "C 银钉");
+            secondTruthCorrect = choiceIndex == choice.CorrectIndex;
             choicePanel.SetActive(false);
             SetCurrentQuestObjective(ObjectiveSecondDefeatBoss);
 
             DialogueLine[] lines = secondTruthCorrect
-                ? new[]
+                ? StoryDatabase.GetDialogue("secondNight.truthCorrect", new[]
                 {
                     new DialogueLine("猎魔人", "不是铁匠，也不是驱魔失败。尸体是被银钉和黑蜡牵起来的。"),
                     new DialogueLine("委托", "你说出真相时，远处教堂钟声断了一拍。黑钉傀儡的护盾碎开一层。")
-                }
-                : new[]
+                })
+                : StoryDatabase.GetDialogue("secondNight.truthWrong", new[]
                 {
                     new DialogueLine("猎魔人", "还差一块线索。但黑血、铁锤和黑蜡已经足够让我找到操控者。"),
                     new DialogueLine("委托", "错误判断让傀儡更凶，但它仍留下了火与银的破绽。")
-                };
+                });
 
             dialogueManager.StartDialogue(lines, SpawnSecondNightBoss);
         }
@@ -834,11 +838,11 @@ namespace WitcherGame
             }
 
             SetCurrentQuestObjective(ObjectiveReturnVillage, true);
-            DialogueLine[] lines =
+            DialogueLine[] lines = StoryDatabase.GetDialogue("firstNight.settlement", new[]
             {
                 new DialogueLine("委托结算", "村民把最后的银币放在桌上。没人欢呼，因为井口的哭声停得太突然。"),
                 new DialogueLine("第二晚钩子", "清晨，村口又多了一具尸体。这一次，尸体穿着铁匠的围裙。")
-            };
+            });
             dialogueManager.StartDialogue(lines, BeginSecondNightContract);
         }
 
@@ -851,11 +855,11 @@ namespace WitcherGame
             }
 
             SetCurrentQuestObjective(ObjectiveSecondReturnVillage, true);
-            DialogueLine[] lines =
+            DialogueLine[] lines = StoryDatabase.GetDialogue("secondNight.settlement", new[]
             {
                 new DialogueLine("委托结算", "黑钉傀儡倒下后，银钉没有融化，而是全都指向教堂地下。"),
                 new DialogueLine("第三晚钩子", "夜里，神父房间的灯亮着。可守夜人说，神父三天前就已经死了。")
-            };
+            });
             dialogueManager.StartDialogue(lines);
         }
 

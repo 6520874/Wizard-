@@ -20,11 +20,18 @@ namespace WitcherGame
         // 中文说明：保存单个任务目标的文字说明和完成状态。
         public class QuestObjective
         {
+            public string id;
             public string text;
             public bool completed;
 
             public QuestObjective(string text)
+                : this(text, text)
             {
+            }
+
+            public QuestObjective(string id, string text)
+            {
+                this.id = id;
                 this.text = text;
             }
         }
@@ -79,19 +86,15 @@ namespace WitcherGame
 
         public void StartFirstMainQuest()
         {
-            QuestData quest = new QuestData
-            {
-                title = "灰鸦村的哭声",
-                description = "调查灰鸦村矿洞中的哭声，找到失踪的孩子，并查明怪物出现的真正原因。",
-                objectives = new List<QuestObjective>
-                {
-                    new QuestObjective("与老村长对话"),
-                    new QuestObjective("前往村庄西侧矿洞"),
-                    new QuestObjective("调查矿洞入口的血迹"),
-                    new QuestObjective("击败第一只低级食尸鬼"),
-                    new QuestObjective("进入矿洞深处")
-                }
-            };
+            QuestData quest = StoryDatabase.GetQuest(
+                "main.greyRavenCry",
+                "灰鸦村的哭声",
+                "调查灰鸦村矿洞中的哭声，找到失踪的孩子，并查明怪物出现的真正原因。",
+                "main.talkVillageElder",
+                "main.goToMine",
+                "main.inspectMineBlood",
+                "main.defeatGhoul",
+                "main.enterMineDepths");
 
             StartQuest(quest);
             SetObjectiveCompleted(0, true);
@@ -149,6 +152,19 @@ namespace WitcherGame
 
             activeQuest.objectives.Clear();
             activeQuest.objectives.Add(new QuestObjective(objectiveText) { completed = completed });
+            RefreshQuestUi();
+            DialogueManager.RefreshQuestHintIfVisible();
+        }
+
+        public void SetCurrentObjectiveById(string objectiveId, string fallbackText, bool completed = false)
+        {
+            if (activeQuest == null)
+            {
+                return;
+            }
+
+            activeQuest.objectives.Clear();
+            activeQuest.objectives.Add(new QuestObjective(objectiveId, StoryDatabase.GetObjectiveText(objectiveId, fallbackText)) { completed = completed });
             RefreshQuestUi();
             DialogueManager.RefreshQuestHintIfVisible();
         }
@@ -273,7 +289,7 @@ namespace WitcherGame
                 return;
             }
 
-            if (!TryResolveObjectiveTarget(objective.text, out Vector2 targetPosition))
+            if (!TryResolveObjectiveTarget(string.IsNullOrWhiteSpace(objective.id) ? objective.text : objective.id, out Vector2 targetPosition))
             {
                 ShowTrackHint("当前目标暂无可追踪地点");
                 return;
@@ -293,9 +309,14 @@ namespace WitcherGame
 
             switch (objectiveText)
             {
+                case "main.talkVillageElder":
                 case "与老村长对话":
                     targetPosition = Vector2.zero;
                     return true;
+                case "main.goToMine":
+                case "main.inspectMineBlood":
+                case "main.defeatGhoul":
+                case "main.enterMineDepths":
                 case "前往村庄西侧矿洞":
                 case "调查矿洞入口的血迹":
                 case "击败第一只低级食尸鬼":

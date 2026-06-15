@@ -98,7 +98,7 @@ namespace WitcherGame
 
         public void StartDefaultVillageDialogue()
         {
-            StartDialogue(DefaultVillageDialogue, () =>
+            StartDialogue(StoryDatabase.GetDialogue("intro.villageElder", DefaultVillageDialogue), () =>
             {
                 if (startFirstQuestWhenDefaultDialogueEnds)
                 {
