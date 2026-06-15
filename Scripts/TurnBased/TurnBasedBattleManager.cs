@@ -1261,20 +1261,6 @@ namespace WitcherGame
             return preview;
         }
 
-        private BattleTurnUnit GetFirstLivingEnemyTurnUnit()
-        {
-            for (int i = 0; i < turnUnits.Count; i++)
-            {
-                BattleTurnUnit unit = turnUnits[i];
-                if (IsLivingEnemyTurn(unit))
-                {
-                    return unit;
-                }
-            }
-
-            return null;
-        }
-
         private List<TimelineSimulationUnit> CreateTimelineSimulation()
         {
             List<TimelineSimulationUnit> simulation = new List<TimelineSimulationUnit>();

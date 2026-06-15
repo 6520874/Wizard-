@@ -26,9 +26,7 @@ namespace WitcherGame
 
         public static class Stats
         {
-            public const string HpLabel = "HP";
             public const string MpLabel = "MP";
-            public const string SpLabel = "SP";
             public const string Attack = "攻击";
             public const string Defense = "防御";
             public const string Magic = "魔力";
@@ -36,8 +34,6 @@ namespace WitcherGame
             public const string Critical = "暴击";
             public const string Experience = "经验";
             public const string Gold = "金币";
-            public const string Loot = "战利品";
-
             public static string Hp(int current, int max) => $"HP {current} / {max}";
             public static string Mp(int current, int max) => $"MP {current} / {max}";
             public static string Sp(int current, int max) => $"SP {current} / {max}";
@@ -188,11 +184,8 @@ namespace WitcherGame
             public const string RoundLabel = "回合";
             public const string LootNone = "战利品：无";
             public const string LootPrefix = "战利品：";
-            public const string WaitingTurn = "等待出手";
             public const string Weakness = "弱点";
             public const string Question = "？";
-            public const string PlayerInitial = "猎";
-            public const string MonsterInitial = "怪";
             public const string ComboSlashShort = "三连银剑";
             public const string GroupFlameShort = "群体火焰";
             public const string DoubleLightningShort = "双段闪电";
@@ -223,8 +216,6 @@ namespace WitcherGame
             public static string TargetDefeated(string targetName) => $"{targetName} 被击倒了。";
             public static string StatusDotDamage(string statusName, int damage) => $"{statusName} 侵蚀猎魔人，造成 {damage} 点伤害。";
             public static string EnemyDrainLife(string enemyName, int healed) => $"{enemyName} 吸回 {healed} 点生命。";
-            public static string TurnNumber(int turn) => $"第{turn}手";
-            public static string CurrentTurn(string name) => $"当前 {name}";
             public static string SkillCost(int manaCost) => manaCost > 0 ? $"MP {manaCost}" : NoCost;
         }
     }

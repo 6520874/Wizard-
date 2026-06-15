@@ -31,14 +31,11 @@ namespace WitcherGame
         private readonly List<Text> skillTitleTexts = new List<Text>();
         private readonly List<Text> skillDescriptionTexts = new List<Text>();
         private readonly List<Text> skillCostTexts = new List<Text>();
-        private readonly List<Image> timelineGems = new List<Image>();
-        private readonly List<Text> timelineGemLabels = new List<Text>();
         private readonly List<PartyVisualSlot> partyVisualSlots = new List<PartyVisualSlot>();
         private static Sprite cachedBattleBackdrop;
         private static Sprite cachedFloorMist;
         private static Sprite cachedGroundShadow;
         private static Sprite cachedGroundGlow;
-        private static Sprite[] cachedCommandButtonSprites;
         private static readonly Dictionary<BattleSkillId, Sprite[]> cachedSkillEffectFrames = new Dictionary<BattleSkillId, Sprite[]>();
         private static Sprite[] cachedGeraltIdleFrames;
         private static Sprite[] cachedGeraltSlashFrames;
@@ -52,11 +49,8 @@ namespace WitcherGame
         private Text messageText;
         private Text playerText;
         private Text potionText;
-        private Text currentTurnText;
-        private Text nextTurnText;
         private GameObject victoryRewardPanel;
         private Text victoryRewardText;
-        private Image currentActorPortrait;
         private Image playerFigure;
         private Vector2 playerFigureHomePosition;
         private bool playerFigureBusy;
@@ -313,7 +307,6 @@ namespace WitcherGame
         public void Refresh(IReadOnlyList<TurnBasedEnemyState> enemies, GeraltController player, int potionCount)
         {
             visibleEnemies = enemies;
-            RefreshTurnTimeline();
             RefreshPartyVisuals();
             EnsureHdBattleHud();
             hdBattleHud?.RefreshFromBattle(manager, enemies, player, GetEnemyHudPositions());
@@ -670,8 +663,6 @@ namespace WitcherGame
             frontFog.sprite = GetFloorMistSprite();
             frontFog.raycastTarget = false;
 
-            // HD-2D HUD owns the visible turn order; the legacy timeline stays disabled to avoid duplicated top UI.
-
             Image playerGlow = CreateCenteredImage("Battle Player Ground Glow", root.transform, new Vector2(146f, 34f), new Vector2(304f, -108f), new Color32(42, 143, 255, 78));
             playerGlow.sprite = GetGroundGlowSprite();
             playerGlow.raycastTarget = false;
@@ -897,174 +888,6 @@ namespace WitcherGame
             return line.Length > GameText.Battle.LootPrefix.Length ? line : GameText.Battle.LootNone;
         }
 
-        private void BuildTurnTimeline(Transform parent)
-        {
-            timelineGems.Clear();
-            timelineGemLabels.Clear();
-
-            Image currentPlate = CreateImage("Battle Current Turn Plate", parent, new Vector2(132f, 40f), new Vector2(22f, -24f), new Color32(5, 8, 12, 204));
-            currentPlate.sprite = WitcherSpriteLibrary.GetSolidSprite(new Color32(5, 8, 12, 228));
-            AddOutline(currentPlate, new Color32(124, 149, 178, 255), new Vector2(2f, -2f));
-
-            currentTurnText = CreateText("Battle Current Turn Text", currentPlate.transform, GameText.Battle.TurnNumber(1), 18, TextAnchor.MiddleRight, new Vector2(48f, -8f), new Vector2(70f, 24f));
-            currentTurnText.color = new Color32(228, 236, 245, 255);
-            AddOutline(currentTurnText, Color.black, new Vector2(1f, -1f));
-
-            Image activeGem = CreateImage("Battle Current Actor Gem", currentPlate.transform, new Vector2(44f, 44f), new Vector2(0f, 2f), new Color32(20, 107, 208, 224));
-            activeGem.sprite = WitcherSpriteLibrary.GetSolidSprite(new Color32(20, 107, 208, 224));
-            activeGem.rectTransform.localEulerAngles = new Vector3(0f, 0f, 45f);
-            AddOutline(activeGem, new Color32(118, 212, 255, 255), new Vector2(2f, -2f));
-
-            currentActorPortrait = CreateImage("Battle Current Actor Portrait", activeGem.transform, new Vector2(48f, 48f), new Vector2(5f, -5f), Color.white);
-            currentActorPortrait.rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
-            currentActorPortrait.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
-            currentActorPortrait.rectTransform.pivot = new Vector2(0.5f, 0.5f);
-            currentActorPortrait.rectTransform.anchoredPosition = Vector2.zero;
-            currentActorPortrait.rectTransform.localEulerAngles = new Vector3(0f, 0f, -45f);
-            currentActorPortrait.preserveAspect = true;
-            currentActorPortrait.raycastTarget = false;
-
-            Image rail = CreateImage("Battle Turn Timeline Rail", parent, new Vector2(548f, 2f), new Vector2(164f, -44f), new Color32(157, 164, 172, 88));
-            rail.sprite = WitcherSpriteLibrary.GetSolidSprite(new Color32(157, 164, 172, 120));
-            rail.raycastTarget = false;
-
-            Image nextPlate = CreateImage("Battle Next Turn Plate", parent, new Vector2(112f, 28f), new Vector2(404f, -18f), new Color32(5, 8, 12, 154));
-            nextPlate.sprite = WitcherSpriteLibrary.GetSolidSprite(new Color32(5, 8, 12, 188));
-            AddOutline(nextPlate, new Color32(80, 88, 105, 210), new Vector2(1f, -1f));
-
-            nextTurnText = CreateText("Battle Next Turn Text", nextPlate.transform, GameText.Battle.WaitingTurn, 15, TextAnchor.MiddleCenter, Vector2.zero, new Vector2(112f, 28f));
-            nextTurnText.color = new Color32(210, 215, 220, 255);
-            AddOutline(nextTurnText, Color.black, new Vector2(1f, -1f));
-
-            for (int i = 0; i < 5; i++)
-            {
-                Image gem = CreateImage($"Battle Timeline Gem {i + 1}", parent, new Vector2(28f, 28f), new Vector2(188f + i * 42f, -30f), GetTimelineGemColor(i));
-                gem.sprite = WitcherSpriteLibrary.GetSolidSprite(GetTimelineGemColor(i));
-                gem.rectTransform.localEulerAngles = new Vector3(0f, 0f, 45f);
-                AddOutline(gem, new Color32(26, 33, 43, 255), new Vector2(1f, -1f));
-                timelineGems.Add(gem);
-
-                Text label = CreateText($"Battle Timeline Label {i + 1}", gem.transform, string.Empty, 12, TextAnchor.MiddleCenter, Vector2.zero, new Vector2(34f, 24f));
-                label.rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
-                label.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
-                label.rectTransform.pivot = new Vector2(0.5f, 0.5f);
-                label.rectTransform.localEulerAngles = new Vector3(0f, 0f, -45f);
-                label.color = Color.white;
-                AddOutline(label, Color.black, new Vector2(1f, -1f));
-                timelineGemLabels.Add(label);
-            }
-        }
-
-        private void RefreshTurnTimeline()
-        {
-            if (manager == null)
-            {
-                return;
-            }
-
-            List<TurnBattleTimelineEntry> preview = manager.GetTimelinePreview(timelineGems.Count);
-            if (currentTurnText != null)
-            {
-                currentTurnText.text = GameText.Battle.TurnNumber(manager.TurnNumber);
-            }
-
-            if (nextTurnText != null)
-            {
-                nextTurnText.text = preview.Count > 0 ? GameText.Battle.CurrentTurn(preview[0].Name) : GameText.Battle.WaitingTurn;
-            }
-
-            if (currentActorPortrait != null)
-            {
-                currentActorPortrait.sprite = preview.Count > 0 ? GetTimelinePortraitSprite(preview[0]) : null;
-                currentActorPortrait.color = currentActorPortrait.sprite == null ? new Color32(255, 255, 255, 0) : Color.white;
-            }
-
-            for (int i = 0; i < timelineGems.Count; i++)
-            {
-                bool hasEntry = i < preview.Count;
-                Image gem = timelineGems[i];
-                Text label = i < timelineGemLabels.Count ? timelineGemLabels[i] : null;
-                if (!hasEntry)
-                {
-                    gem.color = new Color32(54, 59, 68, 130);
-                    if (label != null)
-                    {
-                        label.text = "-";
-                    }
-                    continue;
-                }
-
-                TurnBattleTimelineEntry entry = preview[i];
-                gem.color = GetTimelineEntryColor(entry, i == 0);
-                if (label != null)
-                {
-                    label.text = GetTimelineEntryLabel(entry);
-                    label.color = i == 0 ? new Color32(255, 232, 152, 255) : new Color32(230, 238, 245, 255);
-                }
-            }
-        }
-
-        private static Color32 GetTimelineEntryColor(TurnBattleTimelineEntry entry, bool current)
-        {
-            if (entry.IsPlayer)
-            {
-                return current ? new Color32(38, 148, 255, 255) : new Color32(28, 96, 188, 225);
-            }
-
-            return current ? new Color32(198, 45, 64, 255) : new Color32(104, 33, 52, 225);
-        }
-
-        private static string GetTimelineEntryLabel(TurnBattleTimelineEntry entry)
-        {
-            if (entry.IsPlayer)
-            {
-                return string.IsNullOrEmpty(entry.PartyMemberName) ? GameText.Battle.PlayerInitial : entry.PartyMemberName.Substring(0, 1);
-            }
-
-            if (!string.IsNullOrEmpty(entry.Name))
-            {
-                return entry.Name.Substring(0, 1);
-            }
-
-            return GameText.Battle.MonsterInitial;
-        }
-
-        private Sprite GetTimelinePortraitSprite(TurnBattleTimelineEntry entry)
-        {
-            if (entry.IsPlayer)
-            {
-                if (!string.IsNullOrEmpty(entry.PartyMemberName) && entry.PartyMemberName != GameText.HunterName)
-                {
-                    PartyMember member = PartyManager.CreateIfMissing().FindMember(entry.PartyMemberName);
-                    return PartyAnimationLibrary.GetIdlePreview(member);
-                }
-
-                return GetPlayerIdleFrame();
-            }
-
-            if (visibleEnemies == null || entry.EnemyIndex < 0 || entry.EnemyIndex >= visibleEnemies.Count)
-            {
-                return null;
-            }
-
-            TurnBasedEnemyState enemy = visibleEnemies[entry.EnemyIndex];
-            return FirstFrame(enemy.IdleFrames, enemy.Sprite);
-        }
-
-        private static Color32 GetTimelineGemColor(int index)
-        {
-            switch (index)
-            {
-                case 0:
-                    return new Color32(34, 112, 204, 230);
-                case 1:
-                case 3:
-                    return new Color32(124, 25, 40, 220);
-                default:
-                    return new Color32(70, 38, 88, 220);
-            }
-        }
-
         private static Vector2 GetEnemyStagePosition(int index)
         {
             switch (index)
@@ -1256,82 +1079,6 @@ namespace WitcherGame
             Sprite sprite = Sprite.Create(texture, new Rect(0f, 0f, width, height), new Vector2(0.5f, 0.5f), 96f);
             sprite.name = name;
             return sprite;
-        }
-
-        private static Sprite GetCommandButtonSprite(TurnBattleAction action)
-        {
-            int index = CommandButtonIndex(action);
-            Sprite[] sprites = GetCommandButtonSprites();
-            if (index >= 0 && index < sprites.Length && sprites[index] != null)
-            {
-                return sprites[index];
-            }
-
-            return WitcherSpriteLibrary.GetSolidSprite(new Color32(9, 10, 12, 235));
-        }
-
-        private static Sprite[] GetCommandButtonSprites()
-        {
-            if (cachedCommandButtonSprites != null)
-            {
-                return cachedCommandButtonSprites;
-            }
-
-            cachedCommandButtonSprites = new Sprite[5];
-            string absolutePath = Path.Combine(Application.dataPath, "Art/UI/BattleCommandButtons.png");
-            if (!File.Exists(absolutePath))
-            {
-                return cachedCommandButtonSprites;
-            }
-
-            Texture2D texture = new Texture2D(2, 2, TextureFormat.RGBA32, false);
-            if (!texture.LoadImage(File.ReadAllBytes(absolutePath)))
-            {
-                return cachedCommandButtonSprites;
-            }
-
-            texture.filterMode = FilterMode.Bilinear;
-            texture.wrapMode = TextureWrapMode.Clamp;
-            Rect[] cropRects =
-            {
-                TopLeftRect(texture, 33f, 280f, 306f, 410f),
-                TopLeftRect(texture, 359f, 280f, 306f, 410f),
-                TopLeftRect(texture, 685f, 280f, 306f, 410f),
-                TopLeftRect(texture, 1011f, 280f, 306f, 410f),
-                TopLeftRect(texture, 1337f, 280f, 306f, 410f)
-            };
-
-            for (int i = 0; i < cropRects.Length; i++)
-            {
-                cachedCommandButtonSprites[i] = Sprite.Create(texture, cropRects[i], new Vector2(0.5f, 0.5f), 100f);
-                cachedCommandButtonSprites[i].name = $"BattleCommandButton_{i + 1}";
-            }
-
-            return cachedCommandButtonSprites;
-        }
-
-        private static Rect TopLeftRect(Texture2D texture, float x, float y, float width, float height)
-        {
-            return new Rect(x, texture.height - y - height, width, height);
-        }
-
-        private static int CommandButtonIndex(TurnBattleAction action)
-        {
-            switch (action)
-            {
-                case TurnBattleAction.Attack:
-                    return 0;
-                case TurnBattleAction.FlameSign:
-                    return 1;
-                case TurnBattleAction.Defend:
-                    return 2;
-                case TurnBattleAction.Item:
-                    return 3;
-                case TurnBattleAction.Escape:
-                    return 4;
-                default:
-                    return -1;
-            }
         }
 
         private static void SetFillWidth(Image fill, float normalized, float fullWidth)
