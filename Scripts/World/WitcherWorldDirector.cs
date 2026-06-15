@@ -25,13 +25,7 @@ namespace WitcherGame
         {
             new RoomDefinition(
                 "威伦荒村长路",
-                new Color32(168, 196, 214, 255),
-                new Color32(54, 94, 128, 104),
-                new Color32(132, 178, 212, 96),
-                new Color32(255, 139, 70, 148),
-                0.58f,
-                0.9f,
-                0.52f)
+                new Color32(168, 196, 214, 255))
         };
 
         public static WitcherWorldDirector CreateIfMissing(GeraltController target)
@@ -121,11 +115,6 @@ namespace WitcherGame
             if (camera != null)
             {
                 camera.backgroundColor = Color.Lerp(new Color32(4, 5, 6, 255), room.BackgroundTint, 0.18f);
-                WitcherDayNightCycle.EnsureOn(camera, room.BackgroundTint);
-                if (background != null && background.TryGetComponent(out WitcherRuntimeBackground runtimeBackground) && runtimeBackground.IsUsingPreferredMap)
-                {
-                    WitcherIsometricAtmosphere.EnsureOn(camera);
-                }
             }
         }
 
@@ -211,37 +200,19 @@ namespace WitcherGame
             public bool IsIsometricVillage { get; }
         }
 
-        // 中文说明：保存一个房间/地图段的氛围颜色、雾效和余烬强度配置。
+        // 中文说明：保存一个房间/地图段的名字和背景色配置。
         private readonly struct RoomDefinition
         {
             public RoomDefinition(
                 string name,
-                Color32 backgroundTint,
-                Color32 atmosphereTint,
-                Color32 fogColor,
-                Color32 emberColor,
-                float fogStrength,
-                float vignetteStrength,
-                float emberStrength)
+                Color32 backgroundTint)
             {
                 Name = name;
                 BackgroundTint = backgroundTint;
-                AtmosphereTint = atmosphereTint;
-                FogColor = fogColor;
-                EmberColor = emberColor;
-                FogStrength = fogStrength;
-                VignetteStrength = vignetteStrength;
-                EmberStrength = emberStrength;
             }
 
             public string Name { get; }
             public Color32 BackgroundTint { get; }
-            public Color32 AtmosphereTint { get; }
-            public Color32 FogColor { get; }
-            public Color32 EmberColor { get; }
-            public float FogStrength { get; }
-            public float VignetteStrength { get; }
-            public float EmberStrength { get; }
         }
     }
 }
