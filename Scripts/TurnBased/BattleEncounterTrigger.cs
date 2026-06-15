@@ -80,17 +80,40 @@ namespace WitcherGame
 
         public void ConfigureBoss(Sprite sprite, int waveBonus)
         {
+            ConfigureBoss(sprite, waveBonus, TurnBasedEnemyVisualKind.BlackMoonKnight);
+        }
+
+        public void ConfigureBoss(Sprite sprite, int waveBonus, TurnBasedEnemyVisualKind kind)
+        {
             battleSprite = sprite;
-            visualKind = TurnBasedEnemyVisualKind.BlackMoonKnight;
+            visualKind = kind == TurnBasedEnemyVisualKind.BlackNailPuppet
+                ? TurnBasedEnemyVisualKind.BlackNailPuppet
+                : TurnBasedEnemyVisualKind.BlackMoonKnight;
             EnsureMapIdleAnimator();
             enemyCount = 1;
+            int bonus = Mathf.Max(0, waveBonus);
+            if (visualKind == TurnBasedEnemyVisualKind.BlackNailPuppet)
+            {
+                encounterTitle = "黑钉傀儡";
+                enemyName = "黑钉傀儡";
+                enemyHealth = 88 + bonus * 10;
+                enemyAttack = 12 + bonus;
+                enemyDefense = 6;
+                experienceReward = 11;
+                goldReward = 45 + bonus * 8;
+                lootName = "黑钉残核";
+                lootChance = 1f;
+                ConfigureTriggerBounds(new Vector2(0f, 0.9f), new Vector2(2.1f, 1.9f), 1.5f, 1.28f);
+                return;
+            }
+
             encounterTitle = "月夜骑士";
             enemyName = "月夜骑士";
-            enemyHealth = 72 + Mathf.Max(0, waveBonus) * 8;
-            enemyAttack = 13 + Mathf.Max(0, waveBonus);
+            enemyHealth = 72 + bonus * 8;
+            enemyAttack = 13 + bonus;
             enemyDefense = 5;
             experienceReward = 9;
-            goldReward = 38 + Mathf.Max(0, waveBonus) * 8;
+            goldReward = 38 + bonus * 8;
             lootName = "月夜骑士残甲";
             lootChance = 1f;
             ConfigureTriggerBounds(new Vector2(0f, 0.95f), new Vector2(2.35f, 1.95f), 1.65f, 1.35f);
@@ -98,7 +121,12 @@ namespace WitcherGame
 
         public void ConfigureContractBoss(Sprite sprite, int waveBonus, string title, string name)
         {
-            ConfigureBoss(sprite, waveBonus);
+            ConfigureContractBoss(sprite, waveBonus, title, name, TurnBasedEnemyVisualKind.BlackMoonKnight);
+        }
+
+        public void ConfigureContractBoss(Sprite sprite, int waveBonus, string title, string name, TurnBasedEnemyVisualKind kind)
+        {
+            ConfigureBoss(sprite, waveBonus, kind);
             if (!string.IsNullOrWhiteSpace(title))
             {
                 encounterTitle = title;

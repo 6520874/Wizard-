@@ -367,7 +367,7 @@ namespace WitcherGame
                     slot.TargetReticle?.gameObject.SetActive(false);
                     float normalizedHealth = enemy.MaxHealth <= 0 ? 0f : Mathf.Clamp01((float)enemy.Health / enemy.MaxHealth);
                     SetFillWidth(slot.HealthFill, normalizedHealth, 118f);
-                    slot.Rect.sizeDelta = enemy.VisualKind == TurnBasedEnemyVisualKind.BlackMoonKnight && i == 0
+                    slot.Rect.sizeDelta = (enemy.VisualKind == TurnBasedEnemyVisualKind.BlackMoonKnight || enemy.VisualKind == TurnBasedEnemyVisualKind.BlackNailPuppet) && i == 0
                         ? new Vector2(248f, 248f)
                         : new Vector2(184f, 184f);
                     if (!slot.Busy)

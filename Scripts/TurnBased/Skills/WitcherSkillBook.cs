@@ -315,6 +315,7 @@ namespace WitcherGame
                     skills.Add(CreateCorruptedBite());
                     break;
                 case TurnBasedEnemyVisualKind.BlackMoonKnight:
+                case TurnBasedEnemyVisualKind.BlackNailPuppet:
                     skills.Add(CreateMoonbreaker());
                     skills.Add(CreatePlagueHowl());
                     skills.Add(CreateBloodDrain());

@@ -320,6 +320,7 @@ namespace WitcherGame
             switch (enemy.VisualKind)
             {
                 case TurnBasedEnemyVisualKind.BlackMoonKnight:
+                case TurnBasedEnemyVisualKind.BlackNailPuppet:
                     baseShield = Mathf.Clamp(Mathf.CeilToInt(enemy.Health / (float)enemy.MaxHealth * 5f), 1, 5);
                     break;
                 case TurnBasedEnemyVisualKind.BloodWraith:
@@ -339,6 +340,8 @@ namespace WitcherGame
             {
                 case TurnBasedEnemyVisualKind.BlackMoonKnight:
                     return new[] { "银", "火", "雷", "印", "剑" };
+                case TurnBasedEnemyVisualKind.BlackNailPuppet:
+                    return new[] { "银", "火", "剑", "印", "？" };
                 case TurnBasedEnemyVisualKind.BloodWraith:
                     return new[] { "银", "火", "冰", "印" };
                 default:
@@ -352,6 +355,8 @@ namespace WitcherGame
             {
                 case TurnBasedEnemyVisualKind.BlackMoonKnight:
                     return new[] { true, true, false, false, true };
+                case TurnBasedEnemyVisualKind.BlackNailPuppet:
+                    return new[] { true, true, true, false, false };
                 case TurnBasedEnemyVisualKind.BloodWraith:
                     return new[] { true, false, false, true };
                 default:

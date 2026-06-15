@@ -798,9 +798,9 @@ namespace WitcherGame
             }
 
             secondBossSpawned = true;
-            GameObject encounterObject = CreateEncounterObject("Black Nail Puppet Boss", secondNightBossPosition, TurnBasedEnemyVisualKind.BlackMoonKnight);
+            GameObject encounterObject = CreateEncounterObject("Black Nail Puppet Boss", secondNightBossPosition, TurnBasedEnemyVisualKind.BlackNailPuppet);
             BattleEncounterTrigger trigger = encounterObject.AddComponent<BattleEncounterTrigger>();
-            trigger.ConfigureContractBoss(encounterObject.GetComponent<SpriteRenderer>().sprite, 1, "黑钉傀儡", "黑钉傀儡");
+            trigger.ConfigureContractBoss(encounterObject.GetComponent<SpriteRenderer>().sprite, 1, "黑钉傀儡", "黑钉傀儡", TurnBasedEnemyVisualKind.BlackNailPuppet);
 
             int healthPenalty = foundIronCorpse ? 8 : 0;
             int attackPenalty = secondTruthCorrect ? 3 : 1;
@@ -891,7 +891,7 @@ namespace WitcherGame
                 return preview.Sprite;
             }
 
-            return WitcherSpriteLibrary.GetSolidSprite(kind == TurnBasedEnemyVisualKind.BlackMoonKnight
+            return WitcherSpriteLibrary.GetSolidSprite(kind == TurnBasedEnemyVisualKind.BlackMoonKnight || kind == TurnBasedEnemyVisualKind.BlackNailPuppet
                 ? new Color32(62, 116, 156, 230)
                 : new Color32(112, 64, 76, 230));
         }

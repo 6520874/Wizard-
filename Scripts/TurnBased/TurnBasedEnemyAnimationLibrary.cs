@@ -10,7 +10,8 @@ namespace WitcherGame
     {
         CorruptedWolf,
         BloodWraith,
-        BlackMoonKnight
+        BlackMoonKnight,
+        BlackNailPuppet
     }
 
     // 中文说明：按怪物类型加载回合制战斗使用的待机、攻击和受击帧。
@@ -35,6 +36,11 @@ namespace WitcherGame
                     enemy.IdleFrames = LoadFolderFrames("Art/WildHuntBoss/Frames/Idle", BossPixelsPerUnit);
                     enemy.AttackFrames = LoadFolderFrames("Art/WildHuntBoss/Frames/Attack", BossPixelsPerUnit);
                     enemy.HurtFrames = LoadFolderFrames("Art/WildHuntBoss/Frames/Hurt", BossPixelsPerUnit);
+                    break;
+                case TurnBasedEnemyVisualKind.BlackNailPuppet:
+                    enemy.IdleFrames = LoadSingleFrame("Art/Monsters/BlackNailPuppet.png", BossPixelsPerUnit, "BlackNailPuppet_Idle");
+                    enemy.AttackFrames = enemy.IdleFrames;
+                    enemy.HurtFrames = enemy.IdleFrames;
                     break;
                 default:
                     enemy.IdleFrames = LoadFrameRow("Art/Monsters/CorruptedWolfSheet.png", 6, 7, 0, MonsterPixelsPerUnit);
@@ -90,6 +96,43 @@ namespace WitcherGame
 
             CachedRows[key] = frames;
             return frames;
+        }
+
+        private static Sprite[] LoadSingleFrame(string relativePath, float pixelsPerUnit, string spriteName)
+        {
+            string absolutePath = Path.Combine(Application.dataPath, relativePath);
+            string key = File.Exists(absolutePath)
+                ? $"{relativePath}_{File.GetLastWriteTimeUtc(absolutePath).Ticks}"
+                : $"{relativePath}_missing";
+
+            if (CachedRows.TryGetValue(key, out Sprite[] cached))
+            {
+                return cached;
+            }
+
+            if (!File.Exists(absolutePath))
+            {
+                CachedRows[key] = System.Array.Empty<Sprite>();
+                return CachedRows[key];
+            }
+
+            Texture2D texture = new Texture2D(2, 2, TextureFormat.RGBA32, false);
+            if (!texture.LoadImage(File.ReadAllBytes(absolutePath)))
+            {
+                CachedRows[key] = System.Array.Empty<Sprite>();
+                return CachedRows[key];
+            }
+
+            texture.filterMode = FilterMode.Bilinear;
+            texture.wrapMode = TextureWrapMode.Clamp;
+            Sprite sprite = Sprite.Create(
+                texture,
+                new Rect(0f, 0f, texture.width, texture.height),
+                new Vector2(0.5f, 0.08f),
+                pixelsPerUnit);
+            sprite.name = spriteName;
+            CachedRows[key] = new[] { sprite };
+            return CachedRows[key];
         }
 
         private static Sprite[] LoadFolderFrames(string relativeFolder, float pixelsPerUnit)
