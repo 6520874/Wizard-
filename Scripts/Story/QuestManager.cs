@@ -150,8 +150,7 @@ namespace WitcherGame
                 return;
             }
 
-            activeQuest.objectives.Clear();
-            activeQuest.objectives.Add(new QuestObjective(objectiveText) { completed = completed });
+            SetSingleObjective(new QuestObjective(objectiveText) { completed = completed });
             RefreshQuestUi();
             DialogueManager.RefreshQuestHintIfVisible();
         }
@@ -163,10 +162,15 @@ namespace WitcherGame
                 return;
             }
 
-            activeQuest.objectives.Clear();
-            activeQuest.objectives.Add(new QuestObjective(objectiveId, StoryDatabase.GetObjectiveText(objectiveId, fallbackText)) { completed = completed });
+            SetSingleObjective(new QuestObjective(objectiveId, StoryDatabase.GetObjectiveText(objectiveId, fallbackText)) { completed = completed });
             RefreshQuestUi();
             DialogueManager.RefreshQuestHintIfVisible();
+        }
+
+        private void SetSingleObjective(QuestObjective objective)
+        {
+            activeQuest.objectives.Clear();
+            activeQuest.objectives.Add(objective);
         }
 
         private void RefreshQuestUi()
@@ -188,20 +192,25 @@ namespace WitcherGame
 
             if (questObjectivesText != null)
             {
-                StringBuilder builder = new StringBuilder();
-                for (int i = 0; i < activeQuest.objectives.Count; i++)
-                {
-                    QuestObjective objective = activeQuest.objectives[i];
-                    builder.Append(objective.completed ? GameText.Quest.CompletedPrefix : GameText.Quest.PendingPrefix);
-                    builder.Append(objective.text);
-                    if (i < activeQuest.objectives.Count - 1)
-                    {
-                        builder.AppendLine();
-                    }
-                }
-
-                questObjectivesText.text = builder.ToString();
+                questObjectivesText.text = BuildObjectivesText(activeQuest.objectives);
             }
+        }
+
+        private static string BuildObjectivesText(IReadOnlyList<QuestObjective> objectives)
+        {
+            StringBuilder builder = new StringBuilder();
+            for (int i = 0; i < objectives.Count; i++)
+            {
+                QuestObjective objective = objectives[i];
+                builder.Append(objective.completed ? GameText.Quest.CompletedPrefix : GameText.Quest.PendingPrefix);
+                builder.Append(objective.text);
+                if (i < objectives.Count - 1)
+                {
+                    builder.AppendLine();
+                }
+            }
+
+            return builder.ToString();
         }
 
         private void SetQuestPanelVisible(bool visible)

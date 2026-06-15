@@ -85,15 +85,19 @@ namespace WitcherGame
 
         private void Update()
         {
-            if (!dialogueActive)
+            if (!dialogueActive || !IsAdvanceInputPressed())
             {
                 return;
             }
 
-            if (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.Space) || Input.GetMouseButtonDown(0))
-            {
-                AdvanceDialogue();
-            }
+            AdvanceDialogue();
+        }
+
+        private static bool IsAdvanceInputPressed()
+        {
+            return Input.GetKeyDown(KeyCode.Return)
+                || Input.GetKeyDown(KeyCode.Space)
+                || Input.GetMouseButtonDown(0);
         }
 
         public void StartDefaultVillageDialogue()
@@ -352,11 +356,18 @@ namespace WitcherGame
                 return;
             }
 
-            taskHintText.text = objective.completed ? GameText.Dialogue.CompletedTask(objective.text) : GameText.Dialogue.CurrentTask(objective.text);
+            ApplyQuestHint(objective);
+            SetTaskHintVisible(true);
+        }
+
+        private void ApplyQuestHint(QuestManager.QuestObjective objective)
+        {
+            taskHintText.text = objective.completed
+                ? GameText.Dialogue.CompletedTask(objective.text)
+                : GameText.Dialogue.CurrentTask(objective.text);
             taskHintText.color = objective.completed
                 ? new Color32(176, 214, 148, 255)
                 : new Color32(226, 214, 158, 255);
-            SetTaskHintVisible(true);
         }
 
         private void SetTaskHintVisible(bool visible)

@@ -68,19 +68,29 @@ namespace WitcherGame
                 return;
             }
 
-            player = player == null ? FindObjectOfType<GeraltController>() : player;
-            bool nearPlayer = player != null && Vector2.Distance(player.transform.position, transform.position) <= interactDistance;
+            bool nearPlayer = IsPlayerInRange();
             RefreshLabel(nearPlayer);
-            if (nearPlayer && manager != null && manager.ShouldAutoTriggerNode(nodeId))
+            if (!nearPlayer)
+            {
+                return;
+            }
+
+            if (manager != null && manager.ShouldAutoTriggerNode(nodeId))
             {
                 manager.InteractWithNode(nodeId);
                 return;
             }
 
-            if (nearPlayer && Input.GetKeyDown(KeyCode.E))
+            if (Input.GetKeyDown(KeyCode.E))
             {
                 manager?.InteractWithNode(nodeId);
             }
+        }
+
+        private bool IsPlayerInRange()
+        {
+            player = player == null ? FindObjectOfType<GeraltController>() : player;
+            return player != null && Vector2.Distance(player.transform.position, transform.position) <= interactDistance;
         }
 
         private void OnMouseDown()

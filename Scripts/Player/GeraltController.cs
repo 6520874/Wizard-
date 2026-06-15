@@ -85,27 +85,21 @@ namespace WitcherGame
 
             if (!IsAlive)
             {
-                StopPhysicsVelocity();
-                hasClickMoveDestination = false;
-                ClampToStage();
+                StopMovementAndClamp();
                 return;
             }
 
             if (!controlsEnabled)
             {
-                StopPhysicsVelocity();
-                hasClickMoveDestination = false;
+                StopMovementAndClamp();
                 geraltAnimator.ForceIdle();
-                ClampToStage();
                 return;
             }
 
             if (hurtLockTimer > 0f)
             {
                 hurtLockTimer -= Time.deltaTime;
-                StopPhysicsVelocity();
-                hasClickMoveDestination = false;
-                ClampToStage();
+                StopMovementAndClamp();
                 return;
             }
 
@@ -122,30 +116,13 @@ namespace WitcherGame
 
             HandlePointAndClickInput();
 
-            Vector2 moveInput = new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical"));
-            bool hasManualInput = moveInput.sqrMagnitude > 0.01f;
-            if (hasManualInput)
-            {
-                hasClickMoveDestination = false;
-            }
-
-            Vector2 movement = hasManualInput
-                ? (moveInput.sqrMagnitude > 1f ? moveInput.normalized : moveInput)
-                : GetClickMoveInput();
+            Vector2 movement = ReadMovementInput();
             Vector2 requestedVelocity = new Vector2(movement.x * moveSpeed, movement.y * verticalMoveSpeed);
             Vector2 resolvedVelocity = ResolveMapVelocity(requestedVelocity);
             ApplyMovement(resolvedVelocity);
             ClampToStage();
 
-            bool verticalDominant = Mathf.Abs(movement.y) > 0.01f && Mathf.Abs(movement.y) >= Mathf.Abs(movement.x) * 0.65f;
-            if (verticalDominant)
-            {
-                spriteRenderer.flipX = false;
-            }
-            else if (Mathf.Abs(movement.x) > 0.01f)
-            {
-                SetFacingDirection(Mathf.Sign(movement.x));
-            }
+            UpdateFacingForMovement(movement);
 
             if (Input.GetKeyDown(KeyCode.E) && !WitcherEquipmentShopTrigger.ShouldBlockPlayerHealInput)
             {
@@ -161,6 +138,13 @@ namespace WitcherGame
 
         private void LateUpdate()
         {
+            ClampToStage();
+        }
+
+        private void StopMovementAndClamp()
+        {
+            StopPhysicsVelocity();
+            hasClickMoveDestination = false;
             ClampToStage();
         }
 
@@ -330,6 +314,18 @@ namespace WitcherGame
             }
 
             return toDestination.normalized;
+        }
+
+        private Vector2 ReadMovementInput()
+        {
+            Vector2 moveInput = new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical"));
+            if (moveInput.sqrMagnitude > 0.01f)
+            {
+                hasClickMoveDestination = false;
+                return moveInput.sqrMagnitude > 1f ? moveInput.normalized : moveInput;
+            }
+
+            return GetClickMoveInput();
         }
 
         private void SetClickMoveDestination(Vector2 screenPosition)
@@ -509,6 +505,21 @@ namespace WitcherGame
 
             lastFacingDirection = Mathf.Sign(direction);
             spriteRenderer.flipX = lastFacingDirection < 0f;
+        }
+
+        private void UpdateFacingForMovement(Vector2 movement)
+        {
+            bool verticalDominant = Mathf.Abs(movement.y) > 0.01f && Mathf.Abs(movement.y) >= Mathf.Abs(movement.x) * 0.65f;
+            if (verticalDominant)
+            {
+                spriteRenderer.flipX = false;
+                return;
+            }
+
+            if (Mathf.Abs(movement.x) > 0.01f)
+            {
+                SetFacingDirection(Mathf.Sign(movement.x));
+            }
         }
 
         private void UpdateDepthSorting()
