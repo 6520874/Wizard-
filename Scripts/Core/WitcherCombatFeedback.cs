@@ -11,12 +11,6 @@ namespace WitcherGame
         private Coroutine hitStopRoutine;
         private float currentStopUntilRealtime;
 
-        public static void EnemyHit(Vector3 position, float shakeStrength = 0.08f, float hitStopDuration = 0.035f)
-        {
-            EnsureInstance().TriggerHitStop(hitStopDuration);
-            ShakeCamera(shakeStrength, 0.12f);
-        }
-
         public static void HeavyEnemyHit(Vector3 position)
         {
             EnsureInstance().TriggerHitStop(0.055f);

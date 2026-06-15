@@ -115,20 +115,6 @@ namespace WitcherGame
                 backgroundRenderer.color = room.BackgroundTint;
                 WitcherRuntimeBackground runtimeBackground = background.GetComponent<WitcherRuntimeBackground>();
                 EnsureVillageWalkableMap(background, runtimeBackground != null && runtimeBackground.IsUsingPreferredMap);
-
-                // WitcherAtmosphereLayer atmosphere = background.GetComponent<WitcherAtmosphereLayer>();
-                // if (atmosphere == null)
-                // {
-                //     atmosphere = background.AddComponent<WitcherAtmosphereLayer>();
-                // }
-                //
-                // atmosphere.ApplyCursedEmbers(
-                //     room.AtmosphereTint,
-                //     room.FogColor,
-                //     room.EmberColor,
-                //     room.FogStrength,
-                //     room.VignetteStrength,
-                //     room.EmberStrength);
             }
 
             Camera camera = Camera.main;

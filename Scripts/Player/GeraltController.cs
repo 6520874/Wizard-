@@ -147,11 +147,6 @@ namespace WitcherGame
                 SetFacingDirection(Mathf.Sign(movement.x));
             }
 
-            // if (Input.GetKeyDown(KeyCode.LeftShift) || Input.GetKeyDown(KeyCode.RightShift))
-            // {
-            //     TryDash(movement.x);
-            // }
-            // else
             if (Input.GetKeyDown(KeyCode.E) && !WitcherEquipmentShopTrigger.ShouldBlockPlayerHealInput)
             {
                 TryHeal();
