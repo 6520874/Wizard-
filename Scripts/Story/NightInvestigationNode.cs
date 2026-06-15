@@ -7,7 +7,10 @@ namespace WitcherGame
     {
         OldWell,
         OldMill,
-        WidowHouse
+        WidowHouse,
+        ForgeCorpse,
+        BlackenedHammer,
+        ChapelWax
     }
 
     // 中文说明：地图调查点交互组件，当前任务目标靠近后自动通知夜晚委托系统。
