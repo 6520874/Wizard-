@@ -9,15 +9,16 @@ namespace WitcherGame
         private const string ManagerName = "Party Manager";
         private const int MaxPartySize = 4;
         private const string HunterName = "猎魔人";
-        private const bool HunterOnlyActiveParty = true;
 
         private static PartyManager instance;
 
         private readonly List<PartyMember> allMembers = new List<PartyMember>();
         private readonly List<PartyMember> activeParty = new List<PartyMember>();
+        private readonly HashSet<string> unlockedBattleMembers = new HashSet<string>();
 
         public IReadOnlyList<PartyMember> AllMembers => allMembers;
         public IReadOnlyList<PartyMember> ActiveParty => activeParty;
+        public bool AllowsBattleAllies => unlockedBattleMembers.Count > 0;
         public System.Action PartyChanged;
 
         public static PartyManager Instance => instance == null ? CreateIfMissing() : instance;
@@ -60,7 +61,7 @@ namespace WitcherGame
                 allMembers.Add(member);
             }
 
-            if (HunterOnlyActiveParty && member.Name != HunterName)
+            if (!IsMemberAllowedInActiveParty(member))
             {
                 member.IsJoined = false;
                 return false;
@@ -97,7 +98,7 @@ namespace WitcherGame
                 return false;
             }
 
-            if (HunterOnlyActiveParty && replacement.Name != HunterName)
+            if (!IsMemberAllowedInActiveParty(replacement))
             {
                 replacement.IsJoined = false;
                 return false;
@@ -132,12 +133,44 @@ namespace WitcherGame
         public bool ToggleMember(string memberName)
         {
             PartyMember member = FindMember(memberName);
-            if (member == null || member.Name == HunterName || HunterOnlyActiveParty)
+            if (member == null || member.Name == HunterName || !IsMemberAllowedInActiveParty(member))
             {
                 return false;
             }
 
             return activeParty.Contains(member) ? RemoveMember(member) : AddMember(member);
+        }
+
+        public bool IsBattleMemberUnlocked(string memberName)
+        {
+            return memberName == HunterName || unlockedBattleMembers.Contains(memberName);
+        }
+
+        public bool UnlockStoryAllyForBattle(string memberName)
+        {
+            if (string.IsNullOrWhiteSpace(memberName) || memberName == HunterName)
+            {
+                return false;
+            }
+
+            EnsureDefaults();
+            unlockedBattleMembers.Add(memberName);
+
+            PartyMember member = FindMember(memberName);
+            if (member == null)
+            {
+                PartyChanged?.Invoke();
+                return false;
+            }
+
+            if (activeParty.Contains(member))
+            {
+                member.IsJoined = true;
+                PartyChanged?.Invoke();
+                return true;
+            }
+
+            return AddMember(member);
         }
 
         public PartyMember GetActiveMember(int index)
@@ -213,26 +246,28 @@ namespace WitcherGame
         private void RemoveHiddenMainPartyMembers()
         {
             activeParty.RemoveAll(member => member == null);
-            if (HunterOnlyActiveParty)
+            activeParty.RemoveAll(member =>
             {
-                activeParty.RemoveAll(member =>
+                bool remove = !IsMemberAllowedInActiveParty(member);
+                if (remove && member != null)
                 {
-                    bool remove = member.Name != HunterName;
-                    if (remove)
-                    {
-                        member.IsJoined = false;
-                    }
-
-                    return remove;
-                });
-
-                PartyMember hunter = allMembers.Find(member => member != null && member.Name == HunterName);
-                if (hunter != null && !activeParty.Contains(hunter))
-                {
-                    hunter.IsJoined = true;
-                    activeParty.Insert(0, hunter);
+                    member.IsJoined = false;
                 }
+
+                return remove;
+            });
+
+            PartyMember hunter = allMembers.Find(member => member != null && member.Name == HunterName);
+            if (hunter != null && !activeParty.Contains(hunter))
+            {
+                hunter.IsJoined = true;
+                activeParty.Insert(0, hunter);
             }
+        }
+
+        private bool IsMemberAllowedInActiveParty(PartyMember member)
+        {
+            return member != null && (member.Name == HunterName || unlockedBattleMembers.Contains(member.Name));
         }
     }
 }

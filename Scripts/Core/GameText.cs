@@ -97,6 +97,7 @@ namespace WitcherGame
             public const string SkillsHeader = "技能";
             public const string PartyManageHeader = "队伍管理";
             public const string HunterOnlyPartyRule = "当前队伍规则：只有猎魔人一个人上阵；其他角色保留为剧情成员，后续版本再开放参战。";
+            public const string StoryAlliesPartyRule = "当前队伍规则：剧情盟友可上阵；未解锁成员仍保留为待命。";
         }
 
         public static class Hud

@@ -23,6 +23,14 @@ namespace WitcherGame
         private const string ObjectiveSecondTruthChoice = "secondNight.truthChoice";
         private const string ObjectiveSecondDefeatBoss = "secondNight.defeatBoss";
         private const string ObjectiveSecondReturnVillage = "secondNight.returnVillage";
+        private const string ObjectiveThirdMeetTriss = "thirdNight.meetTriss";
+        private const string ObjectiveThirdInspectCryptGate = "thirdNight.inspectCryptGate";
+        private const string ObjectiveThirdClearAmbush = "thirdNight.clearAmbush";
+        private const string ObjectiveThirdInspectAltar = "thirdNight.inspectAltar";
+        private const string ObjectiveThirdInspectReliquary = "thirdNight.inspectReliquary";
+        private const string ObjectiveThirdTruthChoice = "thirdNight.truthChoice";
+        private const string ObjectiveThirdDefeatBoss = "thirdNight.defeatBoss";
+        private const string ObjectiveThirdReturnVillage = "thirdNight.returnVillage";
 
         private static NightContractManager instance;
 
@@ -40,6 +48,13 @@ namespace WitcherGame
         [SerializeField] private Vector2 secondNightFirstAmbushPosition = new Vector2(-2.95f, -2.2f);
         [SerializeField] private Vector2 secondNightSecondAmbushPosition = new Vector2(3.75f, -1.5f);
         [SerializeField] private Vector2 secondNightBossPosition = new Vector2(7.28f, -1.72f);
+        [Header("Third Night Nodes")]
+        [SerializeField] private Vector2 cryptGatePosition = new Vector2(-6.65f, -2.16f);
+        [SerializeField] private Vector2 blackWaxAltarPosition = new Vector2(-0.48f, -1.58f);
+        [SerializeField] private Vector2 sealedReliquaryPosition = new Vector2(5.88f, -1.35f);
+        [SerializeField] private Vector2 thirdNightFirstAmbushPosition = new Vector2(-3.35f, -2.28f);
+        [SerializeField] private Vector2 thirdNightSecondAmbushPosition = new Vector2(3.46f, -1.82f);
+        [SerializeField] private Vector2 thirdNightBossPosition = new Vector2(7.16f, -1.68f);
         [SerializeField] private float nodeMarkerScale = 0.38f;
         [SerializeField] private float contractMonsterScale = 0.28f;
         [SerializeField] private float contractBossScale = 0.34f;
@@ -69,6 +84,16 @@ namespace WitcherGame
         private bool secondBossSpawned;
         private bool secondSettlementShown;
         private int secondClearedAmbushCount;
+        private bool thirdNightStarted;
+        private bool foundCryptGate;
+        private bool foundBlackWaxAltar;
+        private bool foundSealedReliquary;
+        private bool thirdTruthChoiceResolved;
+        private bool thirdTruthCorrect;
+        private int thirdNightChoiceIndex = -1;
+        private bool thirdBossSpawned;
+        private bool thirdSettlementShown;
+        private int thirdClearedAmbushCount;
         private GameObject choicePanel;
         private Text choiceSummaryText;
         private Text choiceAText;
@@ -143,6 +168,26 @@ namespace WitcherGame
                 case ObjectiveSecondReturnVillage:
                     targetPosition = Vector2.zero;
                     return true;
+                case ObjectiveThirdMeetTriss:
+                case ObjectiveThirdInspectCryptGate:
+                    targetPosition = cryptGatePosition;
+                    return true;
+                case ObjectiveThirdClearAmbush:
+                    targetPosition = foundBlackWaxAltar ? thirdNightSecondAmbushPosition : thirdNightFirstAmbushPosition;
+                    return true;
+                case ObjectiveThirdInspectAltar:
+                    targetPosition = blackWaxAltarPosition;
+                    return true;
+                case ObjectiveThirdInspectReliquary:
+                case ObjectiveThirdTruthChoice:
+                    targetPosition = sealedReliquaryPosition;
+                    return true;
+                case ObjectiveThirdDefeatBoss:
+                    targetPosition = thirdNightBossPosition;
+                    return true;
+                case ObjectiveThirdReturnVillage:
+                    targetPosition = Vector2.zero;
+                    return true;
                 default:
                     targetPosition = default;
                     return false;
@@ -200,6 +245,32 @@ namespace WitcherGame
             PlayerInputController.RefreshPlayerControl();
         }
 
+        public void BeginThirdNightContract()
+        {
+            if (thirdNightStarted)
+            {
+                return;
+            }
+
+            thirdNightStarted = true;
+            contractStarted = true;
+            questManager = QuestManager.CreateIfMissing();
+            dialogueManager = DialogueManager.CreateIfMissing();
+            StartCoroutine(BeginThirdNightSequence());
+        }
+
+        private IEnumerator BeginThirdNightSequence()
+        {
+            player = player == null ? FindObjectOfType<GeraltController>() : player;
+            player?.SetControlEnabled(false);
+            NightPhaseTransition transition = NightPhaseTransition.CreateIfMissing();
+            yield return transition.PlayTransition("第三晚", "黑蜡地下教堂", MoveToThirdNightMap);
+            StartThirdNightQuest();
+            CreateThirdNightNodes();
+            StartCoroutine(ShowThirdNightBriefingWhenReady());
+            PlayerInputController.RefreshPlayerControl();
+        }
+
         public void InteractWithNode(NightInvestigationNodeId nodeId)
         {
             if (!contractStarted || DialogueManager.IsDialogueActive)
@@ -237,6 +308,15 @@ namespace WitcherGame
                 case NightInvestigationNodeId.ChapelWax:
                     InvestigateChapelWax();
                     break;
+                case NightInvestigationNodeId.CryptGate:
+                    InvestigateCryptGate();
+                    break;
+                case NightInvestigationNodeId.BlackWaxAltar:
+                    InvestigateBlackWaxAltar();
+                    break;
+                case NightInvestigationNodeId.SealedReliquary:
+                    InvestigateSealedReliquary();
+                    break;
             }
         }
 
@@ -249,6 +329,11 @@ namespace WitcherGame
 
         private bool ShouldBlockOutOfOrderNode(NightInvestigationNodeId nodeId)
         {
+            if (thirdNightStarted)
+            {
+                return ShouldBlockThirdNightNode(nodeId);
+            }
+
             if (secondNightStarted)
             {
                 return ShouldBlockSecondNightNode(nodeId);
@@ -312,10 +397,46 @@ namespace WitcherGame
             return true;
         }
 
+        private bool ShouldBlockThirdNightNode(NightInvestigationNodeId nodeId)
+        {
+            if (!foundCryptGate)
+            {
+                return nodeId != NightInvestigationNodeId.CryptGate;
+            }
+
+            if (thirdClearedAmbushCount < 1)
+            {
+                return true;
+            }
+
+            if (!foundBlackWaxAltar)
+            {
+                return nodeId != NightInvestigationNodeId.BlackWaxAltar;
+            }
+
+            if (thirdClearedAmbushCount < 2)
+            {
+                return true;
+            }
+
+            if (!foundSealedReliquary)
+            {
+                return nodeId != NightInvestigationNodeId.SealedReliquary;
+            }
+
+            return true;
+        }
+
         public void NotifyEncounterCleared(NightContractEncounterRole role)
         {
             if (!contractStarted)
             {
+                return;
+            }
+
+            if (thirdNightStarted)
+            {
+                NotifyThirdNightEncounterCleared(role);
                 return;
             }
 
@@ -384,6 +505,38 @@ namespace WitcherGame
             }
         }
 
+        private void NotifyThirdNightEncounterCleared(NightContractEncounterRole role)
+        {
+            if (role == NightContractEncounterRole.ClueAmbush)
+            {
+                thirdClearedAmbushCount++;
+                if (!foundBlackWaxAltar)
+                {
+                    SetCurrentQuestObjective(ObjectiveThirdInspectAltar);
+                }
+                else if (!foundSealedReliquary)
+                {
+                    SetCurrentQuestObjective(ObjectiveThirdInspectReliquary);
+                }
+                else if (!thirdTruthChoiceResolved)
+                {
+                    SetCurrentQuestObjective(ObjectiveThirdTruthChoice);
+                }
+
+                return;
+            }
+
+            if (role == NightContractEncounterRole.Boss)
+            {
+                SetCurrentQuestObjective(ObjectiveThirdReturnVillage, true);
+                if (!thirdSettlementShown)
+                {
+                    thirdSettlementShown = true;
+                    StartCoroutine(ShowThirdNightSettlementWhenReady());
+                }
+            }
+        }
+
         private void Awake()
         {
             instance = this;
@@ -412,6 +565,12 @@ namespace WitcherGame
 
         private void ResolveActiveTruthChoice(int choiceIndex)
         {
+            if (thirdNightStarted)
+            {
+                ResolveThirdTruthChoice(choiceIndex);
+                return;
+            }
+
             if (secondNightStarted)
             {
                 ResolveSecondTruthChoice(choiceIndex);
@@ -437,6 +596,15 @@ namespace WitcherGame
                 "第二晚：铁匠黑血案",
                 "第一晚之后，村口出现了穿着铁匠围裙的尸体。调查黑血、铁锤和教堂蜡泪，找出是谁让尸体重新站了起来。",
                 ObjectiveSecondInspectCorpse));
+        }
+
+        private void StartThirdNightQuest()
+        {
+            questManager.StartQuest(StoryDatabase.GetQuest(
+                "thirdNight",
+                "第三晚：黑蜡地下教堂",
+                "特莉丝循着黑蜡火光来到灰鸦村。和她一起调查地下教堂、封钉圣匣，以及银钉真正想锁住的东西。",
+                ObjectiveThirdMeetTriss));
         }
 
         private IEnumerator ShowContractBriefingWhenReady()
@@ -471,6 +639,26 @@ namespace WitcherGame
             dialogueManager.StartDialogue(briefing);
         }
 
+        private IEnumerator ShowThirdNightBriefingWhenReady()
+        {
+            yield return new WaitForSeconds(0.35f);
+            while (DialogueManager.IsDialogueActive)
+            {
+                yield return null;
+            }
+
+            DialogueLine[] briefing = StoryDatabase.GetDialogue("thirdNight.briefing", new[]
+            {
+                new DialogueLine(GameText.TrissName, "黑蜡不是为了让死人站起来。它在给活人留一条下去的路。"),
+                new DialogueLine("猎魔人", "那就一起下去。你看火，我看刀。")
+            });
+            dialogueManager.StartDialogue(briefing, () =>
+            {
+                RecruitTrissForThirdNight();
+                SetCurrentQuestObjective(ObjectiveThirdInspectCryptGate);
+            });
+        }
+
         private void CreateInvestigationNodes()
         {
             CreateNode(NightInvestigationNodeId.OldWell, "老井", oldWellPosition, new Color32(68, 118, 132, 230));
@@ -483,6 +671,13 @@ namespace WitcherGame
             CreateNode(NightInvestigationNodeId.ForgeCorpse, "围裙尸体", forgeCorpsePosition, new Color32(126, 55, 50, 230));
             CreateNode(NightInvestigationNodeId.BlackenedHammer, "黑血铁锤", blackenedHammerPosition, new Color32(116, 97, 72, 230));
             CreateNode(NightInvestigationNodeId.ChapelWax, "教堂黑蜡", chapelWaxPosition, new Color32(80, 70, 116, 230));
+        }
+
+        private void CreateThirdNightNodes()
+        {
+            CreateNode(NightInvestigationNodeId.CryptGate, "地下门", cryptGatePosition, new Color32(94, 87, 128, 230));
+            CreateNode(NightInvestigationNodeId.BlackWaxAltar, "黑蜡祭坛", blackWaxAltarPosition, new Color32(135, 72, 56, 230));
+            CreateNode(NightInvestigationNodeId.SealedReliquary, "封钉圣匣", sealedReliquaryPosition, new Color32(108, 103, 83, 230));
         }
 
         private void MoveToFirstNightMap()
@@ -502,6 +697,24 @@ namespace WitcherGame
             {
                 worldDirector.EnterSecondNightMap();
             }
+        }
+
+        private void MoveToThirdNightMap()
+        {
+            ClearContractObjects();
+            WitcherWorldDirector worldDirector = FindObjectOfType<WitcherWorldDirector>();
+            if (worldDirector != null)
+            {
+                worldDirector.EnterThirdNightMap();
+            }
+        }
+
+        private void RecruitTrissForThirdNight()
+        {
+            PartyManager partyManager = PartyManager.CreateIfMissing();
+            partyManager.UnlockStoryAllyForBattle(GameText.TrissName);
+            player = player == null ? FindObjectOfType<GeraltController>() : player;
+            PartyFollowManager.CreateIfMissing(player);
         }
 
         private void ClearContractObjects()
@@ -671,6 +884,60 @@ namespace WitcherGame
             dialogueManager.StartDialogue(lines, () => SpawnAmbush(secondNightSecondAmbushPosition, TurnBasedEnemyVisualKind.BloodWraith, 1, "黑蜡哭影"));
         }
 
+        private void InvestigateCryptGate()
+        {
+            if (foundCryptGate)
+            {
+                return;
+            }
+
+            foundCryptGate = true;
+            CompleteNode(NightInvestigationNodeId.CryptGate);
+            SetCurrentQuestObjective(ObjectiveThirdClearAmbush);
+            DialogueLine[] lines = StoryDatabase.GetDialogue("thirdNight.cryptGate", new[]
+            {
+                new DialogueLine("地下门", "门缝里没有风，只有热。黑蜡沿着石阶往下流，像有人在下面点着一整排蜡烛。"),
+                new DialogueLine(GameText.TrissName, "我能烧开门上的蜡，但它们会记住我的火。")
+            });
+            dialogueManager.StartDialogue(lines, () => SpawnAmbush(thirdNightFirstAmbushPosition, TurnBasedEnemyVisualKind.BloodWraith, 2, "黑蜡守门影"));
+        }
+
+        private void InvestigateBlackWaxAltar()
+        {
+            if (foundBlackWaxAltar)
+            {
+                return;
+            }
+
+            foundBlackWaxAltar = true;
+            CompleteNode(NightInvestigationNodeId.BlackWaxAltar);
+            SetCurrentQuestObjective(ObjectiveThirdClearAmbush);
+            DialogueLine[] lines = StoryDatabase.GetDialogue("thirdNight.blackWaxAltar", new[]
+            {
+                new DialogueLine("黑蜡祭坛", "祭坛上没有神像，只有一圈烧短的蜡。每根蜡烛里都封着一小段头发。"),
+                new DialogueLine("猎魔人", "不是献祭。更像是把人留在这里，等有人替他们选择。")
+            });
+            dialogueManager.StartDialogue(lines, () => SpawnAmbush(thirdNightSecondAmbushPosition, TurnBasedEnemyVisualKind.CorruptedWolf, 2, "蜡下腐兽"));
+        }
+
+        private void InvestigateSealedReliquary()
+        {
+            if (foundSealedReliquary)
+            {
+                return;
+            }
+
+            foundSealedReliquary = true;
+            CompleteNode(NightInvestigationNodeId.SealedReliquary);
+            SetCurrentQuestObjective(ObjectiveThirdTruthChoice);
+            DialogueLine[] lines = StoryDatabase.GetDialogue("thirdNight.sealedReliquary", new[]
+            {
+                new DialogueLine("封钉圣匣", "圣匣里躺着三枚银钉。每枚钉帽上都刻着一个孩子的名字，最小的那个还没干。"),
+                new DialogueLine(GameText.TrissName, "烧掉它，门会开。留下它，村里今晚能睡。交出去……他们就得自己醒着。")
+            });
+            dialogueManager.StartDialogue(lines, ShowThirdTruthChoice);
+        }
+
         private void CompleteNode(NightInvestigationNodeId id)
         {
             if (nodes.TryGetValue(id, out NightInvestigationNode node))
@@ -740,6 +1007,28 @@ namespace WitcherGame
             player?.SetControlEnabled(false);
         }
 
+        private void ShowThirdTruthChoice()
+        {
+            if (thirdTruthChoiceResolved)
+            {
+                return;
+            }
+
+            EnsureChoiceUi();
+            StoryDatabase.ChoiceData choice = StoryDatabase.GetChoice(
+                "thirdNight.truthChoice",
+                "圣匣里的银钉还温着，你决定：\nA 让特莉丝烧尽黑蜡   B 封住地下门   C 把银钉交给孩子",
+                2,
+                "A 烧蜡",
+                "B 封门",
+                "C 交钉");
+            choiceSummaryText.text = choice.Summary;
+            SetChoiceLabels(choice.Labels[0], choice.Labels[1], choice.Labels[2]);
+            choicePanel.SetActive(true);
+            player = player == null ? FindObjectOfType<GeraltController>() : player;
+            player?.SetControlEnabled(false);
+        }
+
         private void ResolveTruthChoice(int choiceIndex)
         {
             if (truthChoiceResolved)
@@ -780,6 +1069,27 @@ namespace WitcherGame
                 GetSecondNightChoiceFallback(choiceIndex));
 
             dialogueManager.StartDialogue(lines, SpawnSecondNightBoss);
+        }
+
+        private void ResolveThirdTruthChoice(int choiceIndex)
+        {
+            if (thirdTruthChoiceResolved)
+            {
+                return;
+            }
+
+            thirdTruthChoiceResolved = true;
+            thirdNightChoiceIndex = choiceIndex;
+            StoryDatabase.ChoiceData choice = StoryDatabase.GetChoice("thirdNight.truthChoice", string.Empty, 2, "A 烧蜡", "B 封门", "C 交钉");
+            thirdTruthCorrect = choiceIndex == choice.CorrectIndex;
+            choicePanel.SetActive(false);
+            SetCurrentQuestObjective(ObjectiveThirdDefeatBoss);
+
+            DialogueLine[] lines = StoryDatabase.GetDialogue(
+                GetThirdNightChoiceDialogueId(choiceIndex),
+                GetThirdNightChoiceFallback(choiceIndex));
+
+            dialogueManager.StartDialogue(lines, SpawnThirdNightBoss);
         }
 
         private static string GetFirstNightChoiceDialogueId(int choiceIndex)
@@ -854,6 +1164,44 @@ namespace WitcherGame
                     {
                         new DialogueLine("猎魔人", "第一枚银钉拔出来时，尸体倒回泥里，像终于记起自己已经死了。"),
                         new DialogueLine("委托", "铁匠铺的火重新亮起。教堂没有开门。")
+                    };
+            }
+        }
+
+        private static string GetThirdNightChoiceDialogueId(int choiceIndex)
+        {
+            switch (choiceIndex)
+            {
+                case 0:
+                    return "thirdNight.choiceBurnWax";
+                case 1:
+                    return "thirdNight.choiceSealDoor";
+                default:
+                    return "thirdNight.choiceGiveNails";
+            }
+        }
+
+        private static DialogueLine[] GetThirdNightChoiceFallback(int choiceIndex)
+        {
+            switch (choiceIndex)
+            {
+                case 0:
+                    return new[]
+                    {
+                        new DialogueLine(GameText.TrissName, "火从圣匣里翻出来时，黑蜡像雪一样塌下去。那些名字也跟着变轻了。"),
+                        new DialogueLine("猎魔人", "门开了。里面的东西没有哭，只是在等我们。")
+                    };
+                case 1:
+                    return new[]
+                    {
+                        new DialogueLine("猎魔人", "你把门重新封上。村里钟声停了，地下却多了一次敲门声。"),
+                        new DialogueLine(GameText.TrissName, "有些安静，不是结束。只是还没有轮到他们说话。")
+                    };
+                default:
+                    return new[]
+                    {
+                        new DialogueLine(GameText.TrissName, "孩子接过银钉时没有哭。他只是问：如果我怕，能不能晚一点敲下去。"),
+                        new DialogueLine("猎魔人", "你没有替他回答。圣匣自己裂开了一道缝。")
                     };
             }
         }
@@ -974,6 +1322,59 @@ namespace WitcherGame
             spawnedContractObjects.Add(encounterObject);
         }
 
+        private void SpawnThirdNightBoss()
+        {
+            if (thirdBossSpawned)
+            {
+                return;
+            }
+
+            thirdBossSpawned = true;
+            GameObject encounterObject = CreateEncounterObject("Black Wax Saint Boss", thirdNightBossPosition, TurnBasedEnemyVisualKind.BlackNailPuppet);
+            BattleEncounterTrigger trigger = encounterObject.AddComponent<BattleEncounterTrigger>();
+            trigger.ConfigureContractBoss(encounterObject.GetComponent<SpriteRenderer>().sprite, 2, "黑蜡圣徒", "黑蜡圣徒", TurnBasedEnemyVisualKind.BlackNailPuppet);
+
+            int healthPenalty = foundCryptGate ? 8 : 0;
+            int attackPenalty = thirdTruthCorrect ? 4 : 1;
+            int defensePenalty = foundBlackWaxAltar ? 2 : 0;
+            int shieldAdjustment = foundSealedReliquary ? -1 : 0;
+            string openingNote;
+            switch (thirdNightChoiceIndex)
+            {
+                case 0:
+                    healthPenalty += 12;
+                    attackPenalty = 2;
+                    shieldAdjustment -= 1;
+                    openingNote = "选择后果：特莉丝烧开黑蜡，圣徒的外壳变薄；那些被蜡封住的名字也一起安静了。";
+                    break;
+                case 1:
+                    healthPenalty += 4;
+                    attackPenalty = 0;
+                    defensePenalty += 2;
+                    shieldAdjustment += 2;
+                    openingNote = "选择后果：地下门被封住，村里暂时睡去；黑蜡圣徒像守门人一样站得更稳。";
+                    break;
+                default:
+                    healthPenalty += 18;
+                    attackPenalty = 4;
+                    shieldAdjustment -= 2;
+                    openingNote = "选择后果：银钉交到孩子手里，圣匣自己裂开；黑蜡圣徒失去了最顺手的命令。";
+                    break;
+            }
+
+            string[] weaknesses = foundBlackWaxAltar
+                ? new[] { "火", "银", "印", "剑", "？" }
+                : new[] { "火", "？", "印", "剑", "？" };
+            bool[] discovered = foundBlackWaxAltar
+                ? new[] { true, true, false, true, false }
+                : new[] { true, false, false, true, false };
+            trigger.ApplyInvestigationModifiers(healthPenalty, attackPenalty, defensePenalty, shieldAdjustment, weaknesses, discovered, openingNote);
+            trigger.ApplyMapScale(contractBossScale);
+            NightContractEncounterWatcher watcher = encounterObject.AddComponent<NightContractEncounterWatcher>();
+            watcher.Configure(this, NightContractEncounterRole.Boss);
+            spawnedContractObjects.Add(encounterObject);
+        }
+
         private IEnumerator ShowSettlementWhenReady()
         {
             yield return new WaitForSeconds(0.2f);
@@ -1001,6 +1402,21 @@ namespace WitcherGame
             DialogueLine[] lines = StoryDatabase.GetDialogue(
                 GetSecondNightSettlementDialogueId(),
                 GetSecondNightSettlementFallback());
+            dialogueManager.StartDialogue(lines, BeginThirdNightContract);
+        }
+
+        private IEnumerator ShowThirdNightSettlementWhenReady()
+        {
+            yield return new WaitForSeconds(0.2f);
+            while (DialogueManager.IsDialogueActive)
+            {
+                yield return null;
+            }
+
+            SetCurrentQuestObjective(ObjectiveThirdReturnVillage, true);
+            DialogueLine[] lines = StoryDatabase.GetDialogue(
+                GetThirdNightSettlementDialogueId(),
+                GetThirdNightSettlementFallback());
             dialogueManager.StartDialogue(lines);
         }
 
@@ -1076,6 +1492,44 @@ namespace WitcherGame
                     {
                         new DialogueLine("委托结算", "傀儡倒下后，铁匠坐在炉前，把每一枚银钉都敲弯。"),
                         new DialogueLine("第三晚钩子", "夜里，教堂门自己开了。门内没有神父，只有一排刚点燃的蜡。")
+                    };
+            }
+        }
+
+        private string GetThirdNightSettlementDialogueId()
+        {
+            switch (thirdNightChoiceIndex)
+            {
+                case 0:
+                    return "thirdNight.settlementBurnWax";
+                case 1:
+                    return "thirdNight.settlementSealDoor";
+                default:
+                    return "thirdNight.settlementGiveNails";
+            }
+        }
+
+        private DialogueLine[] GetThirdNightSettlementFallback()
+        {
+            switch (thirdNightChoiceIndex)
+            {
+                case 0:
+                    return new[]
+                    {
+                        new DialogueLine("委托结算", "地下教堂亮了一整夜。天亮后，村民发现每扇窗台上都有一撮黑灰。"),
+                        new DialogueLine(GameText.TrissName, "我不知道我们救下了谁，也不知道谁被我们烧没了。")
+                    };
+                case 1:
+                    return new[]
+                    {
+                        new DialogueLine("委托结算", "村里终于睡了一个安稳觉。第三天清晨，教堂门口多了一只从里面伸出的手印。"),
+                        new DialogueLine("猎魔人", "有些门能挡住怪物，也能挡住求救。")
+                    };
+                default:
+                    return new[]
+                    {
+                        new DialogueLine("委托结算", "孩子把银钉埋在井边，没有告诉任何人。那晚之后，井水第一次映出了星星。"),
+                        new DialogueLine(GameText.TrissName, "他还会害怕。可这次，害怕是他自己的。")
                     };
             }
         }

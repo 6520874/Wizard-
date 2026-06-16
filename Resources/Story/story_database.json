@@ -24,7 +24,15 @@
     { "id": "secondNight.inspectChapel", "text": "调查教堂门口的黑蜡" },
     { "id": "secondNight.truthChoice", "text": "决定如何处理第二具行走尸体" },
     { "id": "secondNight.defeatBoss", "text": "击败黑钉傀儡" },
-    { "id": "secondNight.returnVillage", "text": "回村结算，记录第三晚异变" }
+    { "id": "secondNight.returnVillage", "text": "回村结算，记录第三晚异变" },
+    { "id": "thirdNight.meetTriss", "text": "在教堂地下入口与特莉丝会合" },
+    { "id": "thirdNight.inspectCryptGate", "text": "调查通往地下教堂的黑蜡门" },
+    { "id": "thirdNight.clearAmbush", "text": "与特莉丝一起击败黑蜡引来的怪物" },
+    { "id": "thirdNight.inspectAltar", "text": "调查地下教堂中央的黑蜡祭坛" },
+    { "id": "thirdNight.inspectReliquary", "text": "检查封着银钉的圣匣" },
+    { "id": "thirdNight.truthChoice", "text": "决定如何处理圣匣里的银钉" },
+    { "id": "thirdNight.defeatBoss", "text": "与特莉丝并肩击败黑蜡圣徒" },
+    { "id": "thirdNight.returnVillage", "text": "回村结算，记下第三晚留下的沉默" }
   ],
   "quests": [
     {
@@ -50,6 +58,12 @@
       "title": "第二晚：铁匠黑血案",
       "description": "第一晚之后，村口出现了穿着铁匠围裙的尸体。调查黑血、铁锤和教堂蜡泪，找出是谁让尸体重新站了起来。",
       "objectiveIds": [ "secondNight.inspectCorpse" ]
+    },
+    {
+      "id": "thirdNight",
+      "title": "第三晚：黑蜡地下教堂",
+      "description": "特莉丝循着黑蜡火光来到灰鸦村。和她一起调查地下教堂、封钉圣匣，以及银钉真正想锁住的东西。",
+      "objectiveIds": [ "thirdNight.meetTriss" ]
     }
   ],
   "choices": [
@@ -63,6 +77,12 @@
       "id": "secondNight.truthChoice",
       "summary": "第二具尸体站起来后，你把真相交给谁？\nA 交出铁匠   B 保住教堂   C 拔掉银钉",
       "labels": [ "A 铁匠", "B 教堂", "C 银钉" ],
+      "correctIndex": 2
+    },
+    {
+      "id": "thirdNight.truthChoice",
+      "summary": "圣匣里的银钉还温着，你决定：\nA 让特莉丝烧尽黑蜡   B 封住地下门   C 把银钉交给孩子",
+      "labels": [ "A 烧蜡", "B 封门", "C 交钉" ],
       "correctIndex": 2
     }
   ],
@@ -226,6 +246,76 @@
       "lines": [
         { "speaker": "委托结算", "text": "傀儡倒下后，铁匠坐在炉前，把每一枚银钉都敲弯。" },
         { "speaker": "第三晚钩子", "text": "夜里，教堂门自己开了。门内没有神父，只有一排刚点燃的蜡。" }
+      ]
+    },
+    {
+      "id": "thirdNight.briefing",
+      "lines": [
+        { "speaker": "特莉丝", "text": "黑蜡不是为了让死人站起来。它在给活人留一条下去的路。" },
+        { "speaker": "猎魔人", "text": "那就一起下去。你看火，我看刀。" }
+      ]
+    },
+    {
+      "id": "thirdNight.cryptGate",
+      "lines": [
+        { "speaker": "地下门", "text": "门缝里没有风，只有热。黑蜡沿着石阶往下流，像有人在下面点着一整排蜡烛。" },
+        { "speaker": "特莉丝", "text": "我能烧开门上的蜡，但它们会记住我的火。" }
+      ]
+    },
+    {
+      "id": "thirdNight.blackWaxAltar",
+      "lines": [
+        { "speaker": "黑蜡祭坛", "text": "祭坛上没有神像，只有一圈烧短的蜡。每根蜡烛里都封着一小段头发。" },
+        { "speaker": "猎魔人", "text": "不是献祭。更像是把人留在这里，等有人替他们选择。" }
+      ]
+    },
+    {
+      "id": "thirdNight.sealedReliquary",
+      "lines": [
+        { "speaker": "封钉圣匣", "text": "圣匣里躺着三枚银钉。每枚钉帽上都刻着一个孩子的名字，最小的那个还没干。" },
+        { "speaker": "特莉丝", "text": "烧掉它，门会开。留下它，村里今晚能睡。交出去……他们就得自己醒着。" }
+      ]
+    },
+    {
+      "id": "thirdNight.choiceBurnWax",
+      "lines": [
+        { "speaker": "特莉丝", "text": "火从圣匣里翻出来时，黑蜡像雪一样塌下去。那些名字也跟着变轻了。" },
+        { "speaker": "猎魔人", "text": "门开了。里面的东西没有哭，只是在等我们。" }
+      ]
+    },
+    {
+      "id": "thirdNight.choiceSealDoor",
+      "lines": [
+        { "speaker": "猎魔人", "text": "你把门重新封上。村里钟声停了，地下却多了一次敲门声。" },
+        { "speaker": "特莉丝", "text": "有些安静，不是结束。只是还没有轮到他们说话。" }
+      ]
+    },
+    {
+      "id": "thirdNight.choiceGiveNails",
+      "lines": [
+        { "speaker": "特莉丝", "text": "孩子接过银钉时没有哭。他只是问：如果我怕，能不能晚一点敲下去。" },
+        { "speaker": "猎魔人", "text": "你没有替他回答。圣匣自己裂开了一道缝。" }
+      ]
+    },
+    {
+      "id": "thirdNight.settlementBurnWax",
+      "lines": [
+        { "speaker": "委托结算", "text": "地下教堂亮了一整夜。天亮后，村民发现每扇窗台上都有一撮黑灰。" },
+        { "speaker": "特莉丝", "text": "我不知道我们救下了谁，也不知道谁被我们烧没了。" }
+      ]
+    },
+    {
+      "id": "thirdNight.settlementSealDoor",
+      "lines": [
+        { "speaker": "委托结算", "text": "村里终于睡了一个安稳觉。第三天清晨，教堂门口多了一只从里面伸出的手印。" },
+        { "speaker": "猎魔人", "text": "有些门能挡住怪物，也能挡住求救。" }
+      ]
+    },
+    {
+      "id": "thirdNight.settlementGiveNails",
+      "lines": [
+        { "speaker": "委托结算", "text": "孩子把银钉埋在井边，没有告诉任何人。那晚之后，井水第一次映出了星星。" },
+        { "speaker": "特莉丝", "text": "他还会害怕。可这次，害怕是他自己的。" }
       ]
     }
   ]

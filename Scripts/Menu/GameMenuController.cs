@@ -215,11 +215,13 @@ namespace WitcherGame
                 }
 
                 string state = member.IsJoined ? GameText.Common.InParty : GameText.Common.Standby;
-                string locked = member.Name == GameText.HunterName ? GameText.Common.Fixed : GameText.Common.ActiveLocked;
+                string locked = member.Name == GameText.HunterName
+                    ? GameText.Common.Fixed
+                    : party.IsBattleMemberUnlocked(member.Name) ? string.Empty : GameText.Common.ActiveLocked;
                 text += $"\n- {member.Name} Lv {member.Level}  {state}{locked}";
             }
 
-            text += "\n\n" + GameText.Menu.HunterOnlyPartyRule;
+            text += "\n\n" + (party.AllowsBattleAllies ? GameText.Menu.StoryAlliesPartyRule : GameText.Menu.HunterOnlyPartyRule);
             ShowDetail(text);
         }
 
