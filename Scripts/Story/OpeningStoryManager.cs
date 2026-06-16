@@ -16,6 +16,8 @@ namespace WitcherGame
 
         [Header("Opening Narration")]
         [SerializeField] private bool playOnStart = true;
+        [Tooltip("0 = 正常开场；1 = 直接第一夜；2 = 直接第二夜。")]
+        [SerializeField, Range(0, 2)] private int startNightOverride;
         [Tooltip("勾选后跳过黑屏旁白和村长对话，直接进入可操作状态。适合调试地图和回合制战斗。")]
         [SerializeField] private bool skipIntroNarrationAndDialogue;
         [Tooltip("跳过引导时是否仍然创建第一主线任务。")]
@@ -68,6 +70,12 @@ namespace WitcherGame
 
         private void Start()
         {
+            if (startNightOverride > 0)
+            {
+                StartFromNightOverride();
+                return;
+            }
+
             if (skipIntroNarrationAndDialogue)
             {
                 SkipIntro();
@@ -242,6 +250,40 @@ namespace WitcherGame
                 GeraltController player = FindObjectOfType<GeraltController>();
                 NightContractManager.CreateIfMissing(player).BeginFirstNightContract();
             }
+        }
+
+        private void StartFromNightOverride()
+        {
+            openingActive = false;
+            if (typingRoutine != null)
+            {
+                StopCoroutine(typingRoutine);
+                typingRoutine = null;
+            }
+
+            if (openingPanel != null)
+            {
+                openingPanel.SetActive(false);
+            }
+
+            StopOpeningMusicImmediately();
+
+            EnsureStoryManagers();
+            DialogueManager activeDialogue = dialogueManager == null ? FindObjectOfType<DialogueManager>() : dialogueManager;
+            if (activeDialogue != null)
+            {
+                activeDialogue.HideDialogue();
+            }
+
+            GeraltController player = FindObjectOfType<GeraltController>();
+            NightContractManager nightContract = NightContractManager.CreateIfMissing(player);
+            if (startNightOverride == 2)
+            {
+                nightContract.BeginSecondNightContract();
+                return;
+            }
+
+            nightContract.BeginFirstNightContract();
         }
 
         private void PlayOpeningMusic()

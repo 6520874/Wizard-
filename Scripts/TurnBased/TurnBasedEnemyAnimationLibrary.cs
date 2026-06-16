@@ -38,9 +38,10 @@ namespace WitcherGame
                     enemy.HurtFrames = LoadFolderFrames("Art/WildHuntBoss/Frames/Hurt", BossPixelsPerUnit);
                     break;
                 case TurnBasedEnemyVisualKind.BlackNailPuppet:
-                    enemy.IdleFrames = LoadSingleFrame("Art/Monsters/BlackNailPuppet.png", BossPixelsPerUnit, "BlackNailPuppet_Idle");
-                    enemy.AttackFrames = enemy.IdleFrames;
-                    enemy.HurtFrames = enemy.IdleFrames;
+                    enemy.IdleFrames = LoadFolderFrames("Art/Monsters/BlackNailPuppet/Reworked/Frames/Idle", BossPixelsPerUnit);
+                    enemy.AttackFrames = LoadFolderFrames("Art/Monsters/BlackNailPuppet/Reworked/Frames/Attack", BossPixelsPerUnit);
+                    enemy.HurtFrames = LoadFolderFrames("Art/Monsters/BlackNailPuppet/Reworked/Frames/Hurt", BossPixelsPerUnit);
+                    enemy.DefeatFrames = LoadFolderFrames("Art/Monsters/BlackNailPuppet/Reworked/Frames/Down", BossPixelsPerUnit);
                     break;
                 default:
                     enemy.IdleFrames = LoadFrameRow("Art/Monsters/CorruptedWolfSheet.png", 6, 7, 0, MonsterPixelsPerUnit);

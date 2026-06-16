@@ -436,6 +436,30 @@ namespace WitcherGame
             yield return PlayEnemyFrames(slot, enemy.HurtFrames, enemy.Sprite, 0.075f, false, true);
         }
 
+        public IEnumerator PlayEnemyDefeat(int enemyIndex, float startDelay = 0f, int damage = 0)
+        {
+            if (startDelay > 0f)
+            {
+                yield return new WaitForSeconds(startDelay);
+            }
+
+            if (!TryGetSlot(enemyIndex, out EnemyVisualSlot slot) || visibleEnemies == null || enemyIndex >= visibleEnemies.Count)
+            {
+                yield break;
+            }
+
+            TurnBasedEnemyState enemy = visibleEnemies[enemyIndex];
+            if (damage > 0)
+            {
+                StartCoroutine(FloatDamageText(slot.DamageText, damage, false));
+            }
+
+            Sprite[] frames = enemy.DefeatFrames != null && enemy.DefeatFrames.Length > 0
+                ? enemy.DefeatFrames
+                : enemy.HurtFrames;
+            yield return PlayEnemyFrames(slot, frames, enemy.Sprite, 0.095f, false, true);
+        }
+
         public IEnumerator PlayFlameSignEffect()
         {
             yield return PlaySkillEffect(BattleSkillId.FlameSign, -1);

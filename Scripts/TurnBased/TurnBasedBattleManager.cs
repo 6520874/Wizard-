@@ -41,6 +41,7 @@ namespace WitcherGame
         public Sprite[] IdleFrames;
         public Sprite[] AttackFrames;
         public Sprite[] HurtFrames;
+        public Sprite[] DefeatFrames;
         public GameObject SourceObject;
         public int ShieldAdjustment;
         public string[] WeaknessLabelsOverride;
@@ -1010,12 +1011,15 @@ namespace WitcherGame
                     continue;
                 }
 
-                yield return battleHud.PlayEnemyHurt(targetResult.EnemyIndex, 0.08f, targetResult.Damage);
                 if (targetResult.Defeated)
                 {
+                    yield return battleHud.PlayEnemyDefeat(targetResult.EnemyIndex, 0.08f, targetResult.Damage);
                     battleHud.SetMessage(GameText.Battle.TargetDefeated(targetResult.TargetName));
                     yield return Wait(0.28f);
+                    continue;
                 }
+
+                yield return battleHud.PlayEnemyHurt(targetResult.EnemyIndex, 0.08f, targetResult.Damage);
             }
         }
 
