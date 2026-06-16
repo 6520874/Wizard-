@@ -8,7 +8,8 @@ namespace WitcherGame
     public class WitcherRuntimeBackground : MonoBehaviour
     {
         [SerializeField] private string imagePath = "Art/Backgrounds/Witcher_Village_Longroad.png";
-        [SerializeField] private string preferredImagePath = "Art/Backgrounds/Witcher_Isometric_Village.png";
+        [SerializeField] private string preferredImagePath = "Art/Backgrounds/Witcher_FirstNight_OldWell.png";
+        [SerializeField] private string secondNightImagePath = "Art/Backgrounds/Witcher_SecondNight_ForgeChapel.png";
         [SerializeField]
         private string[] segmentImagePaths = System.Array.Empty<string>();
         [SerializeField] private float pixelsPerUnit = 64f;
@@ -18,6 +19,8 @@ namespace WitcherGame
         [SerializeField] private Vector2 worldCenter = new Vector2(24f, -0.35f);
         [SerializeField] private float preferredWorldWidth = 24f;
         [SerializeField] private Vector2 preferredWorldCenter = new Vector2(0f, -0.35f);
+        [SerializeField] private float secondNightWorldWidth = 24f;
+        [SerializeField] private Vector2 secondNightWorldCenter = new Vector2(0f, -0.65f);
         [SerializeField] private float segmentWorldWidth = 64f;
         [SerializeField] private float segmentOverlap = 1.2f;
         [SerializeField] private float seamFogWidth = 2.1f;
@@ -25,13 +28,52 @@ namespace WitcherGame
 
         private SpriteRenderer spriteRenderer;
         private bool isUsingPreferredMap;
+        private bool isUsingSecondNightMap;
 
         public bool IsUsingPreferredMap => isUsingPreferredMap;
+        public bool IsUsingSecondNightMap => isUsingSecondNightMap;
 
         private void Awake()
         {
             spriteRenderer = GetComponent<SpriteRenderer>();
             spriteRenderer.sortingOrder = sortingOrder;
+            LoadActiveMap();
+        }
+
+        public void ApplyFirstNightMap()
+        {
+            isUsingSecondNightMap = false;
+            LoadActiveMap();
+            FitToWorld();
+        }
+
+        public void ApplySecondNightMap()
+        {
+            if (!HasAssetFile(secondNightImagePath))
+            {
+                Debug.LogWarning($"Second night background image not found: {Path.Combine(Application.dataPath, secondNightImagePath)}", this);
+                return;
+            }
+
+            isUsingSecondNightMap = true;
+            LoadActiveMap();
+            FitToWorld();
+        }
+
+        private void LoadActiveMap()
+        {
+            spriteRenderer = spriteRenderer == null ? GetComponent<SpriteRenderer>() : spriteRenderer;
+            spriteRenderer.sortingOrder = sortingOrder;
+            spriteRenderer.enabled = true;
+
+            if (isUsingSecondNightMap)
+            {
+                isUsingPreferredMap = false;
+                ClearSegmentChildren();
+                LoadSprite(spriteRenderer, secondNightImagePath);
+                return;
+            }
+
             isUsingPreferredMap = HasAssetFile(preferredImagePath);
             if (!isUsingPreferredMap && HasSegments)
             {
@@ -57,13 +99,17 @@ namespace WitcherGame
 
         private void FitToWorld()
         {
-            if (HasSegments)
+            if (HasSegments && !isUsingPreferredMap && !isUsingSecondNightMap)
             {
                 return;
             }
 
-            float activeWorldWidth = isUsingPreferredMap ? preferredWorldWidth : worldWidth;
-            Vector2 activeWorldCenter = isUsingPreferredMap ? preferredWorldCenter : worldCenter;
+            float activeWorldWidth = isUsingSecondNightMap
+                ? secondNightWorldWidth
+                : isUsingPreferredMap ? preferredWorldWidth : worldWidth;
+            Vector2 activeWorldCenter = isUsingSecondNightMap
+                ? secondNightWorldCenter
+                : isUsingPreferredMap ? preferredWorldCenter : worldCenter;
             if (spriteRenderer.sprite == null || activeWorldWidth <= 0f)
             {
                 return;
@@ -148,7 +194,7 @@ namespace WitcherGame
                 return;
             }
 
-            texture.filterMode = isUsingPreferredMap ? FilterMode.Bilinear : FilterMode.Point;
+            texture.filterMode = (isUsingPreferredMap || isUsingSecondNightMap) ? FilterMode.Bilinear : FilterMode.Point;
             texture.wrapMode = TextureWrapMode.Clamp;
             targetRenderer.sprite = Sprite.Create(
                 texture,

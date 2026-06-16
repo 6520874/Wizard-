@@ -16,6 +16,12 @@ namespace WitcherGame
         private const float VillageMaxStageX = 10.8f;
         private const float VillageMinStageY = -5.75f;
         private const float VillageMaxStageY = 4.75f;
+        private const float SecondNightStartX = -7.2f;
+        private const float SecondNightStartY = -2.45f;
+        private const float SecondNightMinStageX = -10.8f;
+        private const float SecondNightMaxStageX = 10.8f;
+        private const float SecondNightMinStageY = -5.2f;
+        private const float SecondNightMaxStageY = 4.25f;
 
         private GeraltController player;
         private WitcherHud hud;
@@ -100,6 +106,47 @@ namespace WitcherGame
             }
         }
 
+        public void EnterFirstNightMap()
+        {
+            GameObject background = GameObject.Find("Background");
+            if (background != null && background.TryGetComponent(out WitcherRuntimeBackground runtimeBackground))
+            {
+                runtimeBackground.ApplyFirstNightMap();
+            }
+
+            EnterRoom(0, false);
+        }
+
+        public void EnterSecondNightMap()
+        {
+            player = player == null ? FindObjectOfType<GeraltController>() : player;
+            if (player == null)
+            {
+                return;
+            }
+
+            GameObject background = GameObject.Find("Background");
+            if (background != null && background.TryGetComponent(out WitcherRuntimeBackground runtimeBackground))
+            {
+                runtimeBackground.ApplySecondNightMap();
+            }
+
+            RoomDefinition room = new RoomDefinition("第二晚：铁匠铺与教堂", new Color32(122, 152, 184, 255));
+            StageBounds stageBounds = GetActiveStageBounds();
+            player.ConfigureStage(stageBounds.MinX, stageBounds.MaxX, stageBounds.MinY, stageBounds.MaxY);
+            player.ConfigureExplorationView(0.56f, 3.45f, 1.82f);
+            player.WarpTo(new Vector2(stageBounds.StartX, stageBounds.StartY));
+
+            ApplyRoomLook(room);
+            EnsureCameraFollow(stageBounds);
+
+            hud = hud == null ? FindObjectOfType<WitcherHud>() : hud;
+            if (hud != null)
+            {
+                hud.SetRoomName(room.Name);
+            }
+        }
+
         private void ApplyRoomLook(RoomDefinition room)
         {
             GameObject background = GameObject.Find("Background");
@@ -107,7 +154,7 @@ namespace WitcherGame
             {
                 backgroundRenderer.color = room.BackgroundTint;
                 WitcherRuntimeBackground runtimeBackground = background.GetComponent<WitcherRuntimeBackground>();
-                EnsureVillageWalkableMap(background, runtimeBackground != null && runtimeBackground.IsUsingPreferredMap);
+                EnsureVillageWalkableMap(background, runtimeBackground != null && (runtimeBackground.IsUsingPreferredMap || runtimeBackground.IsUsingSecondNightMap));
             }
 
             Camera camera = Camera.main;
@@ -134,6 +181,18 @@ namespace WitcherGame
         private StageBounds GetActiveStageBounds()
         {
             WitcherRuntimeBackground runtimeBackground = FindObjectOfType<WitcherRuntimeBackground>();
+            if (runtimeBackground != null && runtimeBackground.IsUsingSecondNightMap)
+            {
+                return new StageBounds(
+                    SecondNightStartX,
+                    SecondNightStartY,
+                    SecondNightMinStageX,
+                    SecondNightMaxStageX,
+                    SecondNightMinStageY,
+                    SecondNightMaxStageY,
+                    true);
+            }
+
             if (runtimeBackground != null && runtimeBackground.IsUsingPreferredMap)
             {
                 return new StageBounds(

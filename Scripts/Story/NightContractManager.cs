@@ -34,12 +34,12 @@ namespace WitcherGame
         [SerializeField] private Vector2 secondAmbushPosition = new Vector2(3.25f, -2.34f);
         [SerializeField] private Vector2 bossPosition = new Vector2(7.45f, -0.92f);
         [Header("Second Night Nodes")]
-        [SerializeField] private Vector2 forgeCorpsePosition = new Vector2(1.25f, -2.18f);
-        [SerializeField] private Vector2 blackenedHammerPosition = new Vector2(6.75f, -1.42f);
-        [SerializeField] private Vector2 chapelWaxPosition = new Vector2(10.4f, -0.92f);
-        [SerializeField] private Vector2 secondNightFirstAmbushPosition = new Vector2(3.55f, -1.9f);
-        [SerializeField] private Vector2 secondNightSecondAmbushPosition = new Vector2(9.25f, -1.55f);
-        [SerializeField] private Vector2 secondNightBossPosition = new Vector2(12.85f, -1.18f);
+        [SerializeField] private Vector2 forgeCorpsePosition = new Vector2(-6.55f, -2.58f);
+        [SerializeField] private Vector2 blackenedHammerPosition = new Vector2(-0.35f, -1.48f);
+        [SerializeField] private Vector2 chapelWaxPosition = new Vector2(5.95f, -1.08f);
+        [SerializeField] private Vector2 secondNightFirstAmbushPosition = new Vector2(-2.95f, -2.2f);
+        [SerializeField] private Vector2 secondNightSecondAmbushPosition = new Vector2(3.75f, -1.5f);
+        [SerializeField] private Vector2 secondNightBossPosition = new Vector2(7.28f, -1.72f);
         [SerializeField] private float nodeMarkerScale = 0.38f;
         [SerializeField] private float contractMonsterScale = 0.28f;
         [SerializeField] private float contractBossScale = 0.34f;
@@ -55,6 +55,7 @@ namespace WitcherGame
         private bool foundFalseTestimony;
         private bool truthChoiceResolved;
         private bool truthCorrect;
+        private int firstNightChoiceIndex = -1;
         private bool bossSpawned;
         private bool settlementShown;
         private int clearedAmbushCount;
@@ -64,6 +65,7 @@ namespace WitcherGame
         private bool foundChapelWax;
         private bool secondTruthChoiceResolved;
         private bool secondTruthCorrect;
+        private int secondNightChoiceIndex = -1;
         private bool secondBossSpawned;
         private bool secondSettlementShown;
         private int secondClearedAmbushCount;
@@ -157,9 +159,19 @@ namespace WitcherGame
             contractStarted = true;
             questManager = QuestManager.CreateIfMissing();
             dialogueManager = DialogueManager.CreateIfMissing();
+            StartCoroutine(BeginFirstNightSequence());
+        }
+
+        private IEnumerator BeginFirstNightSequence()
+        {
+            player = player == null ? FindObjectOfType<GeraltController>() : player;
+            player?.SetControlEnabled(false);
+            NightPhaseTransition transition = NightPhaseTransition.CreateIfMissing();
+            yield return transition.PlayTransition("第一晚", "老井哭声案", MoveToFirstNightMap);
             StartFirstNightQuest();
             CreateInvestigationNodes();
             StartCoroutine(ShowContractBriefingWhenReady());
+            PlayerInputController.RefreshPlayerControl();
         }
 
         public void BeginSecondNightContract()
@@ -170,11 +182,22 @@ namespace WitcherGame
             }
 
             secondNightStarted = true;
+            contractStarted = true;
             questManager = QuestManager.CreateIfMissing();
             dialogueManager = DialogueManager.CreateIfMissing();
+            StartCoroutine(BeginSecondNightSequence());
+        }
+
+        private IEnumerator BeginSecondNightSequence()
+        {
+            player = player == null ? FindObjectOfType<GeraltController>() : player;
+            player?.SetControlEnabled(false);
+            NightPhaseTransition transition = NightPhaseTransition.CreateIfMissing();
+            yield return transition.PlayTransition("第二晚", "铁匠铺的黑血案", MoveToSecondNightMap);
             StartSecondNightQuest();
             CreateSecondNightNodes();
             StartCoroutine(ShowSecondNightBriefingWhenReady());
+            PlayerInputController.RefreshPlayerControl();
         }
 
         public void InteractWithNode(NightInvestigationNodeId nodeId)
@@ -462,6 +485,39 @@ namespace WitcherGame
             CreateNode(NightInvestigationNodeId.ChapelWax, "教堂黑蜡", chapelWaxPosition, new Color32(80, 70, 116, 230));
         }
 
+        private void MoveToFirstNightMap()
+        {
+            WitcherWorldDirector worldDirector = FindObjectOfType<WitcherWorldDirector>();
+            if (worldDirector != null)
+            {
+                worldDirector.EnterFirstNightMap();
+            }
+        }
+
+        private void MoveToSecondNightMap()
+        {
+            ClearContractObjects();
+            WitcherWorldDirector worldDirector = FindObjectOfType<WitcherWorldDirector>();
+            if (worldDirector != null)
+            {
+                worldDirector.EnterSecondNightMap();
+            }
+        }
+
+        private void ClearContractObjects()
+        {
+            foreach (GameObject contractObject in spawnedContractObjects)
+            {
+                if (contractObject != null)
+                {
+                    Destroy(contractObject);
+                }
+            }
+
+            spawnedContractObjects.Clear();
+            nodes.Clear();
+        }
+
         private void CreateNode(NightInvestigationNodeId id, string displayName, Vector2 position, Color32 color)
         {
             if (nodes.ContainsKey(id))
@@ -639,11 +695,11 @@ namespace WitcherGame
             EnsureChoiceUi();
             StoryDatabase.ChoiceData choice = StoryDatabase.GetChoice(
                 "firstNight.truthChoice",
-                "哭声真正来源是？\nA 女鬼复仇   B 水鬼诱捕   C 村民伪装献祭",
+                "井口哭声停下前，你决定：\nA 封井止哭   B 公开献祭者   C 先救活人",
                 2,
-                "A 女鬼",
-                "B 水鬼",
-                "C 献祭");
+                "A 封井",
+                "B 公开",
+                "C 救人");
             choiceSummaryText.text = choice.Summary;
             SetChoiceLabels(choice.Labels[0], choice.Labels[1], choice.Labels[2]);
             choicePanel.SetActive(true);
@@ -672,10 +728,10 @@ namespace WitcherGame
             EnsureChoiceUi();
             StoryDatabase.ChoiceData choice = StoryDatabase.GetChoice(
                 "secondNight.truthChoice",
-                "第二具尸体为何会行走？\nA 铁匠杀人   B 神父驱魔失败   C 银钉操控尸体",
+                "第二具尸体站起来后，你把真相交给谁？\nA 交出铁匠   B 保住教堂   C 拔掉银钉",
                 2,
                 "A 铁匠",
-                "B 神父",
+                "B 教堂",
                 "C 银钉");
             choiceSummaryText.text = choice.Summary;
             SetChoiceLabels(choice.Labels[0], choice.Labels[1], choice.Labels[2]);
@@ -692,22 +748,15 @@ namespace WitcherGame
             }
 
             truthChoiceResolved = true;
-            StoryDatabase.ChoiceData choice = StoryDatabase.GetChoice("firstNight.truthChoice", string.Empty, 2, "A 女鬼", "B 水鬼", "C 献祭");
+            firstNightChoiceIndex = choiceIndex;
+            StoryDatabase.ChoiceData choice = StoryDatabase.GetChoice("firstNight.truthChoice", string.Empty, 2, "A 封井", "B 公开", "C 救人");
             truthCorrect = choiceIndex == choice.CorrectIndex;
             choicePanel.SetActive(false);
             SetCurrentQuestObjective(ObjectiveDefeatBoss);
 
-            DialogueLine[] lines = truthCorrect
-                ? StoryDatabase.GetDialogue("firstNight.truthCorrect", new[]
-                {
-                    new DialogueLine("猎魔人", "不是女鬼，也不是水鬼。是活人在借哭声掩盖献祭。"),
-                    new DialogueLine("委托", "真相刺穿诅咒，井底怪物露出破绽。")
-                })
-                : StoryDatabase.GetDialogue("firstNight.truthWrong", new[]
-                {
-                    new DialogueLine("猎魔人", "判断还不完整，但线索足够让我活下来。"),
-                    new DialogueLine("委托", "诅咒因此加深，不过黑血和爪痕仍然削弱了它。")
-                });
+            DialogueLine[] lines = StoryDatabase.GetDialogue(
+                GetFirstNightChoiceDialogueId(choiceIndex),
+                GetFirstNightChoiceFallback(choiceIndex));
 
             dialogueManager.StartDialogue(lines, SpawnContractBoss);
         }
@@ -720,24 +769,93 @@ namespace WitcherGame
             }
 
             secondTruthChoiceResolved = true;
-            StoryDatabase.ChoiceData choice = StoryDatabase.GetChoice("secondNight.truthChoice", string.Empty, 2, "A 铁匠", "B 神父", "C 银钉");
+            secondNightChoiceIndex = choiceIndex;
+            StoryDatabase.ChoiceData choice = StoryDatabase.GetChoice("secondNight.truthChoice", string.Empty, 2, "A 铁匠", "B 教堂", "C 银钉");
             secondTruthCorrect = choiceIndex == choice.CorrectIndex;
             choicePanel.SetActive(false);
             SetCurrentQuestObjective(ObjectiveSecondDefeatBoss);
 
-            DialogueLine[] lines = secondTruthCorrect
-                ? StoryDatabase.GetDialogue("secondNight.truthCorrect", new[]
-                {
-                    new DialogueLine("猎魔人", "不是铁匠，也不是驱魔失败。尸体是被银钉和黑蜡牵起来的。"),
-                    new DialogueLine("委托", "你说出真相时，远处教堂钟声断了一拍。黑钉傀儡的护盾碎开一层。")
-                })
-                : StoryDatabase.GetDialogue("secondNight.truthWrong", new[]
-                {
-                    new DialogueLine("猎魔人", "还差一块线索。但黑血、铁锤和黑蜡已经足够让我找到操控者。"),
-                    new DialogueLine("委托", "错误判断让傀儡更凶，但它仍留下了火与银的破绽。")
-                });
+            DialogueLine[] lines = StoryDatabase.GetDialogue(
+                GetSecondNightChoiceDialogueId(choiceIndex),
+                GetSecondNightChoiceFallback(choiceIndex));
 
             dialogueManager.StartDialogue(lines, SpawnSecondNightBoss);
+        }
+
+        private static string GetFirstNightChoiceDialogueId(int choiceIndex)
+        {
+            switch (choiceIndex)
+            {
+                case 0:
+                    return "firstNight.choiceSealWell";
+                case 1:
+                    return "firstNight.choiceNameVillage";
+                default:
+                    return "firstNight.choiceSaveLiving";
+            }
+        }
+
+        private static DialogueLine[] GetFirstNightChoiceFallback(int choiceIndex)
+        {
+            switch (choiceIndex)
+            {
+                case 0:
+                    return new[]
+                    {
+                        new DialogueLine("猎魔人", "井盖落下时，哭声像被塞进石头里。村口的人第一次敢靠近火堆。"),
+                        new DialogueLine("寡妇", "她还在下面。你们只是听不见了。")
+                    };
+                case 1:
+                    return new[]
+                    {
+                        new DialogueLine("猎魔人", "献祭者的名字被说出口后，村民都低下头，像突然认得自己的鞋。"),
+                        new DialogueLine("委托", "井底的哭声变轻了。寡妇家的窗却再也没有亮。")
+                    };
+                default:
+                    return new[]
+                    {
+                        new DialogueLine("猎魔人", "你把还活着的人从井边拖开。哭声没有停，却开始给你让路。"),
+                        new DialogueLine("委托", "井水翻起白雾，像有人在下面松了一口气。")
+                    };
+            }
+        }
+
+        private static string GetSecondNightChoiceDialogueId(int choiceIndex)
+        {
+            switch (choiceIndex)
+            {
+                case 0:
+                    return "secondNight.choiceBlameSmith";
+                case 1:
+                    return "secondNight.choiceKeepChurch";
+                default:
+                    return "secondNight.choicePullNails";
+            }
+        }
+
+        private static DialogueLine[] GetSecondNightChoiceFallback(int choiceIndex)
+        {
+            switch (choiceIndex)
+            {
+                case 0:
+                    return new[]
+                    {
+                        new DialogueLine("铁匠", "他们把铁匠铺的火灭了。没人问炉灰里为什么有教堂的蜡。"),
+                        new DialogueLine("猎魔人", "尸体听见这个结果，反而站得更直。")
+                    };
+                case 1:
+                    return new[]
+                    {
+                        new DialogueLine("教堂", "钟声响了三下，村民跪下时很安静。黑蜡沿台阶往上爬。"),
+                        new DialogueLine("猎魔人", "有些门被保住了。也有些东西被关在门后。")
+                    };
+                default:
+                    return new[]
+                    {
+                        new DialogueLine("猎魔人", "第一枚银钉拔出来时，尸体倒回泥里，像终于记起自己已经死了。"),
+                        new DialogueLine("委托", "铁匠铺的火重新亮起。教堂没有开门。")
+                    };
+            }
         }
 
         private void SpawnAmbush(Vector2 position, TurnBasedEnemyVisualKind kind, int count, string title)
@@ -767,10 +885,28 @@ namespace WitcherGame
             int attackPenalty = truthCorrect ? 3 : 1;
             int defensePenalty = foundFalseTestimony ? 2 : 0;
             int shieldAdjustment = foundClawMarks ? -1 : 0;
-            if (truthCorrect)
+            string openingNote;
+            switch (firstNightChoiceIndex)
             {
-                healthPenalty += 8;
-                shieldAdjustment -= 1;
+                case 0:
+                    healthPenalty += 3;
+                    attackPenalty = 0;
+                    defensePenalty += 1;
+                    shieldAdjustment += 1;
+                    openingNote = "选择后果：井口被封，村民安静下来；井底哭魂在黑暗里撞得更急。";
+                    break;
+                case 1:
+                    healthPenalty += 10;
+                    attackPenalty = 2;
+                    defensePenalty += foundFalseTestimony ? 3 : 1;
+                    openingNote = "选择后果：献祭者的名字被说出口，伪装变薄；村里有人开始恨你。";
+                    break;
+                default:
+                    healthPenalty += 16;
+                    attackPenalty = 3;
+                    shieldAdjustment -= 2;
+                    openingNote = "选择后果：你先救活人，哭声仍在；井底哭魂露出最深的一道裂缝。";
+                    break;
             }
 
             string[] weaknesses = foundBlackBlood
@@ -779,10 +915,6 @@ namespace WitcherGame
             bool[] discovered = foundBlackBlood
                 ? new[] { true, false, false, true, false }
                 : new[] { false, false, false, true, false };
-            string openingNote = truthCorrect
-                ? "调查结论正确：井底哭魂开局破绽，护盾削弱。"
-                : "判断有误：诅咒加深，但线索仍削弱了怪物。";
-
             trigger.ApplyInvestigationModifiers(healthPenalty, attackPenalty, defensePenalty, shieldAdjustment, weaknesses, discovered, openingNote);
             trigger.ApplyMapScale(contractBossScale);
             NightContractEncounterWatcher watcher = encounterObject.AddComponent<NightContractEncounterWatcher>();
@@ -806,10 +938,27 @@ namespace WitcherGame
             int attackPenalty = secondTruthCorrect ? 3 : 1;
             int defensePenalty = foundBlackenedHammer ? 2 : 0;
             int shieldAdjustment = foundChapelWax ? -1 : 0;
-            if (secondTruthCorrect)
+            string openingNote;
+            switch (secondNightChoiceIndex)
             {
-                healthPenalty += 10;
-                shieldAdjustment -= 1;
+                case 0:
+                    healthPenalty += 2;
+                    attackPenalty = 0;
+                    shieldAdjustment += 1;
+                    openingNote = "选择后果：铁匠成了村口的答案；黑钉傀儡像收到命令一样站稳。";
+                    break;
+                case 1:
+                    healthPenalty += 6;
+                    attackPenalty = 1;
+                    defensePenalty += 2;
+                    openingNote = "选择后果：教堂保住了门面；黑蜡也保住了傀儡的骨架。";
+                    break;
+                default:
+                    healthPenalty += 14;
+                    attackPenalty = 3;
+                    shieldAdjustment -= 2;
+                    openingNote = "选择后果：银钉被拔出，尸体倒下；黑钉傀儡失去一半操控节奏。";
+                    break;
             }
 
             string[] weaknesses = foundBlackenedHammer
@@ -818,10 +967,6 @@ namespace WitcherGame
             bool[] discovered = foundBlackenedHammer
                 ? new[] { true, true, true, false, false }
                 : new[] { true, false, true, false, false };
-            string openingNote = secondTruthCorrect
-                ? "调查结论正确：黑钉傀儡失去操控节奏，护盾削弱。"
-                : "判断有误：黑钉傀儡攻势更狠，但火与银的线索仍然有效。";
-
             trigger.ApplyInvestigationModifiers(healthPenalty, attackPenalty, defensePenalty, shieldAdjustment, weaknesses, discovered, openingNote);
             trigger.ApplyMapScale(contractBossScale);
             NightContractEncounterWatcher watcher = encounterObject.AddComponent<NightContractEncounterWatcher>();
@@ -838,11 +983,9 @@ namespace WitcherGame
             }
 
             SetCurrentQuestObjective(ObjectiveReturnVillage, true);
-            DialogueLine[] lines = StoryDatabase.GetDialogue("firstNight.settlement", new[]
-            {
-                new DialogueLine("委托结算", "村民把最后的银币放在桌上。没人欢呼，因为井口的哭声停得太突然。"),
-                new DialogueLine("第二晚钩子", "清晨，村口又多了一具尸体。这一次，尸体穿着铁匠的围裙。")
-            });
+            DialogueLine[] lines = StoryDatabase.GetDialogue(
+                GetFirstNightSettlementDialogueId(),
+                GetFirstNightSettlementFallback());
             dialogueManager.StartDialogue(lines, BeginSecondNightContract);
         }
 
@@ -855,12 +998,86 @@ namespace WitcherGame
             }
 
             SetCurrentQuestObjective(ObjectiveSecondReturnVillage, true);
-            DialogueLine[] lines = StoryDatabase.GetDialogue("secondNight.settlement", new[]
-            {
-                new DialogueLine("委托结算", "黑钉傀儡倒下后，银钉没有融化，而是全都指向教堂地下。"),
-                new DialogueLine("第三晚钩子", "夜里，神父房间的灯亮着。可守夜人说，神父三天前就已经死了。")
-            });
+            DialogueLine[] lines = StoryDatabase.GetDialogue(
+                GetSecondNightSettlementDialogueId(),
+                GetSecondNightSettlementFallback());
             dialogueManager.StartDialogue(lines);
+        }
+
+        private string GetFirstNightSettlementDialogueId()
+        {
+            switch (firstNightChoiceIndex)
+            {
+                case 0:
+                    return "firstNight.settlementSealWell";
+                case 1:
+                    return "firstNight.settlementNameVillage";
+                default:
+                    return "firstNight.settlementSaveLiving";
+            }
+        }
+
+        private DialogueLine[] GetFirstNightSettlementFallback()
+        {
+            switch (firstNightChoiceIndex)
+            {
+                case 0:
+                    return new[]
+                    {
+                        new DialogueLine("委托结算", "村民把银币放在桌上。那一晚没人再听见哭声，连寡妇也没有。"),
+                        new DialogueLine("第二晚钩子", "清晨，封井的铁链断了一节。村口又多了一具穿着铁匠围裙的尸体。")
+                    };
+                case 1:
+                    return new[]
+                    {
+                        new DialogueLine("委托结算", "银币被推到你面前时，几个人离席了。寡妇家的门被钉上一块木板。"),
+                        new DialogueLine("第二晚钩子", "天亮前，铁匠铺的炉火自己灭了。村口多了一具穿着铁匠围裙的尸体。")
+                    };
+                default:
+                    return new[]
+                    {
+                        new DialogueLine("委托结算", "孩子醒来后没有说话，只把一枚湿透的银币塞进你手心。"),
+                        new DialogueLine("第二晚钩子", "清晨，井边多了一排小脚印。脚印尽头，是一具穿着铁匠围裙的尸体。")
+                    };
+            }
+        }
+
+        private string GetSecondNightSettlementDialogueId()
+        {
+            switch (secondNightChoiceIndex)
+            {
+                case 0:
+                    return "secondNight.settlementBlameSmith";
+                case 1:
+                    return "secondNight.settlementKeepChurch";
+                default:
+                    return "secondNight.settlementPullNails";
+            }
+        }
+
+        private DialogueLine[] GetSecondNightSettlementFallback()
+        {
+            switch (secondNightChoiceIndex)
+            {
+                case 0:
+                    return new[]
+                    {
+                        new DialogueLine("委托结算", "铁匠铺门口堆满石头。村民说这样睡得踏实些。"),
+                        new DialogueLine("第三晚钩子", "夜里，石头缝里渗出黑蜡。教堂地下传来敲铁的声音。")
+                    };
+                case 1:
+                    return new[]
+                    {
+                        new DialogueLine("委托结算", "神父房间的灯亮了一整夜。村民路过时都放轻脚步。"),
+                        new DialogueLine("第三晚钩子", "天快亮时，钟楼落下一根银钉，钉尖指向地下。")
+                    };
+                default:
+                    return new[]
+                    {
+                        new DialogueLine("委托结算", "傀儡倒下后，铁匠坐在炉前，把每一枚银钉都敲弯。"),
+                        new DialogueLine("第三晚钩子", "夜里，教堂门自己开了。门内没有神父，只有一排刚点燃的蜡。")
+                    };
+            }
         }
 
         private GameObject CreateEncounterObject(string objectName, Vector2 position, TurnBasedEnemyVisualKind kind)

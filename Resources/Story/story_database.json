@@ -15,14 +15,14 @@
     { "id": "firstNight.investigateMill", "text": "调查老磨坊的爪痕，削弱护盾" },
     { "id": "firstNight.investigateWidow", "text": "询问寡妇家的假供词，判断真相" },
     { "id": "firstNight.clearAmbush", "text": "击败被哭声吸引来的怪物" },
-    { "id": "firstNight.truthChoice", "text": "判断哭声真正来源" },
+    { "id": "firstNight.truthChoice", "text": "决定如何处理井口哭声" },
     { "id": "firstNight.defeatBoss", "text": "击败井底哭魂" },
     { "id": "firstNight.returnVillage", "text": "回村结算，等待第二晚异变" },
     { "id": "secondNight.inspectCorpse", "text": "检查村口铁匠围裙尸体" },
     { "id": "secondNight.inspectHammer", "text": "调查铁匠铺染黑的锤子" },
     { "id": "secondNight.clearAmbush", "text": "击败被黑血引来的怪物" },
     { "id": "secondNight.inspectChapel", "text": "调查教堂门口的黑蜡" },
-    { "id": "secondNight.truthChoice", "text": "判断第二具尸体为何会行走" },
+    { "id": "secondNight.truthChoice", "text": "决定如何处理第二具行走尸体" },
     { "id": "secondNight.defeatBoss", "text": "击败黑钉傀儡" },
     { "id": "secondNight.returnVillage", "text": "回村结算，记录第三晚异变" }
   ],
@@ -55,14 +55,14 @@
   "choices": [
     {
       "id": "firstNight.truthChoice",
-      "summary": "哭声真正来源是？\nA 女鬼复仇   B 水鬼诱捕   C 村民伪装献祭",
-      "labels": [ "A 女鬼", "B 水鬼", "C 献祭" ],
+      "summary": "井口哭声停下前，你决定：\nA 封井止哭   B 公开献祭者   C 先救活人",
+      "labels": [ "A 封井", "B 公开", "C 救人" ],
       "correctIndex": 2
     },
     {
       "id": "secondNight.truthChoice",
-      "summary": "第二具尸体为何会行走？\nA 铁匠杀人   B 神父驱魔失败   C 银钉操控尸体",
-      "labels": [ "A 铁匠", "B 神父", "C 银钉" ],
+      "summary": "第二具尸体站起来后，你把真相交给谁？\nA 交出铁匠   B 保住教堂   C 拔掉银钉",
+      "labels": [ "A 铁匠", "B 教堂", "C 银钉" ],
       "correctIndex": 2
     }
   ],
@@ -117,24 +117,45 @@
       ]
     },
     {
-      "id": "firstNight.truthCorrect",
+      "id": "firstNight.choiceSealWell",
       "lines": [
-        { "speaker": "猎魔人", "text": "不是女鬼，也不是水鬼。是活人在借哭声掩盖献祭。" },
-        { "speaker": "委托", "text": "真相刺穿诅咒，井底怪物露出破绽。" }
+        { "speaker": "猎魔人", "text": "井盖落下时，哭声像被塞进石头里。村口的人第一次敢靠近火堆。" },
+        { "speaker": "寡妇", "text": "她还在下面。你们只是听不见了。" }
       ]
     },
     {
-      "id": "firstNight.truthWrong",
+      "id": "firstNight.choiceNameVillage",
       "lines": [
-        { "speaker": "猎魔人", "text": "判断还不完整，但线索足够让我活下来。" },
-        { "speaker": "委托", "text": "诅咒因此加深，不过黑血和爪痕仍然削弱了它。" }
+        { "speaker": "猎魔人", "text": "献祭者的名字被说出口后，村民都低下头，像突然认得自己的鞋。" },
+        { "speaker": "委托", "text": "井底的哭声变轻了。寡妇家的窗却再也没有亮。" }
       ]
     },
     {
-      "id": "firstNight.settlement",
+      "id": "firstNight.choiceSaveLiving",
       "lines": [
-        { "speaker": "委托结算", "text": "村民把最后的银币放在桌上。没人欢呼，因为井口的哭声停得太突然。" },
-        { "speaker": "第二晚钩子", "text": "清晨，村口又多了一具尸体。这一次，尸体穿着铁匠的围裙。" }
+        { "speaker": "猎魔人", "text": "你把还活着的人从井边拖开。哭声没有停，却开始给你让路。" },
+        { "speaker": "委托", "text": "井水翻起白雾，像有人在下面松了一口气。" }
+      ]
+    },
+    {
+      "id": "firstNight.settlementSealWell",
+      "lines": [
+        { "speaker": "委托结算", "text": "村民把银币放在桌上。那一晚没人再听见哭声，连寡妇也没有。" },
+        { "speaker": "第二晚钩子", "text": "清晨，封井的铁链断了一节。村口又多了一具穿着铁匠围裙的尸体。" }
+      ]
+    },
+    {
+      "id": "firstNight.settlementNameVillage",
+      "lines": [
+        { "speaker": "委托结算", "text": "银币被推到你面前时，几个人离席了。寡妇家的门被钉上一块木板。" },
+        { "speaker": "第二晚钩子", "text": "天亮前，铁匠铺的炉火自己灭了。村口多了一具穿着铁匠围裙的尸体。" }
+      ]
+    },
+    {
+      "id": "firstNight.settlementSaveLiving",
+      "lines": [
+        { "speaker": "委托结算", "text": "孩子醒来后没有说话，只把一枚湿透的银币塞进你手心。" },
+        { "speaker": "第二晚钩子", "text": "清晨，井边多了一排小脚印。脚印尽头，是一具穿着铁匠围裙的尸体。" }
       ]
     },
     {
@@ -166,24 +187,45 @@
       ]
     },
     {
-      "id": "secondNight.truthCorrect",
+      "id": "secondNight.choiceBlameSmith",
       "lines": [
-        { "speaker": "猎魔人", "text": "不是铁匠，也不是驱魔失败。尸体是被银钉和黑蜡牵起来的。" },
-        { "speaker": "委托", "text": "你说出真相时，远处教堂钟声断了一拍。黑钉傀儡的护盾碎开一层。" }
+        { "speaker": "铁匠", "text": "他们把铁匠铺的火灭了。没人问炉灰里为什么有教堂的蜡。" },
+        { "speaker": "猎魔人", "text": "尸体听见这个结果，反而站得更直。" }
       ]
     },
     {
-      "id": "secondNight.truthWrong",
+      "id": "secondNight.choiceKeepChurch",
       "lines": [
-        { "speaker": "猎魔人", "text": "还差一块线索。但黑血、铁锤和黑蜡已经足够让我找到操控者。" },
-        { "speaker": "委托", "text": "错误判断让傀儡更凶，但它仍留下了火与银的破绽。" }
+        { "speaker": "教堂", "text": "钟声响了三下，村民跪下时很安静。黑蜡沿台阶往上爬。" },
+        { "speaker": "猎魔人", "text": "有些门被保住了。也有些东西被关在门后。" }
       ]
     },
     {
-      "id": "secondNight.settlement",
+      "id": "secondNight.choicePullNails",
       "lines": [
-        { "speaker": "委托结算", "text": "黑钉傀儡倒下后，银钉没有融化，而是全都指向教堂地下。" },
-        { "speaker": "第三晚钩子", "text": "夜里，神父房间的灯亮着。可守夜人说，神父三天前就已经死了。" }
+        { "speaker": "猎魔人", "text": "第一枚银钉拔出来时，尸体倒回泥里，像终于记起自己已经死了。" },
+        { "speaker": "委托", "text": "铁匠铺的火重新亮起。教堂没有开门。" }
+      ]
+    },
+    {
+      "id": "secondNight.settlementBlameSmith",
+      "lines": [
+        { "speaker": "委托结算", "text": "铁匠铺门口堆满石头。村民说这样睡得踏实些。" },
+        { "speaker": "第三晚钩子", "text": "夜里，石头缝里渗出黑蜡。教堂地下传来敲铁的声音。" }
+      ]
+    },
+    {
+      "id": "secondNight.settlementKeepChurch",
+      "lines": [
+        { "speaker": "委托结算", "text": "神父房间的灯亮了一整夜。村民路过时都放轻脚步。" },
+        { "speaker": "第三晚钩子", "text": "天快亮时，钟楼落下一根银钉，钉尖指向地下。" }
+      ]
+    },
+    {
+      "id": "secondNight.settlementPullNails",
+      "lines": [
+        { "speaker": "委托结算", "text": "傀儡倒下后，铁匠坐在炉前，把每一枚银钉都敲弯。" },
+        { "speaker": "第三晚钩子", "text": "夜里，教堂门自己开了。门内没有神父，只有一排刚点燃的蜡。" }
       ]
     }
   ]

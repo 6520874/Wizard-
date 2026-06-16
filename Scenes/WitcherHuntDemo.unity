@@ -154,22 +154,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 18579854418c4047a5beac733e248a98, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  worldCenter: {x: 24, y: -0.35}
-  worldWidth: 66
-  worldHeight: 9.4
-  sortingOrder: -45
-  atmosphereTint:
-    serializedVersion: 2
-    rgba: 1745949482
-  fogColor:
-    serializedVersion: 2
-    rgba: 1382314104
-  emberColor:
-    serializedVersion: 2
-    rgba: 2485408480
-  fogStrength: 0.48
-  vignetteStrength: 0.88
-  emberStrength: 0.78
 --- !u!114 &552038929
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -293,14 +277,18 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   playOnStart: 0
-  skipIntroNarrationAndDialogue: 0
-  startFirstQuestWhenIntroSkipped: 0
+  skipIntroNarrationAndDialogue: 1
+  startFirstQuestWhenIntroSkipped: 1
   typewriterCharactersPerSecond: 28
   narrationLines:
   - "\u9ED1\u6708\u5347\u8D77\u540E\u7684\u7B2C\u4E03\u4E2A\u51AC\u5929\uFF0C\u5317\u5883\u7684\u6751\u5E84\u5F00\u59CB\u4E00\u4E2A\u63A5\u4E00\u4E2A\u6C89\u9ED8\u3002"
   - "\u6709\u4EBA\u8BF4\uFF0C\u662F\u761F\u75AB\u3002"
   - "\u6709\u4EBA\u8BF4\uFF0C\u662F\u72FC\u7FA4\u3002"
   - "\u4F46\u730E\u9B54\u4EBA\u77E5\u9053\u2026\u2026\u771F\u6B63\u4F1A\u5403\u4EBA\u7684\u4E1C\u897F\uFF0C\u5F80\u5F80\u62AB\u7740\u4EBA\u7684\u76AE\u3002"
+  openingMusicResourcePath: Music/DarkPlace_Opening
+  openingMusicVolume: 0.42
+  musicFadeInSeconds: 1.8
+  musicFadeOutSeconds: 0.9
   villageSceneName: 
   openingPanel: {fileID: 0}
   narrationText: {fileID: 0}
@@ -366,13 +354,14 @@ MonoBehaviour:
   maxHealth: 120
   maxMana: 100
   manaRegenPerSecond: 11
-  bossHitDamage: 5
   dashSpeed: 12
   dashDuration: 0.16
   dashCooldown: 0.55
   dashManaCost: 18
   healManaCost: 35
   healAmount: 22
+  clickToMoveEnabled: 1
+  clickMoveStopDistance: 0.08
 --- !u!61 &1129717109
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -567,6 +556,8 @@ MonoBehaviour:
   maxStageX: 55.6
   minStageY: -2.35
   maxStageY: 3.8
+  villageMonsterScale: 0.36
+  villageBossScale: 0.32
   fixedEncounterPoints:
   - kind: 2
     position: {x: 5.8, y: -1.55}
