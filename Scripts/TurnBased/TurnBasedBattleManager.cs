@@ -1034,14 +1034,12 @@ namespace WitcherGame
 
         private int GetPlayerAttack()
         {
-            playerInventory = playerInventory == null && player != null ? PlayerInventory.CreateIfMissing(player) : playerInventory;
-            return playerAttack + (playerInventory == null ? 0 : playerInventory.AttackBonus);
+            return playerAttack;
         }
 
         private int GetPlayerDefense()
         {
-            playerInventory = playerInventory == null && player != null ? PlayerInventory.CreateIfMissing(player) : playerInventory;
-            return playerDefense + (playerInventory == null ? 0 : playerInventory.DefenseBonus);
+            return playerDefense;
         }
 
         private IEnumerator ConsumePlayerStatusTurnsWithFeedback()

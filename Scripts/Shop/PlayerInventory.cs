@@ -4,23 +4,17 @@ using UnityEngine;
 
 namespace WitcherGame
 {
-    // 中文说明：保存玩家金币和已购买装备，后续可接入正式背包与属性系统。
+    // 中文说明：保存玩家金币、经验和战利品，后续可接入正式背包系统。
     public class PlayerInventory : MonoBehaviour
     {
         private const int DefaultStartingGold = 180;
 
         [SerializeField] private int gold = DefaultStartingGold;
         [SerializeField] private int experience;
-        [SerializeField] private int attackBonus;
-        [SerializeField] private int defenseBonus;
-        [SerializeField] private List<string> ownedEquipment = new List<string>();
         [SerializeField] private List<string> ownedLoot = new List<string>();
 
         public int Gold => gold;
         public int Experience => experience;
-        public int AttackBonus => attackBonus;
-        public int DefenseBonus => defenseBonus;
-        public IReadOnlyList<string> OwnedEquipment => ownedEquipment;
         public IReadOnlyList<string> OwnedLoot => ownedLoot;
         public event Action InventoryChanged;
 
@@ -38,40 +32,6 @@ namespace WitcherGame
             }
 
             return inventory;
-        }
-
-        public bool HasEquipment(string itemName)
-        {
-            return !string.IsNullOrEmpty(itemName) && ownedEquipment.Contains(itemName);
-        }
-
-        public bool TryPurchase(ShopItemData item, out string message)
-        {
-            if (item == null)
-            {
-                message = GameText.Shop.MissingItem;
-                return false;
-            }
-
-            if (HasEquipment(item.ItemName))
-            {
-                message = GameText.Shop.AlreadyOwnedItem;
-                return false;
-            }
-
-            if (gold < item.Price)
-            {
-                message = GameText.Shop.NotEnoughGold;
-                return false;
-            }
-
-            gold -= item.Price;
-            ownedEquipment.Add(item.ItemName);
-            attackBonus += Math.Max(0, item.AttackBonus);
-            defenseBonus += Math.Max(0, item.DefenseBonus);
-            InventoryChanged?.Invoke();
-            message = GameText.Shop.PurchaseSuccess(item.ItemName, item.GetBonusText());
-            return true;
         }
 
         public void AddGold(int amount)

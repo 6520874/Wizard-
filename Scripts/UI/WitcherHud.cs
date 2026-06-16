@@ -26,8 +26,6 @@ namespace WitcherGame
         private Text roomText;
         private Text goldValueText;
         private Text experienceValueText;
-        private Text attackValueText;
-        private Text defenseValueText;
         private GeraltController subscribedPlayer;
         private PlayerInventory playerInventory;
         private PlayerInventory subscribedInventory;
@@ -171,8 +169,6 @@ namespace WitcherGame
 
             goldValueText = CreateStatusValueText("Gold Value", root.transform, new Vector2(119f, -260f));
             experienceValueText = CreateStatusValueText("Experience Value", root.transform, new Vector2(250f, -260f));
-            attackValueText = CreateStatusValueText("Attack Bonus Value", root.transform, new Vector2(381f, -260f));
-            defenseValueText = CreateStatusValueText("Defense Bonus Value", root.transform, new Vector2(512f, -260f));
 
             BuildBossBar();
             BuildGameOverPanel();
@@ -246,7 +242,7 @@ namespace WitcherGame
 
         private void UpdateInventoryText()
         {
-            if (goldValueText == null || experienceValueText == null || attackValueText == null || defenseValueText == null)
+            if (goldValueText == null || experienceValueText == null)
             {
                 return;
             }
@@ -256,15 +252,11 @@ namespace WitcherGame
             {
                 goldValueText.text = "0";
                 experienceValueText.text = "0";
-                attackValueText.text = "+0";
-                defenseValueText.text = "+0";
                 return;
             }
 
             goldValueText.text = playerInventory.Gold.ToString();
             experienceValueText.text = playerInventory.Experience.ToString();
-            attackValueText.text = $"+{playerInventory.AttackBonus}";
-            defenseValueText.text = $"+{playerInventory.DefenseBonus}";
         }
 
         private void BuildBossBar()

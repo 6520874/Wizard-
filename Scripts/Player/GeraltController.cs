@@ -95,7 +95,7 @@ namespace WitcherGame
 
             UpdateFacingForMovement(movement);
 
-            if (Input.GetKeyDown(KeyCode.E) && !WitcherEquipmentShopTrigger.ShouldBlockPlayerHealInput)
+            if (Input.GetKeyDown(KeyCode.E))
             {
                 TryHeal();
             }

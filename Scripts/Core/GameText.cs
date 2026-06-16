@@ -1,6 +1,6 @@
 namespace WitcherGame
 {
-    // 中文说明：集中管理除剧情数据文件之外的固定界面、战斗、商店和系统文案。
+    // 中文说明：集中管理除剧情数据文件之外的固定界面、战斗和系统文案。
     public static class GameText
     {
         public const string HunterName = "猎魔人";
@@ -42,10 +42,6 @@ namespace WitcherGame
             public static string GoldAmount(int amount) => $"金币 {amount}";
             public static string GoldGain(int amount) => $"+{amount} 金币";
             public static string ExperienceGain(int amount) => $"+{amount} XP";
-            public static string AttackBonus(int amount) => $"攻击 +{amount}";
-            public static string DefenseBonus(int amount) => $"防御 +{amount}";
-            public static string AttackDefenseBonus(int attack, int defense) => $"攻击 +{attack}  防御 +{defense}";
-            public static string NoBonus => "无属性加成";
         }
 
         public static class Opening
@@ -77,44 +73,16 @@ namespace WitcherGame
             public const string PendingPrefix = "□ ";
         }
 
-        public static class Shop
-        {
-            public const string KeeperName = "铁匠";
-            public const string KeeperRole = "武器 / 护甲";
-            public const string WelcomeLine = "欢迎，猎魔人。看看有没有你趁手的家伙。";
-            public const string AnythingElseLine = "还需要别的吗？";
-            public const string BuyEquipment = "购买装备";
-            public const string ShopTitle = "乌鸦铁砧装备店";
-            public const string ShopInputHint = "方向键选择，回车购买，Esc 返回。";
-            public const string ReturnToDialogue = "返回";
-            public const string InteractPrompt = "按 E 交互：装备店";
-            public const string OwnedNone = "已拥有：暂无";
-            public const string AlreadyOwnedSuffix = "    已拥有";
-            public const string MissingItem = "商品不存在";
-            public const string AlreadyOwnedItem = "你已经拥有这件装备";
-            public const string NotEnoughGold = "金币不足";
-
-            public static string PurchaseSuccess(string itemName, string bonusText) => $"购买成功：{itemName}（{bonusText}）";
-            public static string ItemRow(string itemName, int price, string bonusText) => $"{itemName}    {price} 金币    {bonusText}";
-            public static string GoldSpent(int price) => $"-{price} 金币";
-            public static string OwnedSummary(string equipmentText, int attackBonus, int defenseBonus, int experience, int lootCount)
-            {
-                return $"已拥有：{equipmentText}\n装备加成：攻击 +{attackBonus}  防御 +{defenseBonus}\n经验：{experience}  战利品：{lootCount}";
-            }
-        }
-
         public static class Menu
         {
             public const string CommandTitle = "猎魔命令";
             public const string Status = "状态";
-            public const string Equipment = "装备";
             public const string Item = "道具";
             public const string Skill = "技能";
             public const string Party = "队伍";
             public const string Talk = "对话";
             public const string System = "系统";
             public const string StatusDescription = "查看队伍生命、魔力、基础属性与当前任务。";
-            public const string EquipmentDescription = "调整武器、护甲、饰品与圣物核心。";
             public const string ItemDescription = "背包系统预留：药剂、委托物品和战利品将从这里使用。";
             public const string SkillDescription = "查看猎魔法印、女术士法术、血魔法和怪物伙伴技能。";
             public const string PartyDescription = "查看当前队伍成员与怪物伙伴预留位。";
@@ -128,27 +96,7 @@ namespace WitcherGame
             public const string PartyStatusHeader = "队伍状态";
             public const string SkillsHeader = "技能";
             public const string PartyManageHeader = "队伍管理";
-            public const string HunterOnlyPartyRule = "当前队伍规则：只有猎魔人一个人上阵；其他角色保留为剧情/装备成员，后续版本再开放参战。";
-        }
-
-        public static class Equipment
-        {
-            public const string PartyTitle = "队伍";
-            public const string EquipmentTitle = "装备";
-            public const string NoEditableMember = "暂无可编辑成员。";
-            public const string CloseHint = "Esc 关闭";
-            public const string HelpHint = "↑↓ 选择成员    ←→ 装备槽    Enter 更换装备    当前版本仅猎魔人上阵    Esc 关闭";
-            public const string SlotWeapon = "武器";
-            public const string SlotArmor = "护甲";
-            public const string SlotAccessory1 = "饰品 1";
-            public const string SlotAccessory2 = "饰品 2";
-            public const string SlotRelicCore = "圣物 / 魔法核心";
-
-            public static string MemberTitle(string memberName, string state) => $"{memberName} 装备  {state}";
-            public static string MemberRow(string memberName, string joinedState, string lockedText, bool selected)
-            {
-                return selected ? $"> {memberName}  {joinedState}{lockedText}" : $"  {memberName}  {joinedState}{lockedText}";
-            }
+            public const string HunterOnlyPartyRule = "当前队伍规则：只有猎魔人一个人上阵；其他角色保留为剧情成员，后续版本再开放参战。";
         }
 
         public static class Hud

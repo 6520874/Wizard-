@@ -37,23 +37,6 @@ namespace WitcherGame.Tests
         }
 
         [Test]
-        public void Inventory_PurchaseEquipment_AddsCombatBonuses()
-        {
-            GameObject inventoryObject = new GameObject("Inventory Test");
-            PlayerInventory inventory = inventoryObject.AddComponent<PlayerInventory>();
-            ShopItemData sword = new ShopItemData("猎人长剑", 120, 7, 0);
-
-            bool purchased = inventory.TryPurchase(sword, out string message);
-
-            Assert.IsTrue(purchased, message);
-            Assert.AreEqual(60, inventory.Gold);
-            Assert.AreEqual(7, inventory.AttackBonus);
-            Assert.AreEqual(0, inventory.DefenseBonus);
-            Assert.IsTrue(inventory.HasEquipment("猎人长剑"));
-            Object.DestroyImmediate(inventoryObject);
-        }
-
-        [Test]
         public void Inventory_AddBattleRewards_StoresGoldExperienceAndLoot()
         {
             GameObject inventoryObject = new GameObject("Reward Test");
@@ -169,15 +152,15 @@ namespace WitcherGame.Tests
         }
 
         [Test]
-        public void PartyMember_EquipmentBonuses_RefreshDerivedStats()
+        public void PartyMember_TotalStats_UseBaseStats()
         {
             PartyMember member = new PartyMember("测试猎人", 1, 100, 30, 10, 5, 4, 8, 0.05f, true);
 
-            member.CurrentEquipment.Weapon = new EquipmentItem("测试剑", EquipmentSlot.Weapon, 0, 0, 6, 0, 0, 1, 0.02f);
-
-            Assert.AreEqual(16, member.TotalAttack);
-            Assert.AreEqual(9, member.TotalSpeed);
-            Assert.AreEqual(0.07f, member.TotalCriticalRate, 0.001f);
+            Assert.AreEqual(100, member.TotalMaxHP);
+            Assert.AreEqual(30, member.TotalMaxMP);
+            Assert.AreEqual(10, member.TotalAttack);
+            Assert.AreEqual(8, member.TotalSpeed);
+            Assert.AreEqual(0.05f, member.TotalCriticalRate, 0.001f);
         }
 
         [Test]

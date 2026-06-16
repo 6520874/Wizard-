@@ -90,7 +90,6 @@ namespace WitcherGame
             }
 
             ApplyRoomLook(room);
-            WitcherEquipmentShopTrigger.CreateIfMissing();
             NightContractManager.CreateIfMissing(player);
             EnsureCameraFollow(stageBounds);
 

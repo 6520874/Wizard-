@@ -5,7 +5,7 @@ using UnityEngine.UI;
 
 namespace WitcherGame
 {
-    // 中文说明：管理游戏内主菜单，负责打开状态、装备、任务等功能入口。
+    // 中文说明：管理游戏内主菜单，负责打开状态、任务等功能入口。
     public class GameMenuController : MonoBehaviour
     {
         private const string ControllerName = "Game Menu Controller";
@@ -104,7 +104,7 @@ namespace WitcherGame
 
         public void Open()
         {
-            if (EquipmentUIController.IsAnyOpen || DialogueManager.IsDialogueActive)
+            if (DialogueManager.IsDialogueActive)
             {
                 return;
             }
@@ -136,7 +136,6 @@ namespace WitcherGame
             }
 
             commands.Add(new MenuCommand(GameText.Menu.Status, GameText.Menu.StatusDescription, ShowStatus));
-            commands.Add(new MenuCommand(GameText.Menu.Equipment, GameText.Menu.EquipmentDescription, OpenEquipment));
             commands.Add(new MenuCommand(GameText.Menu.Item, GameText.Menu.ItemDescription, () => ShowDetail(GameText.Menu.ItemPlaceholder)));
             commands.Add(new MenuCommand(GameText.Menu.Skill, GameText.Menu.SkillDescription, ShowSkills));
             commands.Add(new MenuCommand(GameText.Menu.Party, GameText.Menu.PartyDescription, ShowParty));
@@ -165,13 +164,6 @@ namespace WitcherGame
             {
                 detailText.text = commands[selectedIndex].Description;
             }
-        }
-
-        private void OpenEquipment()
-        {
-            root.SetActive(false);
-            isOpen = false;
-            EquipmentUIController.CreateIfMissing(player).Open();
         }
 
         private void ShowStatus()

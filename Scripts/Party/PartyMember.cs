@@ -3,105 +3,6 @@ using System.Collections.Generic;
 
 namespace WitcherGame
 {
-    // 中文说明：定义装备可以穿戴到角色身上的槽位。
-    public enum EquipmentSlot
-    {
-        Weapon,
-        Armor,
-        Accessory1,
-        Accessory2,
-        RelicCore
-    }
-
-    [Serializable]
-    // 中文说明：保存一件装备的名称、槽位和属性加成。
-    public class EquipmentItem
-    {
-        public string Name;
-        public EquipmentSlot Slot;
-        public int HpBonus;
-        public int MpBonus;
-        public int AttackBonus;
-        public int DefenseBonus;
-        public int MagicBonus;
-        public int SpeedBonus;
-        public float CriticalBonus;
-
-        public EquipmentItem(string name, EquipmentSlot slot, int hp, int mp, int attack, int defense, int magic, int speed, float critical)
-        {
-            Name = name;
-            Slot = slot;
-            HpBonus = hp;
-            MpBonus = mp;
-            AttackBonus = attack;
-            DefenseBonus = defense;
-            MagicBonus = magic;
-            SpeedBonus = speed;
-            CriticalBonus = critical;
-        }
-    }
-
-    [Serializable]
-    // 中文说明：保存一个队伍成员当前穿戴的全部装备。
-    public class PartyEquipment
-    {
-        public EquipmentItem Weapon;
-        public EquipmentItem Armor;
-        public EquipmentItem Accessory1;
-        public EquipmentItem Accessory2;
-        public EquipmentItem RelicCore;
-
-        public EquipmentItem Get(EquipmentSlot slot)
-        {
-            switch (slot)
-            {
-                case EquipmentSlot.Weapon:
-                    return Weapon;
-                case EquipmentSlot.Armor:
-                    return Armor;
-                case EquipmentSlot.Accessory1:
-                    return Accessory1;
-                case EquipmentSlot.Accessory2:
-                    return Accessory2;
-                case EquipmentSlot.RelicCore:
-                    return RelicCore;
-                default:
-                    return null;
-            }
-        }
-
-        public void Set(EquipmentSlot slot, EquipmentItem item)
-        {
-            switch (slot)
-            {
-                case EquipmentSlot.Weapon:
-                    Weapon = item;
-                    break;
-                case EquipmentSlot.Armor:
-                    Armor = item;
-                    break;
-                case EquipmentSlot.Accessory1:
-                    Accessory1 = item;
-                    break;
-                case EquipmentSlot.Accessory2:
-                    Accessory2 = item;
-                    break;
-                case EquipmentSlot.RelicCore:
-                    RelicCore = item;
-                    break;
-            }
-        }
-
-        public IEnumerable<EquipmentItem> EquippedItems()
-        {
-            if (Weapon != null) yield return Weapon;
-            if (Armor != null) yield return Armor;
-            if (Accessory1 != null) yield return Accessory1;
-            if (Accessory2 != null) yield return Accessory2;
-            if (RelicCore != null) yield return RelicCore;
-        }
-    }
-
     [Serializable]
     // 中文说明：保存队伍成员已学会技能的名称、定位、消耗和说明。
     public class PartySkill
@@ -126,7 +27,7 @@ namespace WitcherGame
     }
 
     [Serializable]
-    // 中文说明：保存一个队伍成员的基础属性、装备、技能和入队状态。
+    // 中文说明：保存一个队伍成员的基础属性、技能和入队状态。
     public class PartyMember
     {
         public string Name;
@@ -141,17 +42,16 @@ namespace WitcherGame
         public int Speed;
         public float CriticalRate;
         public bool IsJoined;
-        public PartyEquipment CurrentEquipment = new PartyEquipment();
         public List<string> Skills = new List<string>();
         public List<PartySkill> SkillDetails = new List<PartySkill>();
 
-        public int TotalMaxHP => MaxHP + Sum(item => item.HpBonus);
-        public int TotalMaxMP => MaxMP + Sum(item => item.MpBonus);
-        public int TotalAttack => Attack + Sum(item => item.AttackBonus);
-        public int TotalDefense => Defense + Sum(item => item.DefenseBonus);
-        public int TotalMagic => Magic + Sum(item => item.MagicBonus);
-        public int TotalSpeed => Speed + Sum(item => item.SpeedBonus);
-        public float TotalCriticalRate => CriticalRate + SumFloat(item => item.CriticalBonus);
+        public int TotalMaxHP => MaxHP;
+        public int TotalMaxMP => MaxMP;
+        public int TotalAttack => Attack;
+        public int TotalDefense => Defense;
+        public int TotalMagic => Magic;
+        public int TotalSpeed => Speed;
+        public float TotalCriticalRate => CriticalRate;
 
         public PartyMember(string name, int level, int maxHp, int maxMp, int attack, int defense, int magic, int speed, float criticalRate, bool isJoined)
         {
@@ -177,28 +77,6 @@ namespace WitcherGame
             }
 
             SkillDetails.Add(new PartySkill(name, role, mpCost, description));
-        }
-
-        private int Sum(Func<EquipmentItem, int> selector)
-        {
-            int total = 0;
-            foreach (EquipmentItem item in CurrentEquipment.EquippedItems())
-            {
-                total += selector(item);
-            }
-
-            return total;
-        }
-
-        private float SumFloat(Func<EquipmentItem, float> selector)
-        {
-            float total = 0f;
-            foreach (EquipmentItem item in CurrentEquipment.EquippedItems())
-            {
-                total += selector(item);
-            }
-
-            return total;
         }
     }
 }
