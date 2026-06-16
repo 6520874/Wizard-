@@ -11,6 +11,8 @@ namespace WitcherGame
         CorruptedWolf,
         BloodWraith,
         BlackMoonKnight,
+        BlackNailThrall,
+        BlackWaxAcolyte,
         BlackNailPuppet
     }
 
@@ -37,6 +39,8 @@ namespace WitcherGame
                     enemy.AttackFrames = LoadFolderFrames("Art/WildHuntBoss/Frames/Attack", BossPixelsPerUnit);
                     enemy.HurtFrames = LoadFolderFrames("Art/WildHuntBoss/Frames/Hurt", BossPixelsPerUnit);
                     break;
+                case TurnBasedEnemyVisualKind.BlackNailThrall:
+                case TurnBasedEnemyVisualKind.BlackWaxAcolyte:
                 case TurnBasedEnemyVisualKind.BlackNailPuppet:
                     enemy.IdleFrames = LoadFolderFrames("Art/Monsters/BlackNailPuppet/Reworked/Frames/Idle", BossPixelsPerUnit);
                     enemy.AttackFrames = LoadFolderFrames("Art/Monsters/BlackNailPuppet/Reworked/Frames/Attack", BossPixelsPerUnit);

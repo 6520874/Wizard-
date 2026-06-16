@@ -189,5 +189,19 @@ namespace WitcherGame.Tests
             Assert.Greater(enemy.IdleFrames.Length, 0);
             Assert.AreEqual(FilterMode.Bilinear, enemy.IdleFrames[0].texture.filterMode);
         }
+
+        [TestCase(TurnBasedEnemyVisualKind.BlackNailThrall)]
+        [TestCase(TurnBasedEnemyVisualKind.BlackWaxAcolyte)]
+        public void EnemyAnimation_SecondNightMonsters_LoadBlackNailFrames(TurnBasedEnemyVisualKind visualKind)
+        {
+            TurnBasedEnemyState enemy = new TurnBasedEnemyState();
+
+            TurnBasedEnemyAnimationLibrary.FillAnimations(enemy, visualKind);
+
+            Assert.NotNull(enemy.IdleFrames);
+            Assert.Greater(enemy.IdleFrames.Length, 0);
+            Assert.NotNull(enemy.AttackFrames);
+            Assert.Greater(enemy.AttackFrames.Length, 0);
+        }
     }
 }

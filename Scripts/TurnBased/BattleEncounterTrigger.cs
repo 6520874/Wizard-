@@ -47,11 +47,11 @@ namespace WitcherGame
         public void ConfigureMonster(TurnBasedEnemyVisualKind kind, Sprite sprite, int count, int waveBonus)
         {
             battleSprite = sprite;
-            visualKind = kind == TurnBasedEnemyVisualKind.BloodWraith ? TurnBasedEnemyVisualKind.BloodWraith : TurnBasedEnemyVisualKind.CorruptedWolf;
+            visualKind = GetMonsterVisualKind(kind);
             EnsureMapIdleAnimator();
-            enemyCount = Mathf.Clamp(count, 1, 3);
+            enemyCount = Mathf.Clamp(count, 1, visualKind == TurnBasedEnemyVisualKind.BlackWaxAcolyte ? 2 : 3);
             int bonus = Mathf.Max(0, waveBonus);
-            if (kind == TurnBasedEnemyVisualKind.BloodWraith)
+            if (visualKind == TurnBasedEnemyVisualKind.BloodWraith)
             {
                 encounterTitle = enemyCount > 1 ? "吸血女妖群" : "吸血女妖";
                 enemyName = "吸血女妖";
@@ -66,6 +66,36 @@ namespace WitcherGame
                 return;
             }
 
+            if (visualKind == TurnBasedEnemyVisualKind.BlackNailThrall)
+            {
+                encounterTitle = enemyCount > 1 ? "黑钉残尸群" : "黑钉残尸";
+                enemyName = "黑钉残尸";
+                enemyHealth = 40 + bonus * 5;
+                enemyAttack = 11 + bonus;
+                enemyDefense = 4;
+                experienceReward = 5;
+                goldReward = 15 + bonus * 3;
+                lootName = "黑钉碎片";
+                lootChance = 0.6f;
+                ConfigureTriggerBounds(new Vector2(0f, 0.82f), new Vector2(1.9f, 1.85f), 1.35f, 1.35f);
+                return;
+            }
+
+            if (visualKind == TurnBasedEnemyVisualKind.BlackWaxAcolyte)
+            {
+                encounterTitle = enemyCount > 1 ? "执钉黑蜡侍群" : "执钉黑蜡侍";
+                enemyName = "执钉黑蜡侍";
+                enemyHealth = 48 + bonus * 6;
+                enemyAttack = 12 + bonus;
+                enemyDefense = 5;
+                experienceReward = 6;
+                goldReward = 18 + bonus * 4;
+                lootName = "凝黑蜡";
+                lootChance = 0.65f;
+                ConfigureTriggerBounds(new Vector2(0f, 0.88f), new Vector2(2f, 1.9f), 1.42f, 1.42f);
+                return;
+            }
+
             encounterTitle = enemyCount > 1 ? "腐化狼群" : "腐化狼";
             enemyName = "腐化狼";
             enemyHealth = 26 + bonus * 4;
@@ -76,6 +106,19 @@ namespace WitcherGame
             lootName = "腐化狼牙";
             lootChance = 0.45f;
             ConfigureTriggerBounds(new Vector2(0f, 0.48f), new Vector2(2.35f, 1.25f), 1.55f, 1.05f);
+        }
+
+        private static TurnBasedEnemyVisualKind GetMonsterVisualKind(TurnBasedEnemyVisualKind kind)
+        {
+            switch (kind)
+            {
+                case TurnBasedEnemyVisualKind.BloodWraith:
+                case TurnBasedEnemyVisualKind.BlackNailThrall:
+                case TurnBasedEnemyVisualKind.BlackWaxAcolyte:
+                    return kind;
+                default:
+                    return TurnBasedEnemyVisualKind.CorruptedWolf;
+            }
         }
 
         public void ConfigureBoss(Sprite sprite, int waveBonus)

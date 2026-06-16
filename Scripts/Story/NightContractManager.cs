@@ -864,7 +864,7 @@ namespace WitcherGame
                 new DialogueLine("黑血铁锤", "铁锤缝隙里有黑血，火星碰到血迹时炸出一圈蓝白色寒光。"),
                 new DialogueLine("猎魔人", "黑血怕火，也怕银。今晚的东西不是肉身，是被钉住的怨念。")
             });
-            dialogueManager.StartDialogue(lines, () => SpawnAmbush(secondNightFirstAmbushPosition, TurnBasedEnemyVisualKind.CorruptedWolf, 2, "黑血腐狼"));
+            dialogueManager.StartDialogue(lines, () => SpawnAmbush(secondNightFirstAmbushPosition, TurnBasedEnemyVisualKind.BlackNailThrall, 2, "黑钉残尸群"));
         }
 
         private void InvestigateChapelWax()
@@ -882,7 +882,7 @@ namespace WitcherGame
                 new DialogueLine("教堂黑蜡", "教堂门口的蜡泪混着铁屑，凝成倒置的祷文。祷文最后一行写着：死者替活人赎罪。"),
                 new DialogueLine("猎魔人", "神父在用银钉操控尸体。找到蜡源，傀儡的护盾会裂开。")
             });
-            dialogueManager.StartDialogue(lines, () => SpawnAmbush(secondNightSecondAmbushPosition, TurnBasedEnemyVisualKind.BloodWraith, 1, "黑蜡哭影"));
+            dialogueManager.StartDialogue(lines, () => SpawnAmbush(secondNightSecondAmbushPosition, TurnBasedEnemyVisualKind.BlackWaxAcolyte, 1, "执钉黑蜡侍"));
         }
 
         private void InvestigateCryptGate()
@@ -1568,7 +1568,10 @@ namespace WitcherGame
                 return preview.Sprite;
             }
 
-            return WitcherSpriteLibrary.GetSolidSprite(kind == TurnBasedEnemyVisualKind.BlackMoonKnight || kind == TurnBasedEnemyVisualKind.BlackNailPuppet
+            return WitcherSpriteLibrary.GetSolidSprite(kind == TurnBasedEnemyVisualKind.BlackMoonKnight
+                || kind == TurnBasedEnemyVisualKind.BlackNailThrall
+                || kind == TurnBasedEnemyVisualKind.BlackWaxAcolyte
+                || kind == TurnBasedEnemyVisualKind.BlackNailPuppet
                 ? new Color32(62, 116, 156, 230)
                 : new Color32(112, 64, 76, 230));
         }

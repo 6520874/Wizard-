@@ -1156,7 +1156,10 @@ namespace WitcherGame
                 return WitcherSkillBook.CreateCorruptedBite();
             }
 
-            if ((enemy.VisualKind == TurnBasedEnemyVisualKind.BlackMoonKnight || enemy.VisualKind == TurnBasedEnemyVisualKind.BlackNailPuppet) && turnNumber % 3 == 0)
+            if ((enemy.VisualKind == TurnBasedEnemyVisualKind.BlackMoonKnight
+                || enemy.VisualKind == TurnBasedEnemyVisualKind.BlackNailThrall
+                || enemy.VisualKind == TurnBasedEnemyVisualKind.BlackWaxAcolyte
+                || enemy.VisualKind == TurnBasedEnemyVisualKind.BlackNailPuppet) && turnNumber % 3 == 0)
             {
                 return WitcherSkillBook.CreateMoonbreaker();
             }
@@ -1507,6 +1510,12 @@ namespace WitcherGame
                     break;
                 case TurnBasedEnemyVisualKind.BlackMoonKnight:
                     baseSpeed = 84;
+                    break;
+                case TurnBasedEnemyVisualKind.BlackNailThrall:
+                    baseSpeed = 86;
+                    break;
+                case TurnBasedEnemyVisualKind.BlackWaxAcolyte:
+                    baseSpeed = 82;
                     break;
                 case TurnBasedEnemyVisualKind.BlackNailPuppet:
                     baseSpeed = 78;
