@@ -15,14 +15,21 @@ namespace WitcherGame
         private const string DefaultOpeningMusicPath = "Music/DarkPlace_Opening";
 
         [Header("Opening Narration")]
+        [InspectorName("开场自动播放")]
         [SerializeField] private bool playOnStart = true;
+        [Header("调试开局：0 = 正常开场；1 = 直接第一夜；2 = 直接第二夜")]
         [Tooltip("0 = 正常开场；1 = 直接第一夜；2 = 直接第二夜。")]
+        [InspectorName("开局夜晚")]
         [SerializeField, Range(0, 2)] private int startNightOverride;
         [Tooltip("勾选后跳过黑屏旁白和村长对话，直接进入可操作状态。适合调试地图和回合制战斗。")]
+        [InspectorName("跳过开场旁白和村长对话")]
         [SerializeField] private bool skipIntroNarrationAndDialogue;
         [Tooltip("跳过引导时是否仍然创建第一主线任务。")]
+        [InspectorName("跳过时创建第一夜任务")]
         [SerializeField] private bool startFirstQuestWhenIntroSkipped = true;
+        [InspectorName("打字速度（每秒字符数）")]
         [SerializeField] private float typewriterCharactersPerSecond = 28f;
+        [InspectorName("开场旁白文本")]
         [SerializeField]
         [TextArea(2, 4)]
         private string[] narrationLines =
