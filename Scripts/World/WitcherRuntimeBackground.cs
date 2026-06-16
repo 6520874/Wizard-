@@ -9,6 +9,7 @@ namespace WitcherGame
     {
         [SerializeField] private string imagePath = "Art/Backgrounds/Witcher_Village_Longroad.png";
         [SerializeField] private string preferredImagePath = "Art/Backgrounds/Witcher_FirstNight_OldWell.png";
+        [SerializeField] private string firstNightInvestigationImagePath = "Art/Backgrounds/Witcher_FirstNight_PuzzleVillage.png";
         [SerializeField] private string secondNightImagePath = "Art/Backgrounds/Witcher_SecondNight_ForgeChapel.png";
         [SerializeField] private string thirdNightImagePath = "Art/Backgrounds/Witcher_ThirdNight_CryptChapel.png";
         [SerializeField]
@@ -49,6 +50,11 @@ namespace WitcherGame
         {
             isUsingSecondNightMap = false;
             isUsingThirdNightMap = false;
+            if (HasAssetFile(firstNightInvestigationImagePath))
+            {
+                preferredImagePath = firstNightInvestigationImagePath;
+            }
+
             LoadActiveMap();
             FitToWorld();
         }
