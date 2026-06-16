@@ -11,6 +11,10 @@ namespace WitcherGame
     public class TurnBasedBattleHud : MonoBehaviour
     {
         private const string HudName = "Turn Based Battle HUD";
+        private const string BattleBackdropPath = "Art/Backgrounds/Witcher_BattleStage.png";
+        private const string BattleFloorMistPath = "Art/Effects/BattleFloorMist.png";
+        private const string BattleGroundShadowPath = "Art/Effects/BattleGroundShadow.png";
+        private const string BattleGroundGlowPath = "Art/Effects/BattleGroundGlow.png";
         private static readonly Color32 JrpgPanelColor = new Color32(8, 24, 15, 202);
         private static readonly Color32 JrpgPanelStrongColor = new Color32(5, 15, 10, 230);
         private static readonly Color32 JrpgBorderColor = new Color32(235, 244, 232, 238);
@@ -1024,28 +1028,7 @@ namespace WitcherGame
                 return cachedBattleBackdrop;
             }
 
-            Texture2D texture = new Texture2D(8, 96, TextureFormat.RGBA32, false);
-            Color top = new Color32(8, 15, 23, 255);
-            Color center = new Color32(12, 23, 30, 255);
-            Color bottom = new Color32(2, 4, 7, 255);
-            for (int y = 0; y < texture.height; y++)
-            {
-                float t = (float)y / (texture.height - 1);
-                Color color = t < 0.58f
-                    ? Color.Lerp(bottom, center, t / 0.58f)
-                    : Color.Lerp(center, top, (t - 0.58f) / 0.42f);
-                for (int x = 0; x < texture.width; x++)
-                {
-                    float vignette = Mathf.Abs((x / (float)(texture.width - 1)) - 0.5f) * 0.18f;
-                    texture.SetPixel(x, y, Color.Lerp(color, Color.black, vignette));
-                }
-            }
-
-            texture.Apply();
-            texture.filterMode = FilterMode.Bilinear;
-            texture.wrapMode = TextureWrapMode.Clamp;
-            cachedBattleBackdrop = Sprite.Create(texture, new Rect(0f, 0f, texture.width, texture.height), new Vector2(0.5f, 0.5f), 96f);
-            cachedBattleBackdrop.name = "RuntimeBattleBackdrop";
+            cachedBattleBackdrop = LoadBattleHudSprite(BattleBackdropPath, "WitcherBattleStage", 100f);
             return cachedBattleBackdrop;
         }
 
@@ -1056,7 +1039,7 @@ namespace WitcherGame
                 return cachedFloorMist;
             }
 
-            cachedFloorMist = CreateRadialSprite("RuntimeBattleMist", 96, 28, 0.88f);
+            cachedFloorMist = LoadBattleHudSprite(BattleFloorMistPath, "BattleFloorMist", 96f);
             return cachedFloorMist;
         }
 
@@ -1067,7 +1050,7 @@ namespace WitcherGame
                 return cachedGroundShadow;
             }
 
-            cachedGroundShadow = CreateRadialSprite("RuntimeEnemyGroundShadow", 96, 28, 1f);
+            cachedGroundShadow = LoadBattleHudSprite(BattleGroundShadowPath, "BattleGroundShadow", 96f);
             return cachedGroundShadow;
         }
 
@@ -1078,30 +1061,30 @@ namespace WitcherGame
                 return cachedGroundGlow;
             }
 
-            cachedGroundGlow = CreateRadialSprite("RuntimeEnemyGroundGlow", 96, 28, 0.78f);
+            cachedGroundGlow = LoadBattleHudSprite(BattleGroundGlowPath, "BattleGroundGlow", 96f);
             return cachedGroundGlow;
         }
 
-        private static Sprite CreateRadialSprite(string name, int width, int height, float power)
+        private static Sprite LoadBattleHudSprite(string relativePath, string spriteName, float pixelsPerUnit)
         {
-            Texture2D texture = new Texture2D(width, height, TextureFormat.RGBA32, false);
-            for (int y = 0; y < height; y++)
+            string absolutePath = Path.Combine(Application.dataPath, relativePath);
+            if (!File.Exists(absolutePath))
             {
-                float ny = ((y + 0.5f) / height - 0.5f) * 2f;
-                for (int x = 0; x < width; x++)
-                {
-                    float nx = ((x + 0.5f) / width - 0.5f) * 2f;
-                    float distance = Mathf.Sqrt(nx * nx + ny * ny * 3.4f);
-                    float alpha = Mathf.Pow(Mathf.Clamp01(1f - distance), power);
-                    texture.SetPixel(x, y, new Color(1f, 1f, 1f, alpha));
-                }
+                Debug.LogWarning($"Battle HUD image not found: {absolutePath}");
+                return null;
             }
 
-            texture.Apply();
+            Texture2D texture = new Texture2D(2, 2, TextureFormat.RGBA32, false);
+            if (!texture.LoadImage(File.ReadAllBytes(absolutePath)))
+            {
+                Debug.LogWarning($"Could not load battle HUD image: {absolutePath}");
+                return null;
+            }
+
             texture.filterMode = FilterMode.Bilinear;
             texture.wrapMode = TextureWrapMode.Clamp;
-            Sprite sprite = Sprite.Create(texture, new Rect(0f, 0f, width, height), new Vector2(0.5f, 0.5f), 96f);
-            sprite.name = name;
+            Sprite sprite = Sprite.Create(texture, new Rect(0f, 0f, texture.width, texture.height), new Vector2(0.5f, 0.5f), pixelsPerUnit);
+            sprite.name = spriteName;
             return sprite;
         }
 
