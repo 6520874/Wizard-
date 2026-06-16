@@ -106,6 +106,10 @@ namespace WitcherGame
             SetQuestPanelVisible(activeQuest != null);
             RefreshQuestUi();
             DialogueManager.RefreshQuestHintIfVisible();
+            if (activeQuest != null)
+            {
+                WitcherSfxPlayer.Play(WitcherSfxCue.QuestUpdate, 0.68f);
+            }
         }
 
         public void SetQuestPanelSuppressed(bool suppressed)
@@ -165,6 +169,7 @@ namespace WitcherGame
             SetSingleObjective(new QuestObjective(objectiveId, StoryDatabase.GetObjectiveText(objectiveId, fallbackText)) { completed = completed });
             RefreshQuestUi();
             DialogueManager.RefreshQuestHintIfVisible();
+            WitcherSfxPlayer.Play(completed ? WitcherSfxCue.ChoiceConfirm : WitcherSfxCue.QuestUpdate, completed ? 0.58f : 0.5f);
         }
 
         private void SetSingleObjective(QuestObjective objective)

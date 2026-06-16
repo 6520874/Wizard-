@@ -155,6 +155,7 @@ namespace WitcherGame
 
         private void AdvanceDialogue()
         {
+            WitcherSfxPlayer.Play(WitcherSfxCue.UiClick, 0.38f);
             if (isTyping)
             {
                 FinishTypingImmediately();

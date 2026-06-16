@@ -565,6 +565,7 @@ namespace WitcherGame
 
         private void ResolveActiveTruthChoice(int choiceIndex)
         {
+            WitcherSfxPlayer.Play(WitcherSfxCue.ChoiceConfirm, 0.72f);
             if (thirdNightStarted)
             {
                 ResolveThirdTruthChoice(choiceIndex);
@@ -943,6 +944,7 @@ namespace WitcherGame
             if (nodes.TryGetValue(id, out NightInvestigationNode node))
             {
                 node.SetCompleted(true);
+                WitcherSfxPlayer.Play(WitcherSfxCue.ClueFound, 0.72f);
             }
         }
 
@@ -1208,6 +1210,7 @@ namespace WitcherGame
 
         private void SpawnAmbush(Vector2 position, TurnBasedEnemyVisualKind kind, int count, string title)
         {
+            WitcherSfxPlayer.Play(WitcherSfxCue.EncounterSpawn, 0.72f);
             GameObject encounterObject = CreateEncounterObject(title, position, kind);
             BattleEncounterTrigger trigger = encounterObject.AddComponent<BattleEncounterTrigger>();
             trigger.ConfigureMonster(kind, encounterObject.GetComponent<SpriteRenderer>().sprite, Mathf.Max(1, count), 0);
@@ -1225,6 +1228,7 @@ namespace WitcherGame
             }
 
             bossSpawned = true;
+            WitcherSfxPlayer.Play(WitcherSfxCue.BossSpawn, 0.82f);
             GameObject encounterObject = CreateEncounterObject("Well Crying Soul Boss", bossPosition, TurnBasedEnemyVisualKind.BlackMoonKnight);
             BattleEncounterTrigger trigger = encounterObject.AddComponent<BattleEncounterTrigger>();
             trigger.ConfigureContractBoss(encounterObject.GetComponent<SpriteRenderer>().sprite, 0, "井底哭魂", "井底哭魂");
@@ -1278,6 +1282,7 @@ namespace WitcherGame
             }
 
             secondBossSpawned = true;
+            WitcherSfxPlayer.Play(WitcherSfxCue.BossSpawn, 0.86f);
             GameObject encounterObject = CreateEncounterObject("Black Nail Puppet Boss", secondNightBossPosition, TurnBasedEnemyVisualKind.BlackNailPuppet);
             BattleEncounterTrigger trigger = encounterObject.AddComponent<BattleEncounterTrigger>();
             trigger.ConfigureContractBoss(encounterObject.GetComponent<SpriteRenderer>().sprite, 1, "黑钉傀儡", "黑钉傀儡", TurnBasedEnemyVisualKind.BlackNailPuppet);
@@ -1330,6 +1335,7 @@ namespace WitcherGame
             }
 
             thirdBossSpawned = true;
+            WitcherSfxPlayer.Play(WitcherSfxCue.BossSpawn, 0.9f);
             GameObject encounterObject = CreateEncounterObject("Black Wax Saint Boss", thirdNightBossPosition, TurnBasedEnemyVisualKind.BlackNailPuppet);
             BattleEncounterTrigger trigger = encounterObject.AddComponent<BattleEncounterTrigger>();
             trigger.ConfigureContractBoss(encounterObject.GetComponent<SpriteRenderer>().sprite, 2, "黑蜡圣徒", "黑蜡圣徒", TurnBasedEnemyVisualKind.BlackNailPuppet);

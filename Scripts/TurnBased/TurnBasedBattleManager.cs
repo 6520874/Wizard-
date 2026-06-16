@@ -237,6 +237,7 @@ namespace WitcherGame
                 return false;
             }
 
+            WitcherSfxPlayer.Play(WitcherSfxCue.EncounterSpawn, 0.55f);
             playerAnimator = player.GetComponent<GeraltAnimator>();
             playerInventory = PlayerInventory.CreateIfMissing(player);
             player.SetControlEnabled(false);
@@ -292,10 +293,12 @@ namespace WitcherGame
 
             if (action == TurnBattleAction.FlameSign)
             {
+                WitcherSfxPlayer.Play(WitcherSfxCue.UiClick, 0.46f);
                 ShowActiveSkillMenu();
                 return;
             }
 
+            WitcherSfxPlayer.Play(WitcherSfxCue.ChoiceConfirm, 0.46f);
             StartCoroutine(ResolvePlayerAction(action));
         }
 
@@ -318,6 +321,7 @@ namespace WitcherGame
                 return;
             }
 
+            WitcherSfxPlayer.Play(WitcherSfxCue.ChoiceConfirm, 0.46f);
             StartCoroutine(ResolveSelectedSkill(skill));
         }
 
@@ -340,6 +344,7 @@ namespace WitcherGame
                 return;
             }
 
+            WitcherSfxPlayer.Play(WitcherSfxCue.ChoiceConfirm, 0.46f);
             StartCoroutine(ResolveSelectedSkill(skill));
         }
 
@@ -348,6 +353,7 @@ namespace WitcherGame
             currentSkillSlots.Clear();
             PartyMember member = GetActiveFriendlyMember();
             currentSkillSlots.AddRange(WitcherSkillBook.GetFriendlySkills(member));
+            WitcherSfxPlayer.Play(WitcherSfxCue.UiClick, 0.45f);
             battleHud.ShowSkillMenu(GetFriendlyDisplayName(member), currentSkillSlots);
         }
 
@@ -359,6 +365,7 @@ namespace WitcherGame
             }
 
             selectedCommandIndex = (selectedCommandIndex + delta + PlayerCommandOrder.Length) % PlayerCommandOrder.Length;
+            WitcherSfxPlayer.Play(WitcherSfxCue.UiClick, 0.36f);
             battleHud?.SetSelectedCommand(selectedCommandIndex);
         }
 
@@ -463,6 +470,7 @@ namespace WitcherGame
             SkillResult result = SkillExecutor.Execute(skill, caster, targets);
             battleHud.SetMessage(result.Message);
             battleHud.ShowSkillName(skill.DisplayName);
+            PlayFriendlySkillSfx(skill);
             switch (skill.AnimationKind)
             {
                 case BattleSkillAnimationKind.Slash:
@@ -531,6 +539,60 @@ namespace WitcherGame
             ApplyFriendlySkillResult(caster, targets, result);
             yield return PlaySkillResultFeedback(result);
             battleHud.Refresh(enemies, player, potionCount);
+        }
+
+        private static void PlayFriendlySkillSfx(SkillDefinition skill)
+        {
+            if (skill == null)
+            {
+                return;
+            }
+
+            switch (skill.AnimationKind)
+            {
+                case BattleSkillAnimationKind.Slash:
+                    WitcherSfxPlayer.Play(WitcherSfxCue.SwordHit, 0.74f);
+                    break;
+                case BattleSkillAnimationKind.Flame:
+                    WitcherSfxPlayer.Play(WitcherSfxCue.FireCast, 0.78f);
+                    break;
+                case BattleSkillAnimationKind.Cast:
+                    WitcherSfxPlayer.Play(IsFireSkill(skill) ? WitcherSfxCue.FireCast : WitcherSfxCue.MagicWard, 0.7f);
+                    break;
+                case BattleSkillAnimationKind.Defend:
+                    WitcherSfxPlayer.Play(WitcherSfxCue.MagicWard, 0.66f);
+                    break;
+                case BattleSkillAnimationKind.Item:
+                    WitcherSfxPlayer.Play(WitcherSfxCue.ChoiceConfirm, 0.48f);
+                    break;
+            }
+        }
+
+        private static bool IsFireSkill(SkillDefinition skill)
+        {
+            if (skill == null)
+            {
+                return false;
+            }
+
+            if (skill.Id == BattleSkillId.FlameSign
+                || skill.Id == BattleSkillId.Fireball
+                || skill.Id == BattleSkillId.TrissFirebolt
+                || skill.Id == BattleSkillId.TrissMeltingSigil
+                || skill.Id == BattleSkillId.TrissMeteorFlare)
+            {
+                return true;
+            }
+
+            for (int i = 0; i < skill.Effects.Count; i++)
+            {
+                if (skill.Effects[i] is DamageSkillEffect damage && damage.DamageType == BattleDamageType.Fire)
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private static GeraltAnimation GetGeraltAnimationForSkill(SkillDefinition skill)
@@ -644,6 +706,7 @@ namespace WitcherGame
 
             battleHud.SetMessage(GameText.Battle.EnemyUseSkill(enemy.Name, skill.DisplayName));
             battleHud.ShowSkillName(skill.DisplayName);
+            WitcherSfxPlayer.Play(WitcherSfxCue.EnemyAttack, 0.68f);
             yield return battleHud.PlayEnemyAttack(enemyIndex);
             yield return battleHud.PlayEnemySkillEffect(skill.Id, enemyIndex);
             ApplyEnemySkillResult(enemyIndex, target, result);
@@ -702,6 +765,7 @@ namespace WitcherGame
 
             playerInventory = playerInventory == null && player != null ? PlayerInventory.CreateIfMissing(player) : playerInventory;
             playerInventory?.AddBattleRewards(goldReward, reward, lootRewards);
+            WitcherSfxPlayer.Play(WitcherSfxCue.BattleVictory, 0.76f);
             battleHud.ShowVictoryRewards(reward, goldReward, lootRewards);
             battleHud.SetMessage(GameText.Battle.VictoryMessage(reward, goldReward));
             WitcherCombatText.Spawn(GameText.Stats.ExperienceGain(reward), player.transform.position + Vector3.up * 1.2f, new Color32(255, 219, 91, 255));

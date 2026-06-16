@@ -85,6 +85,7 @@ namespace WitcherGame
             }
             else if (Input.GetKeyDown(KeyCode.Return))
             {
+                WitcherSfxPlayer.Play(WitcherSfxCue.ChoiceConfirm, 0.46f);
                 commands[selectedIndex].Execute?.Invoke();
             }
             else if (IsPartyCommandSelected() && Input.GetKeyDown(KeyCode.J))
@@ -114,11 +115,13 @@ namespace WitcherGame
             root.SetActive(true);
             selectedIndex = Mathf.Clamp(selectedIndex, 0, commands.Count - 1);
             RefreshSelection();
+            WitcherSfxPlayer.Play(WitcherSfxCue.UiClick, 0.52f);
             PlayerInputController.RefreshPlayerControl();
         }
 
         public void Close()
         {
+            WitcherSfxPlayer.Play(WitcherSfxCue.UiClick, 0.42f);
             isOpen = false;
             if (root != null)
             {
@@ -147,6 +150,7 @@ namespace WitcherGame
         private void MoveSelection(int delta)
         {
             selectedIndex = (selectedIndex + delta + commands.Count) % commands.Count;
+            WitcherSfxPlayer.Play(WitcherSfxCue.UiClick, 0.45f);
             RefreshSelection();
         }
 
@@ -230,6 +234,7 @@ namespace WitcherGame
             PartyManager party = PartyManager.CreateIfMissing();
             if (party.ToggleMember(memberName))
             {
+                WitcherSfxPlayer.Play(WitcherSfxCue.ChoiceConfirm, 0.58f);
                 ShowParty();
             }
         }

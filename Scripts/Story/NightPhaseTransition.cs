@@ -48,6 +48,7 @@ namespace WitcherGame
         {
             EnsureUi();
             root.SetActive(true);
+            WitcherSfxPlayer.Play(WitcherSfxCue.NightTransition, 0.82f);
 
             titleText.text = title;
             subtitleText.text = subtitle;
