@@ -42,7 +42,8 @@ namespace WitcherGame
             }
 
             bool blocked = DialogueManager.IsDialogueActive
-                || (instance.menuController != null && instance.menuController.IsOpen);
+                || (instance.menuController != null && instance.menuController.IsOpen)
+                || WitcherContractRunManager.HasOpenUi;
             instance.player?.SetControlEnabled(!blocked);
         }
 
@@ -96,7 +97,8 @@ namespace WitcherGame
         private bool IsAnyUiOpen()
         {
             return DialogueManager.IsDialogueActive
-                || (menuController != null && menuController.IsOpen);
+                || (menuController != null && menuController.IsOpen)
+                || WitcherContractRunManager.HasOpenUi;
         }
     }
 }

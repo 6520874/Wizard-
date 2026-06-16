@@ -170,6 +170,11 @@ namespace WitcherGame
         public void ConfigureContractBoss(Sprite sprite, int waveBonus, string title, string name, TurnBasedEnemyVisualKind kind)
         {
             ConfigureBoss(sprite, waveBonus, kind);
+            OverrideEncounterIdentity(title, name);
+        }
+
+        public void OverrideEncounterIdentity(string title, string name)
+        {
             if (!string.IsNullOrWhiteSpace(title))
             {
                 encounterTitle = title;

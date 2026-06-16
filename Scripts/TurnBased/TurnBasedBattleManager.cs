@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -97,6 +98,7 @@ namespace WitcherGame
 
         public bool BattleActive => battleActive;
         public int TurnNumber => Mathf.Max(1, turnNumber);
+        public event Action<bool> BattleFinished;
 
         // 中文说明：记录进入战斗前相机的渲染设置，战斗结束后用于恢复地图画面。
         private struct CameraRenderState
@@ -631,7 +633,7 @@ namespace WitcherGame
 
         private IEnumerator TryEscape()
         {
-            if (Random.value <= escapeChance)
+            if (UnityEngine.Random.value <= escapeChance)
             {
                 battleHud.SetMessage(GameText.Battle.EscapeSuccess);
                 yield return Wait(0.65f);
@@ -757,7 +759,7 @@ namespace WitcherGame
             {
                 reward += Mathf.Max(1, enemy.ExperienceReward);
                 goldReward += Mathf.Max(0, enemy.GoldReward);
-                if (!string.IsNullOrEmpty(enemy.LootName) && Random.value <= Mathf.Clamp01(enemy.LootChance))
+                if (!string.IsNullOrEmpty(enemy.LootName) && UnityEngine.Random.value <= Mathf.Clamp01(enemy.LootChance))
                 {
                     lootRewards.Add(enemy.LootName);
                 }
@@ -815,6 +817,8 @@ namespace WitcherGame
             {
                 player.SetControlEnabled(true);
             }
+
+            BattleFinished?.Invoke(won);
         }
 
         private static void SetQuestPanelHiddenForBattle(bool hidden)

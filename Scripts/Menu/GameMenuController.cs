@@ -141,6 +141,7 @@ namespace WitcherGame
             commands.Add(new MenuCommand(GameText.Menu.Status, GameText.Menu.StatusDescription, ShowStatus));
             commands.Add(new MenuCommand(GameText.Menu.Item, GameText.Menu.ItemDescription, () => ShowDetail(GameText.Menu.ItemPlaceholder)));
             commands.Add(new MenuCommand(GameText.Menu.Skill, GameText.Menu.SkillDescription, ShowSkills));
+            commands.Add(new MenuCommand("猎魔委托", "接一份 3-5 分钟的短委托：有限调查、战前准备、审判真相和结局收集。", OpenContractBoard));
             commands.Add(new MenuCommand(GameText.Menu.Party, GameText.Menu.PartyDescription, ShowParty));
             commands.Add(new MenuCommand(GameText.Menu.Talk, GameText.Menu.TalkDescription, PlayPartyTalk));
             commands.Add(new MenuCommand(GameText.Menu.System, GameText.Menu.SystemDescription, () => ShowDetail(GameText.Menu.SystemPlaceholder)));
@@ -242,6 +243,13 @@ namespace WitcherGame
         private bool IsPartyCommandSelected()
         {
             return selectedIndex >= 0 && selectedIndex < commands.Count && commands[selectedIndex].Label == GameText.Menu.Party;
+        }
+
+        private void OpenContractBoard()
+        {
+            GeraltController target = player == null ? FindObjectOfType<GeraltController>() : player;
+            Close();
+            WitcherContractRunManager.CreateIfMissing(target).OpenBoard();
         }
 
         private void PlayPartyTalk()
