@@ -1,18 +1,20 @@
 Generated procedural SFX for Ravenbound.
 
-These WAV files were synthesized locally for this project on 2026-06-16.
+These WAV files were synthesized locally for this project on 2026-06-19.
 They are original generated assets, not downloaded third-party samples.
+The 2026-06-19 pass replaces the earlier brighter cues with darker witcher-contract style sounds:
+muted UI taps, low ritual bells, cold wind beds, metal impacts, restrained magic, and ominous combat stingers.
 
 Files:
-- ui_click.wav
-- choice_confirm.wav
-- quest_update.wav
-- clue_found.wav
-- night_transition.wav
-- encounter_spawn.wav
-- boss_spawn.wav
-- sword_hit.wav
-- fire_cast.wav
-- magic_ward.wav
-- enemy_attack.wav
-- battle_victory.wav
+- ui_click.wav: muted leather-and-metal tap.
+- choice_confirm.wav: low seal hit with restrained bell tail.
+- quest_update.wav: parchment scrape, omen pulse, and dull bell.
+- clue_found.wav: cold silver clue shimmer with low drone.
+- night_transition.wav: long night wind and distant ritual tone.
+- encounter_spawn.wav: threat swell with sub rumble and metal sting.
+- boss_spawn.wav: deep boss bell, chain scrape, and oppressive rumble.
+- sword_hit.wav: dry steel impact with body thud.
+- fire_cast.wav: dark fire rush with low crackle.
+- magic_ward.wav: protective ward hum with faint crystal overtones.
+- enemy_attack.wav: hostile rush, scrape, and guttural low drop.
+- battle_victory.wav: somber minor victory cue, not celebratory fanfare.
