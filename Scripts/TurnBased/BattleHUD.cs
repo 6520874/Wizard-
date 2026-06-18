@@ -164,6 +164,34 @@ namespace WitcherGame
                 Weaknesses = System.Array.Empty<string>(),
                 WeaknessDiscovered = System.Array.Empty<bool>()
             });
+
+            IReadOnlyList<PartyMember> activeMembers = PartyManager.CreateIfMissing().ActiveParty;
+            for (int i = 0; i < activeMembers.Count; i++)
+            {
+                PartyMember member = activeMembers[i];
+                if (member == null || !member.IsJoined || member.Name == GameText.HunterName)
+                {
+                    continue;
+                }
+
+                units.Add(new BattleUnit
+                {
+                    Id = "party-" + member.Name,
+                    Name = member.Name,
+                    IsPlayer = true,
+                    Level = member.Level,
+                    CurrentHp = Mathf.Clamp(member.HP, 0, member.TotalMaxHP),
+                    MaxHp = member.TotalMaxHP,
+                    CurrentSp = Mathf.Clamp(member.MP, 0, member.TotalMaxMP),
+                    MaxSp = member.TotalMaxMP,
+                    IsAlive = member.HP > 0,
+                    Portrait = PartyPortraitLibrary.GetPortrait(member),
+                    UiPosition = new Vector2(304f, -34f - units.Count * 36f),
+                    Weaknesses = System.Array.Empty<string>(),
+                    WeaknessDiscovered = System.Array.Empty<bool>()
+                });
+            }
+
             return units;
         }
 
@@ -252,7 +280,7 @@ namespace WitcherGame
                 BattleUnit unit;
                 if (entry.IsPlayer)
                 {
-                    unit = partyUnits != null && partyUnits.Count > 0 ? partyUnits[0] : null;
+                    unit = FindPartyTimelineUnit(partyUnits, entry.PartyMemberName);
                 }
                 else
                 {
@@ -269,6 +297,25 @@ namespace WitcherGame
             }
 
             return result;
+        }
+
+        private static BattleUnit FindPartyTimelineUnit(List<BattleUnit> partyUnits, string partyMemberName)
+        {
+            if (partyUnits == null || partyUnits.Count == 0)
+            {
+                return null;
+            }
+
+            if (!string.IsNullOrEmpty(partyMemberName))
+            {
+                BattleUnit namedUnit = partyUnits.Find(unit => unit != null && unit.Name == partyMemberName);
+                if (namedUnit != null)
+                {
+                    return namedUnit;
+                }
+            }
+
+            return partyUnits[0];
         }
 
         private static int GetShieldValue(TurnBasedEnemyState enemy)
