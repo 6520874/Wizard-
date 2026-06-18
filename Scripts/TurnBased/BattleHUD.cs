@@ -330,6 +330,7 @@ namespace WitcherGame
             {
                 case TurnBasedEnemyVisualKind.BlackMoonKnight:
                 case TurnBasedEnemyVisualKind.BlackNailThrall:
+                case TurnBasedEnemyVisualKind.BlackWaxGateShade:
                 case TurnBasedEnemyVisualKind.BlackWaxAcolyte:
                 case TurnBasedEnemyVisualKind.BlackNailPuppet:
                     baseShield = Mathf.Clamp(Mathf.CeilToInt(enemy.Health / (float)enemy.MaxHealth * 5f), 1, 5);
@@ -352,6 +353,7 @@ namespace WitcherGame
                 case TurnBasedEnemyVisualKind.BlackMoonKnight:
                     return new[] { "银", "火", "雷", "印", "剑" };
                 case TurnBasedEnemyVisualKind.BlackNailThrall:
+                case TurnBasedEnemyVisualKind.BlackWaxGateShade:
                 case TurnBasedEnemyVisualKind.BlackWaxAcolyte:
                 case TurnBasedEnemyVisualKind.BlackNailPuppet:
                     return new[] { "银", "火", "剑", "印", "？" };
@@ -369,6 +371,7 @@ namespace WitcherGame
                 case TurnBasedEnemyVisualKind.BlackMoonKnight:
                     return new[] { true, true, false, false, true };
                 case TurnBasedEnemyVisualKind.BlackNailThrall:
+                case TurnBasedEnemyVisualKind.BlackWaxGateShade:
                 case TurnBasedEnemyVisualKind.BlackWaxAcolyte:
                 case TurnBasedEnemyVisualKind.BlackNailPuppet:
                     return new[] { true, true, true, false, false };

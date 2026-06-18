@@ -1162,6 +1162,7 @@ namespace WitcherGame
 
             if ((enemy.VisualKind == TurnBasedEnemyVisualKind.BlackMoonKnight
                 || enemy.VisualKind == TurnBasedEnemyVisualKind.BlackNailThrall
+                || enemy.VisualKind == TurnBasedEnemyVisualKind.BlackWaxGateShade
                 || enemy.VisualKind == TurnBasedEnemyVisualKind.BlackWaxAcolyte
                 || enemy.VisualKind == TurnBasedEnemyVisualKind.BlackNailPuppet) && turnNumber % 3 == 0)
             {
@@ -1517,6 +1518,9 @@ namespace WitcherGame
                     break;
                 case TurnBasedEnemyVisualKind.BlackNailThrall:
                     baseSpeed = 86;
+                    break;
+                case TurnBasedEnemyVisualKind.BlackWaxGateShade:
+                    baseSpeed = 90;
                     break;
                 case TurnBasedEnemyVisualKind.BlackWaxAcolyte:
                     baseSpeed = 82;

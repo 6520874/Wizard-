@@ -203,5 +203,23 @@ namespace WitcherGame.Tests
             Assert.NotNull(enemy.AttackFrames);
             Assert.Greater(enemy.AttackFrames.Length, 0);
         }
+
+        [Test]
+        public void EnemyAnimation_ThirdNightGateShade_LoadsDedicatedFrames()
+        {
+            TurnBasedEnemyState enemy = new TurnBasedEnemyState();
+
+            TurnBasedEnemyAnimationLibrary.FillAnimations(enemy, TurnBasedEnemyVisualKind.BlackWaxGateShade);
+
+            Assert.NotNull(enemy.IdleFrames);
+            Assert.Greater(enemy.IdleFrames.Length, 0);
+            Assert.That(enemy.IdleFrames[0].name, Does.Contain("BlackWaxGateShade"));
+            Assert.NotNull(enemy.AttackFrames);
+            Assert.Greater(enemy.AttackFrames.Length, 0);
+            Assert.NotNull(enemy.HurtFrames);
+            Assert.Greater(enemy.HurtFrames.Length, 0);
+            Assert.NotNull(enemy.DefeatFrames);
+            Assert.Greater(enemy.DefeatFrames.Length, 0);
+        }
     }
 }

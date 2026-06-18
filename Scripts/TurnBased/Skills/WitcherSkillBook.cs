@@ -316,6 +316,7 @@ namespace WitcherGame
                     break;
                 case TurnBasedEnemyVisualKind.BlackMoonKnight:
                 case TurnBasedEnemyVisualKind.BlackNailThrall:
+                case TurnBasedEnemyVisualKind.BlackWaxGateShade:
                 case TurnBasedEnemyVisualKind.BlackWaxAcolyte:
                 case TurnBasedEnemyVisualKind.BlackNailPuppet:
                     skills.Add(CreateMoonbreaker());

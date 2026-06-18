@@ -49,7 +49,7 @@ namespace WitcherGame
             battleSprite = sprite;
             visualKind = GetMonsterVisualKind(kind);
             EnsureMapIdleAnimator();
-            enemyCount = Mathf.Clamp(count, 1, visualKind == TurnBasedEnemyVisualKind.BlackWaxAcolyte ? 2 : 3);
+            enemyCount = Mathf.Clamp(count, 1, visualKind == TurnBasedEnemyVisualKind.BlackWaxAcolyte || visualKind == TurnBasedEnemyVisualKind.BlackWaxGateShade ? 2 : 3);
             int bonus = Mathf.Max(0, waveBonus);
             if (visualKind == TurnBasedEnemyVisualKind.BloodWraith)
             {
@@ -78,6 +78,21 @@ namespace WitcherGame
                 lootName = "黑钉碎片";
                 lootChance = 0.6f;
                 ConfigureTriggerBounds(new Vector2(0f, 0.82f), new Vector2(1.9f, 1.85f), 1.35f, 1.35f);
+                return;
+            }
+
+            if (visualKind == TurnBasedEnemyVisualKind.BlackWaxGateShade)
+            {
+                encounterTitle = enemyCount > 1 ? "黑蜡守门影群" : "黑蜡守门影";
+                enemyName = "黑蜡守门影";
+                enemyHealth = 42 + bonus * 6;
+                enemyAttack = 11 + bonus;
+                enemyDefense = 4;
+                experienceReward = 5;
+                goldReward = 16 + bonus * 4;
+                lootName = "守门黑蜡";
+                lootChance = 0.62f;
+                ConfigureTriggerBounds(new Vector2(0f, 0.86f), new Vector2(1.9f, 1.9f), 1.38f, 1.38f);
                 return;
             }
 
@@ -114,6 +129,7 @@ namespace WitcherGame
             {
                 case TurnBasedEnemyVisualKind.BloodWraith:
                 case TurnBasedEnemyVisualKind.BlackNailThrall:
+                case TurnBasedEnemyVisualKind.BlackWaxGateShade:
                 case TurnBasedEnemyVisualKind.BlackWaxAcolyte:
                     return kind;
                 default:

@@ -900,7 +900,7 @@ namespace WitcherGame
                 new DialogueLine("地下门", "门缝里没有风，只有热。黑蜡沿着石阶往下流，像有人在下面点着一整排蜡烛。"),
                 new DialogueLine(GameText.TrissName, "我能烧开门上的蜡，但它们会记住我的火。")
             });
-            dialogueManager.StartDialogue(lines, () => SpawnAmbush(thirdNightFirstAmbushPosition, TurnBasedEnemyVisualKind.BloodWraith, 2, "黑蜡守门影"));
+            dialogueManager.StartDialogue(lines, () => SpawnAmbush(thirdNightFirstAmbushPosition, TurnBasedEnemyVisualKind.BlackWaxGateShade, 2, "黑蜡守门影"));
         }
 
         private void InvestigateBlackWaxAltar()
@@ -1570,6 +1570,7 @@ namespace WitcherGame
 
             return WitcherSpriteLibrary.GetSolidSprite(kind == TurnBasedEnemyVisualKind.BlackMoonKnight
                 || kind == TurnBasedEnemyVisualKind.BlackNailThrall
+                || kind == TurnBasedEnemyVisualKind.BlackWaxGateShade
                 || kind == TurnBasedEnemyVisualKind.BlackWaxAcolyte
                 || kind == TurnBasedEnemyVisualKind.BlackNailPuppet
                 ? new Color32(62, 116, 156, 230)
