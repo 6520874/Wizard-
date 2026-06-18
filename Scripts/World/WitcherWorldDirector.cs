@@ -5,6 +5,8 @@ namespace WitcherGame
     // 中文说明：组织当前地图房间、主角出生点、边界和地图外观刷新。
     public class WitcherWorldDirector : MonoBehaviour
     {
+        private const string SecondNightMusicPath = "Music/Witcher_SecondNight_BlackNailForge";
+        private const string ThirdNightMusicPath = "Music/Witcher_ThirdNight_BlackWaxCrypt";
         private const float StartY = -1.65f;
         private const float MinStageX = -7.6f;
         private const float MaxStageX = 55.6f;
@@ -138,6 +140,8 @@ namespace WitcherGame
                 runtimeBackground.ApplySecondNightMap();
             }
 
+            WitcherMusicPlayer.PlayMusic(SecondNightMusicPath);
+
             RoomDefinition room = new RoomDefinition("第二晚：铁匠铺与教堂", new Color32(122, 152, 184, 255));
             StageBounds stageBounds = GetActiveStageBounds();
             player.ConfigureStage(stageBounds.MinX, stageBounds.MaxX, stageBounds.MinY, stageBounds.MaxY);
@@ -167,6 +171,8 @@ namespace WitcherGame
             {
                 runtimeBackground.ApplyThirdNightMap();
             }
+
+            WitcherMusicPlayer.PlayMusic(ThirdNightMusicPath);
 
             RoomDefinition room = new RoomDefinition("第三晚：黑蜡地下教堂", new Color32(132, 112, 152, 255));
             StageBounds stageBounds = GetActiveStageBounds();

@@ -15,6 +15,7 @@ namespace WitcherGame
 
         private AudioSource audioSource;
         private bool loadingClip;
+        private Coroutine loadingRoutine;
 
         public static WitcherMusicPlayer CreateIfMissing()
         {
@@ -29,6 +30,11 @@ namespace WitcherGame
             WitcherMusicPlayer musicPlayer = playerObject.AddComponent<WitcherMusicPlayer>();
             musicPlayer.PlayIfNeeded();
             return musicPlayer;
+        }
+
+        public static void PlayMusic(string resourcePath)
+        {
+            CreateIfMissing().SwitchMusic(resourcePath);
         }
 
         private void Awake()
@@ -91,19 +97,50 @@ namespace WitcherGame
             }
 
             loadingClip = true;
-            StartCoroutine(LoadAndPlayMusic());
+            loadingRoutine = StartCoroutine(LoadAndPlayMusic(musicResourcePath));
         }
 
-        private System.Collections.IEnumerator LoadAndPlayMusic()
+        private void SwitchMusic(string resourcePath)
         {
-            ResourceRequest request = Resources.LoadAsync<AudioClip>(musicResourcePath);
+            if (string.IsNullOrWhiteSpace(resourcePath))
+            {
+                return;
+            }
+
+            EnsureAudioSource();
+            if (resourcePath == musicResourcePath && audioSource != null && audioSource.clip != null)
+            {
+                PlayIfNeeded();
+                return;
+            }
+
+            musicResourcePath = resourcePath;
+            if (loadingRoutine != null)
+            {
+                StopCoroutine(loadingRoutine);
+                loadingRoutine = null;
+            }
+
+            loadingClip = true;
+            loadingRoutine = StartCoroutine(LoadAndPlayMusic(musicResourcePath));
+        }
+
+        private System.Collections.IEnumerator LoadAndPlayMusic(string resourcePath)
+        {
+            ResourceRequest request = Resources.LoadAsync<AudioClip>(resourcePath);
             yield return request;
 
             loadingClip = false;
+            loadingRoutine = null;
+            if (resourcePath != musicResourcePath)
+            {
+                yield break;
+            }
+
             AudioClip clip = request.asset as AudioClip;
             if (clip == null)
             {
-                Debug.LogWarning($"Music clip not found at Resources/{musicResourcePath}");
+                Debug.LogWarning($"Music clip not found at Resources/{resourcePath}");
                 yield break;
             }
 
