@@ -418,8 +418,8 @@ namespace WitcherGame
             rect.anchorMin = new Vector2(0.5f, 1f);
             rect.anchorMax = new Vector2(0.5f, 1f);
             rect.pivot = new Vector2(0.5f, 1f);
-            rect.sizeDelta = new Vector2(760f, 68f);
-            rect.anchoredPosition = new Vector2(-96f, -28f);
+            rect.sizeDelta = new Vector2(620f, 54f);
+            rect.anchoredPosition = new Vector2(-170f, -8f);
 
             Image back = gameObject.AddComponent<Image>();
             back.sprite = WitcherSpriteLibrary.GetSolidSprite(BattleHudStyle.PanelColor);
@@ -427,7 +427,7 @@ namespace WitcherGame
             back.raycastTarget = false;
             BattleHudStyle.AddOutline(back, BattleHudStyle.BorderColor, new Vector2(1f, -1f));
 
-            Image rail = BattleHudStyle.CreateImage("Turn Rail", transform, new Vector2(704f, 2f), new Vector2(28f, -35f), BattleHudStyle.RuleColor, new Vector2(0f, 1f));
+            Image rail = BattleHudStyle.CreateImage("Turn Rail", transform, new Vector2(552f, 2f), new Vector2(28f, -29f), BattleHudStyle.RuleColor, new Vector2(0f, 1f));
             rail.raycastTarget = false;
 
             for (int i = 0; i < 8; i++)
@@ -436,7 +436,7 @@ namespace WitcherGame
                 icon.Build();
                 icon.Rect.anchorMin = new Vector2(0f, 1f);
                 icon.Rect.anchorMax = new Vector2(0f, 1f);
-                icon.Rect.anchoredPosition = new Vector2(28f + i * 58f, -10f);
+                icon.Rect.anchoredPosition = new Vector2(28f + i * 52f, -7f);
                 icons.Add(icon);
             }
         }
@@ -478,19 +478,19 @@ namespace WitcherGame
         public void Build()
         {
             Rect = gameObject.AddComponent<RectTransform>();
-            Rect.sizeDelta = new Vector2(42f, 42f);
+            Rect.sizeDelta = new Vector2(36f, 36f);
             frame = gameObject.AddComponent<Image>();
             frame.sprite = WitcherSpriteLibrary.GetSolidSprite(BattleHudStyle.PanelStrongColor);
             frame.color = BattleHudStyle.PanelStrongColor;
             frame.rectTransform.localEulerAngles = new Vector3(0f, 0f, 45f);
             BattleHudStyle.AddOutline(frame, BattleHudStyle.BorderColor, new Vector2(1f, -1f));
 
-            portrait = BattleHudStyle.CreateImage("Portrait", transform, new Vector2(38f, 38f), Vector2.zero, Color.white, new Vector2(0.5f, 0.5f));
+            portrait = BattleHudStyle.CreateImage("Portrait", transform, new Vector2(32f, 32f), Vector2.zero, Color.white, new Vector2(0.5f, 0.5f));
             portrait.rectTransform.localEulerAngles = new Vector3(0f, 0f, -45f);
             portrait.preserveAspect = true;
             portrait.raycastTarget = false;
 
-            label = BattleHudStyle.CreateText("Label", transform, "?", 16, TextAnchor.MiddleCenter, Vector2.zero, new Vector2(42f, 42f), BattleHudStyle.TextColor);
+            label = BattleHudStyle.CreateText("Label", transform, "?", 15, TextAnchor.MiddleCenter, Vector2.zero, new Vector2(36f, 36f), BattleHudStyle.TextColor);
             label.rectTransform.localEulerAngles = new Vector3(0f, 0f, -45f);
             BattleHudStyle.AddOutline(label, Color.black, new Vector2(2f, -2f));
         }
@@ -529,17 +529,17 @@ namespace WitcherGame
     // 中文说明：右侧我方队伍状态栏容器，显示上阵角色的生命和法力。
     public class PartyStatusPanel : MonoBehaviour
     {
-        private const float ItemGap = 86f;
+        private const float ItemGap = 66f;
         private readonly List<PartyStatusItem> items = new List<PartyStatusItem>();
 
         public void Build()
         {
             RectTransform rect = gameObject.AddComponent<RectTransform>();
-            rect.anchorMin = new Vector2(1f, 0.5f);
-            rect.anchorMax = new Vector2(1f, 0.5f);
-            rect.pivot = new Vector2(1f, 0.5f);
-            rect.sizeDelta = new Vector2(248f, 350f);
-            rect.anchoredPosition = new Vector2(-24f, -22f);
+            rect.anchorMin = new Vector2(1f, 0f);
+            rect.anchorMax = new Vector2(1f, 0f);
+            rect.pivot = new Vector2(1f, 0f);
+            rect.sizeDelta = new Vector2(236f, 136f);
+            rect.anchoredPosition = new Vector2(-14f, 16f);
 
             Image back = gameObject.AddComponent<Image>();
             back.sprite = WitcherSpriteLibrary.GetSolidSprite(new Color32(8, 24, 15, 92));
@@ -584,7 +584,7 @@ namespace WitcherGame
     // 中文说明：单个我方角色状态块，负责平滑刷新 HP/SP 条。
     public class PartyStatusItem : MonoBehaviour
     {
-        private const float ResourceBarWidth = 164f;
+        private const float ResourceBarWidth = 92f;
         private Image frame;
         private Image portrait;
         private Text nameText;
@@ -604,29 +604,29 @@ namespace WitcherGame
         public void Build()
         {
             Rect = gameObject.AddComponent<RectTransform>();
-            Rect.sizeDelta = new Vector2(248f, 82f);
+            Rect.sizeDelta = new Vector2(232f, 62f);
             frame = gameObject.AddComponent<Image>();
             frame.sprite = WitcherSpriteLibrary.GetSolidSprite(BattleHudStyle.PanelColor);
             frame.color = BattleHudStyle.PanelColor;
             BattleHudStyle.AddOutline(frame, BattleHudStyle.BorderColor, new Vector2(1f, -1f));
 
-            portrait = BattleHudStyle.CreateImage("Portrait", transform, new Vector2(50f, 50f), new Vector2(10f, -16f), Color.white, new Vector2(0f, 1f));
+            portrait = BattleHudStyle.CreateImage("Portrait", transform, new Vector2(40f, 40f), new Vector2(8f, -12f), Color.white, new Vector2(0f, 1f));
             portrait.preserveAspect = true;
             portrait.raycastTarget = false;
             BattleHudStyle.AddOutline(portrait, BattleHudStyle.BorderColor, new Vector2(1f, -1f));
 
-            nameText = BattleHudStyle.CreateText("Name", transform, GameText.HunterName, 16, TextAnchor.MiddleLeft, new Vector2(70f, -8f), new Vector2(150f, 22f), BattleHudStyle.TextColor);
-            hpText = BattleHudStyle.CreateText("HP", transform, GameText.Stats.Hp(0, 0), 14, TextAnchor.MiddleLeft, new Vector2(70f, -32f), new Vector2(152f, 18f), BattleHudStyle.TextColor);
-            spText = BattleHudStyle.CreateText("SP", transform, GameText.Stats.Sp(0, 0), 13, TextAnchor.MiddleLeft, new Vector2(70f, -52f), new Vector2(152f, 18f), BattleHudStyle.MutedTextColor);
+            nameText = BattleHudStyle.CreateText("Name", transform, GameText.HunterName, 14, TextAnchor.MiddleLeft, new Vector2(54f, -4f), new Vector2(168f, 18f), BattleHudStyle.TextColor);
+            hpText = BattleHudStyle.CreateText("HP", transform, GameText.Stats.Hp(0, 0), 12, TextAnchor.MiddleLeft, new Vector2(54f, -24f), new Vector2(74f, 16f), BattleHudStyle.TextColor);
+            spText = BattleHudStyle.CreateText("SP", transform, GameText.Stats.Sp(0, 0), 12, TextAnchor.MiddleLeft, new Vector2(54f, -42f), new Vector2(74f, 16f), BattleHudStyle.MutedTextColor);
             BattleHudStyle.AddOutline(nameText, Color.black, new Vector2(2f, -2f));
             BattleHudStyle.AddOutline(hpText, Color.black, new Vector2(1f, -1f));
             BattleHudStyle.AddOutline(spText, Color.black, new Vector2(1f, -1f));
 
-            Image hpBack = BattleHudStyle.CreateImage("HP Back", transform, new Vector2(ResourceBarWidth, 6f), new Vector2(70f, -49f), new Color32(5, 7, 10, 230), new Vector2(0f, 1f));
+            Image hpBack = BattleHudStyle.CreateImage("HP Back", transform, new Vector2(ResourceBarWidth, 6f), new Vector2(128f, -31f), new Color32(5, 7, 10, 230), new Vector2(0f, 1f));
             hpFill = BattleHudStyle.CreateImage("HP Fill", hpBack.transform, new Vector2(ResourceBarWidth, 6f), Vector2.zero, new Color32(93, 168, 116, 240), new Vector2(0f, 1f));
             hpFill.rectTransform.pivot = new Vector2(0f, 1f);
 
-            Image spBack = BattleHudStyle.CreateImage("SP Back", transform, new Vector2(ResourceBarWidth, 5f), new Vector2(70f, -69f), new Color32(5, 7, 10, 230), new Vector2(0f, 1f));
+            Image spBack = BattleHudStyle.CreateImage("SP Back", transform, new Vector2(ResourceBarWidth, 5f), new Vector2(128f, -49f), new Color32(5, 7, 10, 230), new Vector2(0f, 1f));
             spFill = BattleHudStyle.CreateImage("SP Fill", spBack.transform, new Vector2(ResourceBarWidth, 5f), Vector2.zero, new Color32(92, 150, 180, 230), new Vector2(0f, 1f));
             spFill.rectTransform.pivot = new Vector2(0f, 1f);
         }
