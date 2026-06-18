@@ -24,7 +24,8 @@ namespace WitcherGame
         private static readonly Color32 JrpgSelectedColor = new Color32(52, 75, 40, 246);
         private static readonly Color32 JrpgGoldColor = new Color32(255, 226, 136, 255);
         private static readonly Vector2 PartyFigureSize = new Vector2(116f, 112f);
-        private const float PartyFigureMaxWidth = 136f;
+        private const float PartyFigureVisibleHeight = 86f;
+        private const float PartyFigureMaxWidth = 164f;
         private const float PartyFigureGroundY = -92f;
 
         private readonly List<Text> enemyRows = new List<Text>();
@@ -45,6 +46,7 @@ namespace WitcherGame
         private static Sprite[] cachedGeraltSlashFrames;
         private static Sprite[] cachedGeraltHurtFrames;
         private static readonly Dictionary<GeraltAnimation, Sprite[]> cachedGeraltFrames = new Dictionary<GeraltAnimation, Sprite[]>();
+        private static readonly Dictionary<Sprite, FigureSpriteMetrics> cachedFigureMetrics = new Dictionary<Sprite, FigureSpriteMetrics>();
 
         private TurnBasedBattleManager manager;
         private GeraltAnimator playerAnimator;
@@ -96,6 +98,13 @@ namespace WitcherGame
             public PartyMember Member;
             public int IdleIndex;
             public float IdleTimer;
+        }
+
+        private struct FigureSpriteMetrics
+        {
+            public bool IsValid;
+            public float VisibleHeight;
+            public float BottomPadding;
         }
 
         private void Update()
@@ -599,14 +608,13 @@ namespace WitcherGame
             Vector2 motion = GetPartySkillMotion(slot, targetEnemyIndex);
             for (int i = 0; i < Mathf.Max(1, frames.Length); i++)
             {
-                if (frames.Length > 0 && frames[i] != null)
-                {
-                    slot.Image.sprite = frames[i];
-                }
-
                 float t = frames.Length <= 1 ? 1f : (float)i / (frames.Length - 1);
                 float pulse = Mathf.Sin(t * Mathf.PI);
-                rect.anchoredPosition = home + motion * pulse;
+                if (frames.Length > 0 && frames[i] != null)
+                {
+                    ApplyFigureSprite(slot.Image, frames[i], home.x + motion.x * pulse, PartyFigureGroundY + motion.y * pulse);
+                }
+
                 rect.localScale = new Vector3(-1f - pulse * 0.05f, 1f + pulse * 0.05f, 1f);
                 slot.Image.color = skill.AnimationKind == BattleSkillAnimationKind.Defend && i % 2 == 0
                     ? new Color32(226, 204, 255, 255)
@@ -614,10 +622,9 @@ namespace WitcherGame
                 yield return new WaitForSeconds(0.07f);
             }
 
-            rect.anchoredPosition = home;
+            ApplyFigureSprite(slot.Image, PartyAnimationLibrary.GetIdlePreview(member), home.x, PartyFigureGroundY);
             rect.localScale = new Vector3(-1f, 1f, 1f);
             slot.Image.color = new Color32(255, 255, 255, 218);
-            slot.Image.sprite = PartyAnimationLibrary.GetIdlePreview(member);
         }
 
         private void BuildHud()
@@ -701,8 +708,9 @@ namespace WitcherGame
 
             BuildPartySupportSlots();
 
-            playerFigure = CreateCenteredImage("Battle Player Figure", root.transform, PartyFigureSize, GetFigureAlignedPosition(304f, GetPlayerIdleFrame(), PartyFigureSize), Color.white);
-            playerFigure.sprite = GetPlayerIdleFrame();
+            Sprite playerIdleFrame = GetPlayerIdleFrame();
+            playerFigure = CreateCenteredImage("Battle Player Figure", root.transform, PartyFigureSize, GetFigureAlignedPosition(304f, playerIdleFrame, PartyFigureSize), Color.white);
+            playerFigure.sprite = playerIdleFrame;
             AlignFigureToGround(playerFigure, 304f);
             playerFigureHomePosition = playerFigure.rectTransform.anchoredPosition;
             playerFigure.preserveAspect = true;
@@ -1594,29 +1602,27 @@ namespace WitcherGame
             }
 
             playerFigureBusy = true;
-            RectTransform rect = playerFigure.rectTransform;
             Sprite[] safeFrames = frames != null && frames.Length > 0 ? frames : LoadGeraltIdleFrames();
             Vector2 home = playerFigureHomePosition;
 
             for (int i = 0; i < safeFrames.Length; i++)
             {
-                if (safeFrames[i] != null)
-                {
-                    playerFigure.sprite = safeFrames[i];
-                }
-
                 float t = safeFrames.Length <= 1 ? 1f : (float)i / (safeFrames.Length - 1);
                 float pulse = Mathf.Sin(t * Mathf.PI);
-                rect.anchoredPosition = home + motion * pulse;
+                if (safeFrames[i] != null)
+                {
+                    ApplyFigureSprite(playerFigure, safeFrames[i], home.x + motion.x * pulse, PartyFigureGroundY + motion.y * pulse);
+                }
+
                 SetPlayerFacingScale(1f + 0.045f * pulse);
                 playerFigure.color = flash && i % 2 == 0 ? new Color32(255, 228, 214, 255) : Color.white;
                 yield return new WaitForSeconds(frameDuration);
             }
 
-            rect.anchoredPosition = home;
+            ApplyFigureSprite(playerFigure, GetPlayerIdleFrame(), home.x, PartyFigureGroundY);
+            playerFigureHomePosition = playerFigure.rectTransform.anchoredPosition;
             SetPlayerFacingScale(1f);
             playerFigure.color = Color.white;
-            playerFigure.sprite = GetPlayerIdleFrame();
             playerIdleIndex = 0;
             playerIdleTimer = 0f;
             playerFigureBusy = false;
@@ -1643,7 +1649,8 @@ namespace WitcherGame
 
             playerIdleTimer = 0f;
             playerIdleIndex = (playerIdleIndex + 1) % frames.Length;
-            playerFigure.sprite = frames[playerIdleIndex];
+            ApplyFigureSprite(playerFigure, frames[playerIdleIndex], playerFigureHomePosition.x, PartyFigureGroundY);
+            playerFigureHomePosition = playerFigure.rectTransform.anchoredPosition;
         }
 
         private void BuildPartySupportSlots()
@@ -1687,12 +1694,16 @@ namespace WitcherGame
                 return PartyFigureSize;
             }
 
-            float targetHeight = PartyFigureSize.y;
-            float width = targetHeight * sprite.rect.width / sprite.rect.height;
+            FigureSpriteMetrics metrics = GetFigureSpriteMetrics(sprite);
+            float visibleHeight = metrics.IsValid ? metrics.VisibleHeight : sprite.rect.height;
+            float scale = PartyFigureVisibleHeight / Mathf.Max(1f, visibleHeight);
+            float width = sprite.rect.width * scale;
+            float targetHeight = sprite.rect.height * scale;
             if (width > PartyFigureMaxWidth)
             {
+                scale = PartyFigureMaxWidth / sprite.rect.width;
                 width = PartyFigureMaxWidth;
-                targetHeight = width * sprite.rect.height / sprite.rect.width;
+                targetHeight = sprite.rect.height * scale;
             }
 
             return new Vector2(width, targetHeight);
@@ -1701,7 +1712,7 @@ namespace WitcherGame
         private static Vector2 GetFigureAlignedPosition(float x, Sprite sprite, Vector2 fallbackSize)
         {
             Vector2 size = sprite == null ? fallbackSize : GetFigureLayoutSize(sprite);
-            return new Vector2(x, PartyFigureGroundY + size.y * 0.5f);
+            return GetFigureAlignedPosition(x, sprite, size, PartyFigureGroundY);
         }
 
         private static void AlignFigureToGround(Image image, float x)
@@ -1713,7 +1724,97 @@ namespace WitcherGame
 
             Vector2 size = GetFigureLayoutSize(image.sprite);
             image.rectTransform.sizeDelta = size;
-            image.rectTransform.anchoredPosition = new Vector2(x, PartyFigureGroundY + size.y * 0.5f);
+            image.rectTransform.anchoredPosition = GetFigureAlignedPosition(x, image.sprite, size, PartyFigureGroundY);
+        }
+
+        private static void ApplyFigureSprite(Image image, Sprite sprite, float x, float groundY)
+        {
+            if (image == null || sprite == null)
+            {
+                return;
+            }
+
+            image.sprite = sprite;
+            Vector2 size = GetFigureLayoutSize(sprite);
+            image.rectTransform.sizeDelta = size;
+            image.rectTransform.anchoredPosition = GetFigureAlignedPosition(x, sprite, size, groundY);
+        }
+
+        private static Vector2 GetFigureAlignedPosition(float x, Sprite sprite, Vector2 size, float groundY)
+        {
+            FigureSpriteMetrics metrics = GetFigureSpriteMetrics(sprite);
+            float scale = sprite != null && sprite.rect.height > 0.01f ? size.y / sprite.rect.height : 1f;
+            float bottomPadding = metrics.IsValid ? metrics.BottomPadding * scale : 0f;
+            return new Vector2(x, groundY + size.y * 0.5f - bottomPadding);
+        }
+
+        private static FigureSpriteMetrics GetFigureSpriteMetrics(Sprite sprite)
+        {
+            if (sprite == null)
+            {
+                return default;
+            }
+
+            if (cachedFigureMetrics.TryGetValue(sprite, out FigureSpriteMetrics cached))
+            {
+                return cached;
+            }
+
+            FigureSpriteMetrics metrics = CalculateFigureSpriteMetrics(sprite);
+            cachedFigureMetrics[sprite] = metrics;
+            return metrics;
+        }
+
+        private static FigureSpriteMetrics CalculateFigureSpriteMetrics(Sprite sprite)
+        {
+            Texture2D texture = sprite.texture;
+            if (texture == null)
+            {
+                return default;
+            }
+
+            Rect rect = sprite.textureRect;
+            int minX = Mathf.Clamp(Mathf.FloorToInt(rect.xMin), 0, texture.width - 1);
+            int maxX = Mathf.Clamp(Mathf.CeilToInt(rect.xMax), minX + 1, texture.width);
+            int minY = Mathf.Clamp(Mathf.FloorToInt(rect.yMin), 0, texture.height - 1);
+            int maxY = Mathf.Clamp(Mathf.CeilToInt(rect.yMax), minY + 1, texture.height);
+            int visibleMinY = maxY;
+            int visibleMaxY = minY;
+
+            Color32[] pixels = texture.GetPixels32();
+            for (int y = minY; y < maxY; y++)
+            {
+                int row = y * texture.width;
+                for (int x = minX; x < maxX; x++)
+                {
+                    if (pixels[row + x].a <= 8)
+                    {
+                        continue;
+                    }
+
+                    if (y < visibleMinY)
+                    {
+                        visibleMinY = y;
+                    }
+
+                    if (y > visibleMaxY)
+                    {
+                        visibleMaxY = y;
+                    }
+                }
+            }
+
+            if (visibleMaxY < visibleMinY)
+            {
+                return default;
+            }
+
+            return new FigureSpriteMetrics
+            {
+                IsValid = true,
+                VisibleHeight = visibleMaxY - visibleMinY + 1f,
+                BottomPadding = visibleMinY - rect.yMin
+            };
         }
 
         private void RefreshPartyVisuals()
@@ -1737,8 +1838,7 @@ namespace WitcherGame
                 slot.Member = member;
                 slot.IdleIndex = 0;
                 slot.IdleTimer = 0f;
-                slot.Image.sprite = PartyAnimationLibrary.GetIdlePreview(member);
-                AlignFigureToGround(slot.Image, GetPartyFigureX(visualIndex));
+                ApplyFigureSprite(slot.Image, PartyAnimationLibrary.GetIdlePreview(member), GetPartyFigureX(visualIndex), PartyFigureGroundY);
                 slot.Image.rectTransform.localScale = new Vector3(-1f, 1f, 1f);
                 slot.Image.gameObject.SetActive(slot.Image.sprite != null);
                 visualIndex++;
