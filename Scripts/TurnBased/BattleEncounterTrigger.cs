@@ -49,7 +49,10 @@ namespace WitcherGame
             battleSprite = sprite;
             visualKind = GetMonsterVisualKind(kind);
             EnsureMapIdleAnimator();
-            enemyCount = Mathf.Clamp(count, 1, visualKind == TurnBasedEnemyVisualKind.BlackWaxAcolyte || visualKind == TurnBasedEnemyVisualKind.BlackWaxGateShade ? 2 : 3);
+            bool limitedGroup = visualKind == TurnBasedEnemyVisualKind.BlackWaxAcolyte
+                || visualKind == TurnBasedEnemyVisualKind.BlackWaxGateShade
+                || visualKind == TurnBasedEnemyVisualKind.CrowboneStitcher;
+            enemyCount = Mathf.Clamp(count, 1, limitedGroup ? 2 : 3);
             int bonus = Mathf.Max(0, waveBonus);
             if (visualKind == TurnBasedEnemyVisualKind.BloodWraith)
             {
@@ -111,6 +114,21 @@ namespace WitcherGame
                 return;
             }
 
+            if (visualKind == TurnBasedEnemyVisualKind.CrowboneStitcher)
+            {
+                encounterTitle = enemyCount > 1 ? "鸦骨缝尸群" : "鸦骨缝尸";
+                enemyName = "鸦骨缝尸";
+                enemyHealth = 44 + bonus * 5;
+                enemyAttack = 11 + bonus;
+                enemyDefense = 4;
+                experienceReward = 5;
+                goldReward = 16 + bonus * 3;
+                lootName = "鸦骨缝线";
+                lootChance = 0.62f;
+                ConfigureTriggerBounds(new Vector2(0f, 0.78f), new Vector2(1.95f, 1.75f), 1.35f, 1.28f);
+                return;
+            }
+
             encounterTitle = enemyCount > 1 ? "腐化狼群" : "腐化狼";
             enemyName = "腐化狼";
             enemyHealth = 26 + bonus * 4;
@@ -131,6 +149,7 @@ namespace WitcherGame
                 case TurnBasedEnemyVisualKind.BlackNailThrall:
                 case TurnBasedEnemyVisualKind.BlackWaxGateShade:
                 case TurnBasedEnemyVisualKind.BlackWaxAcolyte:
+                case TurnBasedEnemyVisualKind.CrowboneStitcher:
                     return kind;
                 default:
                     return TurnBasedEnemyVisualKind.CorruptedWolf;

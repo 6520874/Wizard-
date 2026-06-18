@@ -314,6 +314,11 @@ namespace WitcherGame
                     skills.Add(CreatePlagueHowl());
                     skills.Add(CreateCorruptedBite());
                     break;
+                case TurnBasedEnemyVisualKind.CrowboneStitcher:
+                    skills.Add(CreatePlagueHowl());
+                    skills.Add(CreateCorruptedBite());
+                    skills.Add(CreateBloodDrain());
+                    break;
                 case TurnBasedEnemyVisualKind.BlackMoonKnight:
                 case TurnBasedEnemyVisualKind.BlackNailThrall:
                 case TurnBasedEnemyVisualKind.BlackWaxGateShade:

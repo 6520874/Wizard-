@@ -111,17 +111,18 @@ namespace WitcherGame.Tests
         }
 
         [Test]
-        public void EnemyAnimation_BlackMoonKnightFolderFrames_UseHighResolutionSourceWithoutChangingWorldSize()
+        public void EnemyAnimation_BlackMoonKnightFolderFrames_UseUniformReworkedFrames()
         {
             TurnBasedEnemyState enemy = new TurnBasedEnemyState();
 
             TurnBasedEnemyAnimationLibrary.FillAnimations(enemy, TurnBasedEnemyVisualKind.BlackMoonKnight);
 
             Assert.NotNull(enemy.IdleFrames);
-            Assert.Greater(enemy.IdleFrames.Length, 0);
-            Assert.GreaterOrEqual(enemy.IdleFrames[0].texture.width, 768);
-            Assert.GreaterOrEqual(enemy.IdleFrames[0].texture.height, 640);
+            Assert.AreEqual(6, enemy.IdleFrames.Length);
+            Assert.AreEqual(256, enemy.IdleFrames[0].texture.width);
+            Assert.AreEqual(256, enemy.IdleFrames[0].texture.height);
             Assert.AreEqual(256f, enemy.IdleFrames[0].pixelsPerUnit);
+            Assert.That(enemy.IdleFrames[0].name, Does.Contain("BlackMoonKnight"));
         }
 
         [Test]
@@ -179,7 +180,9 @@ namespace WitcherGame.Tests
 
         [TestCase(TurnBasedEnemyVisualKind.CorruptedWolf)]
         [TestCase(TurnBasedEnemyVisualKind.BloodWraith)]
-        public void EnemyAnimation_SheetFrames_UseBilinearFiltering(TurnBasedEnemyVisualKind visualKind)
+        [TestCase(TurnBasedEnemyVisualKind.BlackMoonKnight)]
+        [TestCase(TurnBasedEnemyVisualKind.CrowboneStitcher)]
+        public void EnemyAnimation_ReworkedMonsterFrames_UseBilinearFiltering(TurnBasedEnemyVisualKind visualKind)
         {
             TurnBasedEnemyState enemy = new TurnBasedEnemyState();
 
@@ -188,6 +191,22 @@ namespace WitcherGame.Tests
             Assert.NotNull(enemy.IdleFrames);
             Assert.Greater(enemy.IdleFrames.Length, 0);
             Assert.AreEqual(FilterMode.Bilinear, enemy.IdleFrames[0].texture.filterMode);
+        }
+
+        [TestCase(TurnBasedEnemyVisualKind.CorruptedWolf)]
+        [TestCase(TurnBasedEnemyVisualKind.BloodWraith)]
+        [TestCase(TurnBasedEnemyVisualKind.BlackMoonKnight)]
+        [TestCase(TurnBasedEnemyVisualKind.CrowboneStitcher)]
+        public void EnemyAnimation_ReworkedMonsterFrames_LoadDeathFrames(TurnBasedEnemyVisualKind visualKind)
+        {
+            TurnBasedEnemyState enemy = new TurnBasedEnemyState();
+
+            TurnBasedEnemyAnimationLibrary.FillAnimations(enemy, visualKind);
+
+            Assert.NotNull(enemy.DefeatFrames);
+            Assert.AreEqual(6, enemy.DefeatFrames.Length);
+            Assert.AreEqual(256, enemy.DefeatFrames[0].texture.width);
+            Assert.AreEqual(256, enemy.DefeatFrames[0].texture.height);
         }
 
         [TestCase(TurnBasedEnemyVisualKind.BlackNailThrall)]

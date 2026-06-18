@@ -336,6 +336,7 @@ namespace WitcherGame
                     baseShield = Mathf.Clamp(Mathf.CeilToInt(enemy.Health / (float)enemy.MaxHealth * 5f), 1, 5);
                     break;
                 case TurnBasedEnemyVisualKind.BloodWraith:
+                case TurnBasedEnemyVisualKind.CrowboneStitcher:
                     baseShield = Mathf.Clamp(Mathf.CeilToInt(enemy.Health / (float)enemy.MaxHealth * 4f), 1, 4);
                     break;
                 default:
@@ -359,6 +360,8 @@ namespace WitcherGame
                     return new[] { "银", "火", "剑", "印", "？" };
                 case TurnBasedEnemyVisualKind.BloodWraith:
                     return new[] { "银", "火", "冰", "印" };
+                case TurnBasedEnemyVisualKind.CrowboneStitcher:
+                    return new[] { "火", "银", "符", "药" };
                 default:
                     return new[] { "剑", "弩", "火", "银" };
             }
@@ -377,6 +380,8 @@ namespace WitcherGame
                     return new[] { true, true, true, false, false };
                 case TurnBasedEnemyVisualKind.BloodWraith:
                     return new[] { true, false, false, true };
+                case TurnBasedEnemyVisualKind.CrowboneStitcher:
+                    return new[] { true, false, false, false };
                 default:
                     return new[] { true, false, true, false };
             }

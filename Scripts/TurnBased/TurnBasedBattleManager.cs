@@ -1513,6 +1513,9 @@ namespace WitcherGame
                 case TurnBasedEnemyVisualKind.BloodWraith:
                     baseSpeed = 98;
                     break;
+                case TurnBasedEnemyVisualKind.CrowboneStitcher:
+                    baseSpeed = 92;
+                    break;
                 case TurnBasedEnemyVisualKind.BlackMoonKnight:
                     baseSpeed = 84;
                     break;

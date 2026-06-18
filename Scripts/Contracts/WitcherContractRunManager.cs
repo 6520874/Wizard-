@@ -952,6 +952,16 @@ namespace WitcherGame
                 "一张没有教会印章的封钉配方",
                 TurnBasedEnemyVisualKind.BlackNailPuppet,
                 1));
+            contracts.Add(new ContractDefinition(
+                "crowbone_grave",
+                "乌鸦坡的缝尸人",
+                "乌鸦坡",
+                "乱葬坡的乌鸦不再啄眼睛，只把骨头排成字。守墓人说，那些字在叫他的旧名。",
+                "鸦骨缝尸",
+                "被缝起来的不是尸体，是一群没人愿意认领的名字",
+                "一截打结的黑羽缝线",
+                TurnBasedEnemyVisualKind.CrowboneStitcher,
+                4));
 
             partners.Add(new PartnerDefinition(PartnerKind.Pyromancer, "赤焰术师", "火焰准备更强，但容易让村民害怕"));
             partners.Add(new PartnerDefinition(PartnerKind.NightCrow, "夜鸦女术士", "能听出谎言，教会和胆小村民会更紧张"));
