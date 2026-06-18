@@ -526,9 +526,10 @@ namespace WitcherGame
         }
     }
 
-    // 中文说明：右侧我方队伍状态栏容器，当前只有猎魔人，后续可扩展多人队伍。
+    // 中文说明：右侧我方队伍状态栏容器，显示上阵角色的生命和法力。
     public class PartyStatusPanel : MonoBehaviour
     {
+        private const float ItemGap = 86f;
         private readonly List<PartyStatusItem> items = new List<PartyStatusItem>();
 
         public void Build()
@@ -537,8 +538,8 @@ namespace WitcherGame
             rect.anchorMin = new Vector2(1f, 0.5f);
             rect.anchorMax = new Vector2(1f, 0.5f);
             rect.pivot = new Vector2(1f, 0.5f);
-            rect.sizeDelta = new Vector2(254f, 410f);
-            rect.anchoredPosition = new Vector2(-60f, 18f);
+            rect.sizeDelta = new Vector2(248f, 350f);
+            rect.anchoredPosition = new Vector2(-24f, -22f);
 
             Image back = gameObject.AddComponent<Image>();
             back.sprite = WitcherSpriteLibrary.GetSolidSprite(new Color32(8, 24, 15, 92));
@@ -551,7 +552,8 @@ namespace WitcherGame
                 item.Build();
                 item.Rect.anchorMin = new Vector2(0f, 1f);
                 item.Rect.anchorMax = new Vector2(0f, 1f);
-                item.Rect.anchoredPosition = new Vector2(0f, -i * 102f);
+                item.Rect.pivot = new Vector2(0f, 1f);
+                item.Rect.anchoredPosition = new Vector2(0f, -i * ItemGap);
                 item.gameObject.SetActive(false);
                 items.Add(item);
             }
@@ -582,6 +584,7 @@ namespace WitcherGame
     // 中文说明：单个我方角色状态块，负责平滑刷新 HP/SP 条。
     public class PartyStatusItem : MonoBehaviour
     {
+        private const float ResourceBarWidth = 164f;
         private Image frame;
         private Image portrait;
         private Text nameText;
@@ -601,30 +604,30 @@ namespace WitcherGame
         public void Build()
         {
             Rect = gameObject.AddComponent<RectTransform>();
-            Rect.sizeDelta = new Vector2(254f, 96f);
+            Rect.sizeDelta = new Vector2(248f, 82f);
             frame = gameObject.AddComponent<Image>();
             frame.sprite = WitcherSpriteLibrary.GetSolidSprite(BattleHudStyle.PanelColor);
             frame.color = BattleHudStyle.PanelColor;
             BattleHudStyle.AddOutline(frame, BattleHudStyle.BorderColor, new Vector2(1f, -1f));
 
-            portrait = BattleHudStyle.CreateImage("Portrait", transform, new Vector2(54f, 54f), new Vector2(12f, -18f), Color.white, new Vector2(0f, 1f));
+            portrait = BattleHudStyle.CreateImage("Portrait", transform, new Vector2(50f, 50f), new Vector2(10f, -16f), Color.white, new Vector2(0f, 1f));
             portrait.preserveAspect = true;
             portrait.raycastTarget = false;
             BattleHudStyle.AddOutline(portrait, BattleHudStyle.BorderColor, new Vector2(1f, -1f));
 
-            nameText = BattleHudStyle.CreateText("Name", transform, GameText.HunterName, 18, TextAnchor.MiddleLeft, new Vector2(76f, -10f), new Vector2(150f, 24f), BattleHudStyle.TextColor);
-            hpText = BattleHudStyle.CreateText("HP", transform, GameText.Stats.Hp(0, 0), 15, TextAnchor.MiddleLeft, new Vector2(76f, -38f), new Vector2(156f, 20f), BattleHudStyle.TextColor);
-            spText = BattleHudStyle.CreateText("SP", transform, GameText.Stats.Sp(0, 0), 14, TextAnchor.MiddleLeft, new Vector2(76f, -64f), new Vector2(156f, 20f), BattleHudStyle.MutedTextColor);
+            nameText = BattleHudStyle.CreateText("Name", transform, GameText.HunterName, 16, TextAnchor.MiddleLeft, new Vector2(70f, -8f), new Vector2(150f, 22f), BattleHudStyle.TextColor);
+            hpText = BattleHudStyle.CreateText("HP", transform, GameText.Stats.Hp(0, 0), 14, TextAnchor.MiddleLeft, new Vector2(70f, -32f), new Vector2(152f, 18f), BattleHudStyle.TextColor);
+            spText = BattleHudStyle.CreateText("SP", transform, GameText.Stats.Sp(0, 0), 13, TextAnchor.MiddleLeft, new Vector2(70f, -52f), new Vector2(152f, 18f), BattleHudStyle.MutedTextColor);
             BattleHudStyle.AddOutline(nameText, Color.black, new Vector2(2f, -2f));
             BattleHudStyle.AddOutline(hpText, Color.black, new Vector2(1f, -1f));
             BattleHudStyle.AddOutline(spText, Color.black, new Vector2(1f, -1f));
 
-            Image hpBack = BattleHudStyle.CreateImage("HP Back", transform, new Vector2(168f, 7f), new Vector2(76f, -58f), new Color32(5, 7, 10, 230), new Vector2(0f, 1f));
-            hpFill = BattleHudStyle.CreateImage("HP Fill", hpBack.transform, new Vector2(168f, 7f), Vector2.zero, new Color32(93, 168, 116, 240), new Vector2(0f, 1f));
+            Image hpBack = BattleHudStyle.CreateImage("HP Back", transform, new Vector2(ResourceBarWidth, 6f), new Vector2(70f, -49f), new Color32(5, 7, 10, 230), new Vector2(0f, 1f));
+            hpFill = BattleHudStyle.CreateImage("HP Fill", hpBack.transform, new Vector2(ResourceBarWidth, 6f), Vector2.zero, new Color32(93, 168, 116, 240), new Vector2(0f, 1f));
             hpFill.rectTransform.pivot = new Vector2(0f, 1f);
 
-            Image spBack = BattleHudStyle.CreateImage("SP Back", transform, new Vector2(168f, 5f), new Vector2(76f, -82f), new Color32(5, 7, 10, 230), new Vector2(0f, 1f));
-            spFill = BattleHudStyle.CreateImage("SP Fill", spBack.transform, new Vector2(168f, 5f), Vector2.zero, new Color32(92, 150, 180, 230), new Vector2(0f, 1f));
+            Image spBack = BattleHudStyle.CreateImage("SP Back", transform, new Vector2(ResourceBarWidth, 5f), new Vector2(70f, -69f), new Color32(5, 7, 10, 230), new Vector2(0f, 1f));
+            spFill = BattleHudStyle.CreateImage("SP Fill", spBack.transform, new Vector2(ResourceBarWidth, 5f), Vector2.zero, new Color32(92, 150, 180, 230), new Vector2(0f, 1f));
             spFill.rectTransform.pivot = new Vector2(0f, 1f);
         }
 
@@ -652,8 +655,8 @@ namespace WitcherGame
         {
             displayedHp = Mathf.Lerp(displayedHp, targetHp, Time.unscaledDeltaTime * 8f);
             displayedSp = Mathf.Lerp(displayedSp, targetSp, Time.unscaledDeltaTime * 8f);
-            SetFill(hpFill, displayedHp, 168f);
-            SetFill(spFill, displayedSp, 168f);
+            SetFill(hpFill, displayedHp, ResourceBarWidth);
+            SetFill(spFill, displayedSp, ResourceBarWidth);
             if (highlighted)
             {
                 float glow = 0.55f + Mathf.Sin(Time.unscaledTime * 5f) * 0.25f;
