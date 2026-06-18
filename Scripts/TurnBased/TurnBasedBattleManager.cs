@@ -65,6 +65,8 @@ namespace WitcherGame
         [SerializeField, Range(0f, 1f)] private float escapeChance = 0.62f;
 
         private const float TurnActionThreshold = 100f;
+        private const float EnemyDefeatSettleDelay = 0.22f;
+        private const float EnemyDefeatMessageHold = 0.42f;
         private const int PlayerTurnSpeed = 116;
         private static readonly TurnBattleAction[] PlayerCommandOrder =
         {
@@ -1081,9 +1083,9 @@ namespace WitcherGame
 
                 if (targetResult.Defeated)
                 {
-                    yield return battleHud.PlayEnemyDefeat(targetResult.EnemyIndex, 0.08f, targetResult.Damage);
+                    yield return battleHud.PlayEnemyDefeat(targetResult.EnemyIndex, EnemyDefeatSettleDelay, targetResult.Damage);
                     battleHud.SetMessage(GameText.Battle.TargetDefeated(targetResult.TargetName));
-                    yield return Wait(0.28f);
+                    yield return Wait(EnemyDefeatMessageHold);
                     continue;
                 }
 

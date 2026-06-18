@@ -15,6 +15,7 @@ namespace WitcherGame
         private const string BattleFloorMistPath = "Art/Effects/BattleFloorMist.png";
         private const string BattleGroundShadowPath = "Art/Effects/BattleGroundShadow.png";
         private const string BattleGroundGlowPath = "Art/Effects/BattleGroundGlow.png";
+        private const float EnemyDefeatFrameDuration = 0.16f;
         private static readonly Color32 JrpgPanelColor = new Color32(8, 24, 15, 202);
         private static readonly Color32 JrpgPanelStrongColor = new Color32(5, 15, 10, 230);
         private static readonly Color32 JrpgBorderColor = new Color32(235, 244, 232, 238);
@@ -470,7 +471,7 @@ namespace WitcherGame
             Sprite[] frames = enemy.DefeatFrames != null && enemy.DefeatFrames.Length > 0
                 ? enemy.DefeatFrames
                 : enemy.HurtFrames;
-            yield return PlayEnemyFrames(slot, frames, enemy.Sprite, 0.095f, false, true);
+            yield return PlayEnemyFrames(slot, frames, enemy.Sprite, EnemyDefeatFrameDuration, false, false);
         }
 
         public IEnumerator PlayFlameSignEffect()
