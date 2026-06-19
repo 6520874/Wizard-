@@ -16,4 +16,4 @@ Design notes:
 - Witcher_FirstNight_OldWell: first-night investigation cue for Gray Crow Village, with low strings, hurdy-gurdy drone, cold bells, wood creaks, wind, and a restrained heartbeat pulse for old-well puzzle scenes.
 - Witcher_SecondNight_BlackNailForge: dark forge/church cue with low drones, muted anvil strikes, distant drums, and sparse bell tones for the black-nail puppet storyline.
 - Witcher_ThirdNight_BlackWaxCrypt: underground chapel cue with choir-like pads, ritual pulse, cold bells, and black-wax crypt atmosphere.
-- Witcher_Battle_ContractClash: 64-second looping battle cue at 120 BPM with war drums, frame drums, low strings, hurdy-gurdy drones, iron strikes, and horn/shawm motifs for medieval monster fights.
+- Witcher_Battle_ContractClash: 68-second sword-and-sorcery battle cue with war drums, lute and harp arpeggios, low strings, choir pads, sword clashes, magic chimes, and horn/shawm calls for western medieval monster fights.
