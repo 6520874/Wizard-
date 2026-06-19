@@ -58,6 +58,8 @@ namespace WitcherGame
     {
         private const string ManagerName = "Turn Based Battle Manager";
         private const string BattleMusicResourcePath = "Music/Witcher_Battle_ContractClash";
+        private const string SecondNightBattleMusicResourcePath = "Music/Witcher_Battle_BlackNailForge";
+        private const string ThirdNightBattleMusicResourcePath = "Music/Witcher_Battle_BlackWaxCrypt";
 
         [SerializeField] private int playerAttack = 18;
         [SerializeField] private int playerDefense = 4;
@@ -250,7 +252,7 @@ namespace WitcherGame
             SetQuestPanelHiddenForBattle(true);
             currentEncounter.PrepareForBattle();
             previousMusicResourcePath = WitcherMusicPlayer.GetCurrentMusicPath();
-            WitcherMusicPlayer.PlayMusic(BattleMusicResourcePath);
+            WitcherMusicPlayer.PlayMusic(GetBattleMusicResourcePath());
             battleActive = true;
             resolvingTurn = true;
             battleEndSequenceStarted = false;
@@ -836,6 +838,22 @@ namespace WitcherGame
             }
 
             previousMusicResourcePath = string.Empty;
+        }
+
+        private static string GetBattleMusicResourcePath()
+        {
+            WitcherRuntimeBackground runtimeBackground = FindObjectOfType<WitcherRuntimeBackground>();
+            if (runtimeBackground != null && runtimeBackground.IsUsingThirdNightMap)
+            {
+                return ThirdNightBattleMusicResourcePath;
+            }
+
+            if (runtimeBackground != null && runtimeBackground.IsUsingSecondNightMap)
+            {
+                return SecondNightBattleMusicResourcePath;
+            }
+
+            return BattleMusicResourcePath;
         }
 
         private static void SetQuestPanelHiddenForBattle(bool hidden)
