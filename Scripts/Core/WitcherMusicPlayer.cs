@@ -37,6 +37,11 @@ namespace WitcherGame
             CreateIfMissing().SwitchMusic(resourcePath);
         }
 
+        public static string GetCurrentMusicPath()
+        {
+            return CreateIfMissing().musicResourcePath;
+        }
+
         private void Awake()
         {
             DontDestroyOnLoad(gameObject);

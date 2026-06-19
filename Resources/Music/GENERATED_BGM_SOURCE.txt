@@ -3,6 +3,7 @@ Generated BGM assets for Ravenbound.
 Files:
 - Assets/Resources/Music/Witcher_SecondNight_BlackNailForge.ogg
 - Assets/Resources/Music/Witcher_ThirdNight_BlackWaxCrypt.ogg
+- Assets/Resources/Music/Witcher_Battle_ContractClash.ogg
 
 Generation method:
 Local procedural synthesis by Codex using Python standard-library wave generation and ffmpeg native Vorbis encoding.
@@ -13,3 +14,4 @@ Generated specifically for this project during development. No external music sa
 Design notes:
 - Witcher_SecondNight_BlackNailForge: dark forge/church cue with low drones, muted anvil strikes, distant drums, and sparse bell tones for the black-nail puppet storyline.
 - Witcher_ThirdNight_BlackWaxCrypt: underground chapel cue with choir-like pads, ritual pulse, cold bells, and black-wax crypt atmosphere.
+- Witcher_Battle_ContractClash: 64-second looping battle cue at 120 BPM with war drums, frame drums, low strings, hurdy-gurdy drones, iron strikes, and horn/shawm motifs for medieval monster fights.

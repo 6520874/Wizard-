@@ -57,6 +57,7 @@ namespace WitcherGame
     public class TurnBasedBattleManager : MonoBehaviour
     {
         private const string ManagerName = "Turn Based Battle Manager";
+        private const string BattleMusicResourcePath = "Music/Witcher_Battle_ContractClash";
 
         [SerializeField] private int playerAttack = 18;
         [SerializeField] private int playerDefense = 4;
@@ -97,6 +98,7 @@ namespace WitcherGame
         private int potionCount;
         private int turnNumber;
         private int selectedCommandIndex;
+        private string previousMusicResourcePath;
 
         public bool BattleActive => battleActive;
         public int TurnNumber => Mathf.Max(1, turnNumber);
@@ -247,6 +249,8 @@ namespace WitcherGame
             player.SetControlEnabled(false);
             SetQuestPanelHiddenForBattle(true);
             currentEncounter.PrepareForBattle();
+            previousMusicResourcePath = WitcherMusicPlayer.GetCurrentMusicPath();
+            WitcherMusicPlayer.PlayMusic(BattleMusicResourcePath);
             battleActive = true;
             resolvingTurn = true;
             battleEndSequenceStarted = false;
@@ -806,6 +810,7 @@ namespace WitcherGame
             battleHud?.Hide();
             ResumeWorldRendering();
             SetQuestPanelHiddenForBattle(false);
+            RestorePreviousMusic();
             battleActive = false;
             resolvingTurn = false;
             battleEndSequenceStarted = false;
@@ -821,6 +826,16 @@ namespace WitcherGame
             }
 
             BattleFinished?.Invoke(won);
+        }
+
+        private void RestorePreviousMusic()
+        {
+            if (!string.IsNullOrWhiteSpace(previousMusicResourcePath))
+            {
+                WitcherMusicPlayer.PlayMusic(previousMusicResourcePath);
+            }
+
+            previousMusicResourcePath = string.Empty;
         }
 
         private static void SetQuestPanelHiddenForBattle(bool hidden)
