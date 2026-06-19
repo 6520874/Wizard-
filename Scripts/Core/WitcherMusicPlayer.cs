@@ -7,7 +7,7 @@ namespace WitcherGame
     public class WitcherMusicPlayer : MonoBehaviour
     {
         private const string PlayerName = "Witcher Music Player";
-        private const string DefaultMusicResourcePath = "Music/UserProvided_Velen_BGM";
+        private const string DefaultMusicResourcePath = "Music/Witcher_FirstNight_OldWell";
         private const float FadeInDuration = 2.4f;
 
         [SerializeField] private string musicResourcePath = DefaultMusicResourcePath;
