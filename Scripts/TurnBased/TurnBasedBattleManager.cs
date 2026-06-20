@@ -66,7 +66,7 @@ namespace WitcherGame
         [SerializeField, Range(0f, 1f)] private float escapeChance = 0.62f;
 
         private const float TurnActionThreshold = 100f;
-        private const float EnemyDefeatSettleDelay = 0.22f;
+        private const float EnemyDefeatSettleDelay = 0.48f;
         private const float EnemyDefeatMessageHold = 0.42f;
         private const int PlayerTurnSpeed = 116;
         private static readonly TurnBattleAction[] PlayerCommandOrder =
