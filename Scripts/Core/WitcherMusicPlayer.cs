@@ -11,7 +11,7 @@ namespace WitcherGame
         private const float FadeInDuration = 2.4f;
 
         [SerializeField] private string musicResourcePath = DefaultMusicResourcePath;
-        [SerializeField] private float volume = 0.34f;
+        [SerializeField] private float volume = 0.52f;
 
         private AudioSource audioSource;
         private bool loadingClip;
