@@ -1,0 +1,19 @@
+{
+  "title": "RavenboundCocos",
+  "webOrientation": "auto",
+  "inlineSpriteFrames": true,
+  "inlineSpriteFrames_native": true,
+  "mergeStartScene": false,
+  "optimizeHotUpdate": false,
+  "md5Cache": false,
+  "encryptJs": false,
+  "xxteaKey": "",
+  "zipCompressJs": true,
+  "fb-instant-games": {},
+  "android": {},
+  "ios": {},
+  "mac": {},
+  "win32": {},
+  "web-mobile": {},
+  "web-desktop": {}
+}

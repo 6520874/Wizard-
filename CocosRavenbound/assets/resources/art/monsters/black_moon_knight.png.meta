@@ -1,0 +1,36 @@
+{
+  "ver": "2.3.5",
+  "uuid": "24a110d3-f2eb-4e99-afb8-f143c3c112f3",
+  "type": "sprite",
+  "wrapMode": "clamp",
+  "filterMode": "bilinear",
+  "premultiplyAlpha": false,
+  "genMipmaps": false,
+  "packable": true,
+  "width": 1536,
+  "height": 1024,
+  "platformSettings": {},
+  "subMetas": {
+    "black_moon_knight": {
+      "ver": "1.0.4",
+      "uuid": "eb8893e3-c2fb-4e88-abd7-a9a6547cda90",
+      "rawTextureUuid": "24a110d3-f2eb-4e99-afb8-f143c3c112f3",
+      "trimType": "auto",
+      "trimThreshold": 1,
+      "rotated": false,
+      "offsetX": 0,
+      "offsetY": 0,
+      "trimX": 0,
+      "trimY": 0,
+      "width": 1536,
+      "height": 1024,
+      "rawWidth": 1536,
+      "rawHeight": 1024,
+      "borderTop": 0,
+      "borderBottom": 0,
+      "borderLeft": 0,
+      "borderRight": 0,
+      "subMetas": {}
+    }
+  }
+}
